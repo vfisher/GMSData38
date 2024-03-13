@@ -8,6 +8,74 @@ CREATE TABLE [dbo].[z_UserOurs]
 [AccDelete] [tinyint] NOT NULL DEFAULT (0)
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_z_UserOurs] ON [dbo].[z_UserOurs]
+FOR INSERT AS
+/* z_UserOurs - Доступные значения - Справочник внутренних фирм - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_UserOurs ^ r_Ours - Проверка в PARENT */
+/* Доступные значения - Справочник внутренних фирм ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_UserOurs', 0
+      RETURN
+    END
+
+/* z_UserOurs ^ r_Users - Проверка в PARENT */
+/* Доступные значения - Справочник внутренних фирм ^ Справочник пользователей - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
+    BEGIN
+      EXEC z_RelationError 'r_Users', 'z_UserOurs', 0
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_z_UserOurs]', 'last', 'insert', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_z_UserOurs] ON [dbo].[z_UserOurs]
+FOR UPDATE AS
+/* z_UserOurs - Доступные значения - Справочник внутренних фирм - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_UserOurs ^ r_Ours - Проверка в PARENT */
+/* Доступные значения - Справочник внутренних фирм ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF UPDATE(OurID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+      BEGIN
+        EXEC z_RelationError 'r_Ours', 'z_UserOurs', 1
+        RETURN
+      END
+
+/* z_UserOurs ^ r_Users - Проверка в PARENT */
+/* Доступные значения - Справочник внутренних фирм ^ Справочник пользователей - Проверка в PARENT */
+  IF UPDATE(UserID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
+      BEGIN
+        EXEC z_RelationError 'r_Users', 'z_UserOurs', 1
+        RETURN
+      END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_z_UserOurs]', 'last', 'update', null
+GO
 ALTER TABLE [dbo].[z_UserOurs] ADD CONSTRAINT [pk_z_UserOurs] PRIMARY KEY CLUSTERED ([UserID], [OurID]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [AccDelete] ON [dbo].[z_UserOurs] ([AccDelete]) ON [PRIMARY]

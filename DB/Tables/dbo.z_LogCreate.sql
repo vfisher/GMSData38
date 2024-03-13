@@ -7,5 +7,13 @@ CREATE TABLE [dbo].[z_LogCreate]
 [UserCode] [smallint] NOT NULL
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel3_Del_z_LogCreate] ON [dbo].[z_LogCreate]FOR DELETE AS/* z_LogCreate - Регистрация действий - Создание - DELETE TRIGGER */BEGIN  SET NOCOUNT ON/* Удаление регистрации печати */  DELETE z_LogPrint FROM z_LogPrint m, deleted i  WHERE m.DocCode = 1001 AND m.ChID = i.ChIDEND
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel3_Del_z_LogCreate]', 'last', 'delete', null
+GO
 ALTER TABLE [dbo].[z_LogCreate] ADD CONSTRAINT [pk_z_LogCreate] PRIMARY KEY CLUSTERED ([TableCode], [PKValue]) ON [PRIMARY]
 GO

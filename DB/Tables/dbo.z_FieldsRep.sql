@@ -45,6 +45,64 @@ CREATE TABLE [dbo].[z_FieldsRep]
 [FieldID] [int] NOT NULL
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_z_FieldsRep] ON [dbo].[z_FieldsRep]
+FOR UPDATE AS
+/* z_FieldsRep - Репозиторий полей - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_FieldsRep ^ z_ReplicaFields - Обновление CHILD */
+/* Репозиторий полей ^ Объекты репликации: Поля - Обновление CHILD */
+  IF UPDATE(FieldName)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.FieldName = i.FieldName
+          FROM z_ReplicaFields a, inserted i, deleted d WHERE a.FieldName = d.FieldName
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_ReplicaFields a, deleted d WHERE a.FieldName = d.FieldName)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Репозиторий полей'' => ''Объекты репликации: Поля''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_z_FieldsRep]', 'last', 'update', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel3_Del_z_FieldsRep] ON [dbo].[z_FieldsRep]
+FOR DELETE AS
+/* z_FieldsRep - Репозиторий полей - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* z_FieldsRep ^ z_ReplicaFields - Проверка в CHILD */
+/* Репозиторий полей ^ Объекты репликации: Поля - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_ReplicaFields a WITH(NOLOCK), deleted d WHERE a.FieldName = d.FieldName)
+    BEGIN
+      EXEC z_RelationError 'z_FieldsRep', 'z_ReplicaFields', 3
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel3_Del_z_FieldsRep]', 'last', 'delete', null
+GO
 ALTER TABLE [dbo].[z_FieldsRep] ADD CONSTRAINT [pk_z_FieldsRep] PRIMARY KEY CLUSTERED ([FieldName]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [DataType] ON [dbo].[z_FieldsRep] ([DataType]) ON [PRIMARY]

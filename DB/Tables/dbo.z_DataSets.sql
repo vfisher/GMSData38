@@ -30,6 +30,170 @@ CREATE TABLE [dbo].[z_DataSets]
 [LockMode] [tinyint] NOT NULL DEFAULT ((1))
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_z_DataSets] ON [dbo].[z_DataSets]
+FOR INSERT AS
+/* z_DataSets - Источники данных - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_DataSets ^ z_Docs - Проверка в PARENT */
+/* Источники данных ^ Документы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DocCode NOT IN (SELECT DocCode FROM z_Docs))
+    BEGIN
+      EXEC z_RelationError 'z_Docs', 'z_DataSets', 0
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_z_DataSets]', 'last', 'insert', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_z_DataSets] ON [dbo].[z_DataSets]
+FOR UPDATE AS
+/* z_DataSets - Источники данных - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_DataSets ^ z_Docs - Проверка в PARENT */
+/* Источники данных ^ Документы - Проверка в PARENT */
+  IF UPDATE(DocCode)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.DocCode NOT IN (SELECT DocCode FROM z_Docs))
+      BEGIN
+        EXEC z_RelationError 'z_Docs', 'z_DataSets', 1
+        RETURN
+      END
+
+/* z_DataSets ^ b_GOperDocs - Обновление CHILD */
+/* Источники данных ^ Проводки для документов - Обновление CHILD */
+  IF UPDATE(DSCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.DSCode = i.DSCode
+          FROM b_GOperDocs a, inserted i, deleted d WHERE a.DSCode = d.DSCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM b_GOperDocs a, deleted d WHERE a.DSCode = d.DSCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Источники данных'' => ''Проводки для документов''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+/* z_DataSets ^ z_DataSetFields - Обновление CHILD */
+/* Источники данных ^ Источники данных - Поля - Обновление CHILD */
+  IF UPDATE(DSCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.DSCode = i.DSCode
+          FROM z_DataSetFields a, inserted i, deleted d WHERE a.DSCode = d.DSCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_DataSetFields a, deleted d WHERE a.DSCode = d.DSCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Источники данных'' => ''Источники данных - Поля''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+/* z_DataSets ^ z_DatasetLinks - Обновление CHILD */
+/* Источники данных ^ Источники данных - Связи - Обновление CHILD */
+  IF UPDATE(DSCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.DSCode = i.DSCode
+          FROM z_DatasetLinks a, inserted i, deleted d WHERE a.DSCode = d.DSCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_DatasetLinks a, deleted d WHERE a.DSCode = d.DSCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Источники данных'' => ''Источники данных - Связи''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+/* z_DataSets ^ z_DatasetLinks - Обновление CHILD */
+/* Источники данных ^ Источники данных - Связи - Обновление CHILD */
+  IF UPDATE(DSCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.LinkDSCode = i.DSCode
+          FROM z_DatasetLinks a, inserted i, deleted d WHERE a.LinkDSCode = d.DSCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_DatasetLinks a, deleted d WHERE a.LinkDSCode = d.DSCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Источники данных'' => ''Источники данных - Связи''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_z_DataSets]', 'last', 'update', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel3_Del_z_DataSets] ON [dbo].[z_DataSets]
+FOR DELETE AS
+/* z_DataSets - Источники данных - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* z_DataSets ^ b_GOperDocs - Проверка в CHILD */
+/* Источники данных ^ Проводки для документов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GOperDocs a WITH(NOLOCK), deleted d WHERE a.DSCode = d.DSCode)
+    BEGIN
+      EXEC z_RelationError 'z_DataSets', 'b_GOperDocs', 3
+      RETURN
+    END
+
+/* z_DataSets ^ z_DataSetFields - Удаление в CHILD */
+/* Источники данных ^ Источники данных - Поля - Удаление в CHILD */
+  DELETE z_DataSetFields FROM z_DataSetFields a, deleted d WHERE a.DSCode = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+/* z_DataSets ^ z_DatasetLinks - Удаление в CHILD */
+/* Источники данных ^ Источники данных - Связи - Удаление в CHILD */
+  DELETE z_DatasetLinks FROM z_DatasetLinks a, deleted d WHERE a.DSCode = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+/* z_DataSets ^ z_DatasetLinks - Удаление в CHILD */
+/* Источники данных ^ Источники данных - Связи - Удаление в CHILD */
+  DELETE z_DatasetLinks FROM z_DatasetLinks a, deleted d WHERE a.LinkDSCode = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel3_Del_z_DataSets]', 'last', 'delete', null
+GO
 ALTER TABLE [dbo].[z_DataSets] ADD CONSTRAINT [pk_z_DataSets] PRIMARY KEY CLUSTERED ([DSCode]) ON [PRIMARY]
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [UniquePageIndex] ON [dbo].[z_DataSets] ([DocCode], [PageIndex], [UserCode]) ON [PRIMARY]

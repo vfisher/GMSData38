@@ -34,6 +34,57 @@ CREATE TABLE [dbo].[v_UFields]
 [FieldPosID] [int] NOT NULL DEFAULT (0)
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_v_UFields] ON [dbo].[v_UFields]
+FOR INSERT AS
+/* v_UFields - Анализатор - Поля пользователя - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* v_UFields ^ r_Users - Проверка в PARENT */
+/* Анализатор - Поля пользователя ^ Справочник пользователей - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
+    BEGIN
+      EXEC z_RelationError 'r_Users', 'v_UFields', 0
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_v_UFields]', 'last', 'insert', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_v_UFields] ON [dbo].[v_UFields]
+FOR UPDATE AS
+/* v_UFields - Анализатор - Поля пользователя - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* v_UFields ^ r_Users - Проверка в PARENT */
+/* Анализатор - Поля пользователя ^ Справочник пользователей - Проверка в PARENT */
+  IF UPDATE(UserID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
+      BEGIN
+        EXEC z_RelationError 'r_Users', 'v_UFields', 1
+        RETURN
+      END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_v_UFields]', 'last', 'update', null
+GO
 ALTER TABLE [dbo].[v_UFields] ADD CONSTRAINT [_pk_v_UFields] PRIMARY KEY CLUSTERED ([UserID], [RepID], [FieldName]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [FieldName] ON [dbo].[v_UFields] ([FieldName]) ON [PRIMARY]
@@ -47,6 +98,44 @@ GO
 CREATE NONCLUSTERED INDEX [UserID] ON [dbo].[v_UFields] ([UserID]) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[v_UFields] ADD CONSTRAINT [FK_v_UFields_v_Reps] FOREIGN KEY ([RepID]) REFERENCES [dbo].[v_Reps] ([RepID]) ON DELETE CASCADE ON UPDATE CASCADE
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[RepID]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[UserID]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Location]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[SrcPosID]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Visible]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[VisibleNote]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Width]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Alignment]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Layout]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[WordWrap]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Negatives]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Operation]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Sorting]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[SubTotals]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[Separator]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[DecimalCount]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[FixedCount]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[FilterOnly]'
+GO
+EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[HideInFilter]'
 GO
 EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UFields].[RepID]'
 GO

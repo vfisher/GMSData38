@@ -34,6 +34,219 @@ CREATE TABLE [dbo].[t_Cst2D]
 [CstPriceAC] [numeric] (21, 9) NOT NULL
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_t_Cst2D] ON [dbo].[t_Cst2D]
+FOR INSERT AS
+/* t_Cst2D - Приход товара по ГТД (новый) (Данные) - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* Проверка открытого периода */
+  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
+  DECLARE @GetDate datetime
+  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
+
+  SET @GetDate = GETDATE()
+
+  INSERT INTO @OpenAges(OurID, isIns)
+  SELECT DISTINCT OurID, 1 FROM  t_Cst2 a, inserted b  WHERE (b.ChID = a.ChID)
+
+  INSERT INTO @OpenAges(OurID, isDel)
+  SELECT DISTINCT OurID, 1 FROM  t_Cst2 a, deleted b  WHERE (b.ChID = a.ChID)
+
+  UPDATE t
+  SET BDate = o.BDate, EDate = o.EDate
+  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
+  WHERE t.OurID = o.OurID
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Cst2 a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Cst2 a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Cst2 a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11046, a.ChID, a.StateCode) = 0)
+    BEGIN
+      RAISERROR ('Изменение документа ''Приход товара по ГТД (новый)'' в данном статусе запрещено.', 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* t_Cst2D ^ t_Cst2 - Проверка в PARENT */
+/* Приход товара по ГТД (новый) (Данные) ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Cst2))
+    BEGIN
+      EXEC z_RelationError 't_Cst2', 't_Cst2D', 0
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_t_Cst2D]', 'last', 'insert', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_t_Cst2D] ON [dbo].[t_Cst2D]
+FOR UPDATE AS
+/* t_Cst2D - Приход товара по ГТД (новый) (Данные) - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* Проверка открытого периода */
+  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
+  DECLARE @GetDate datetime
+  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
+
+  SET @GetDate = GETDATE()
+
+  INSERT INTO @OpenAges(OurID, isIns)
+  SELECT DISTINCT OurID, 1 FROM  t_Cst2 a, inserted b  WHERE (b.ChID = a.ChID)
+
+  INSERT INTO @OpenAges(OurID, isDel)
+  SELECT DISTINCT OurID, 1 FROM  t_Cst2 a, deleted b  WHERE (b.ChID = a.ChID)
+
+  UPDATE t
+  SET BDate = o.BDate, EDate = o.EDate
+  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
+  WHERE t.OurID = o.OurID
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Cst2 a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Cst2 a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Cst2 a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Cst2 a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Cst2 a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11046, a.ChID, a.StateCode) = 0)
+    BEGIN
+      RAISERROR ('Изменение документа ''Приход товара по ГТД (новый)'' в данном статусе запрещено.', 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* t_Cst2D ^ t_Cst2 - Проверка в PARENT */
+/* Приход товара по ГТД (новый) (Данные) ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в PARENT */
+  IF UPDATE(ChID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Cst2))
+      BEGIN
+        EXEC z_RelationError 't_Cst2', 't_Cst2D', 1
+        RETURN
+      END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_t_Cst2D]', 'last', 'update', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel3_Del_t_Cst2D] ON [dbo].[t_Cst2D]
+FOR DELETE AS
+/* t_Cst2D - Приход товара по ГТД (новый) (Данные) - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* Проверка открытого периода */
+  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
+  DECLARE @GetDate datetime
+  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
+
+  SET @GetDate = GETDATE()
+
+  INSERT INTO @OpenAges(OurID, isIns)
+  SELECT DISTINCT OurID, 1 FROM  t_Cst2 a, inserted b  WHERE (b.ChID = a.ChID)
+
+  INSERT INTO @OpenAges(OurID, isDel)
+  SELECT DISTINCT OurID, 1 FROM  t_Cst2 a, deleted b  WHERE (b.ChID = a.ChID)
+
+  UPDATE t
+  SET BDate = o.BDate, EDate = o.EDate
+  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
+  WHERE t.OurID = o.OurID
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Cst2 a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Cst2 a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = 'Приход товара по ГТД (новый) (Данные) (t_Cst2D):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Cst2 a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11046, a.ChID, a.StateCode) = 0)
+    BEGIN
+      RAISERROR ('Изменение документа ''Приход товара по ГТД (новый)'' в данном статусе запрещено.', 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel3_Del_t_Cst2D]', 'last', 'delete', null
+GO
 ALTER TABLE [dbo].[t_Cst2D] ADD CONSTRAINT [pk_t_Cst2D] PRIMARY KEY CLUSTERED ([ChID], [SrcPosID]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [ChID] ON [dbo].[t_Cst2D] ([ChID]) ON [PRIMARY]

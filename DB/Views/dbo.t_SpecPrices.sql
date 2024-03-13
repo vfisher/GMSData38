@@ -12,3 +12,61 @@ AS
   LEFT JOIN t_SpecDs d WITH (NOLOCK) ON m.ChID = d.ChID
   GROUP BY m.ChID, m.ProdID, s.PLID, mp.PriceMC) AS GMSView
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[T_Del_t_SpecPrices] ON [dbo].[t_SpecPrices]
+INSTEAD OF DELETE
+AS
+RETURN
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[T_Ins_t_SpecPrices] ON [dbo].[t_SpecPrices]
+INSTEAD OF INSERT
+AS
+RETURN
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[T_Upd_t_SpecPrices] ON [dbo].[t_SpecPrices]
+INSTEAD OF UPDATE
+AS
+  IF UPDATE(PriceCC)
+    BEGIN
+      UPDATE mp 
+      SET 
+        mp.PriceMC = i.PriceCC
+      FROM r_ProdMP mp WITH (NOLOCK)
+      INNER JOIN inserted i ON mp.ProdID = i.ProdID AND mp.PLID = i.PLID
+
+      INSERT INTO r_ProdMP (PLID, ProdID, CurrID, PriceMC)
+      SELECT i.PLID, i.ProdID, dbo.zf_GetCurrCC(), i.PriceCC
+      FROM inserted i
+      LEFT JOIN r_ProdMP mp WITH (NOLOCK)
+      ON i.ProdID = mp.ProdID AND i.PLID = mp.PLID
+      WHERE mp.PLID IS NULL
+    END
+  ELSE IF UPDATE(Extra)
+    BEGIN
+      UPDATE mp 
+      SET 
+        mp.PriceMC = ROUND(i.CostCC * (1 + i.Extra / 100), 0)
+      FROM r_ProdMP mp WITH (NOLOCK)
+      INNER JOIN inserted i ON mp.ProdID = i.ProdID AND mp.PLID = i.PLID
+
+      INSERT INTO r_ProdMP (PLID, ProdID, CurrID, PriceMC)
+      SELECT
+        i.PLID, i.ProdID, dbo.zf_GetCurrCC(), 
+        ROUND(i.CostCC * (1 + i.Extra / 100), 0)
+      FROM inserted i
+      LEFT JOIN r_ProdMP mp WITH (NOLOCK)
+      ON i.ProdID = mp.ProdID AND i.PLID = mp.PLID
+      WHERE mp.PLID IS NULL
+    END
+GO

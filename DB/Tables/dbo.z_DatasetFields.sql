@@ -33,6 +33,57 @@ CREATE TABLE [dbo].[z_DatasetFields]
 [UseExtendedEdit] [bit] NOT NULL DEFAULT ((0))
 ) ON [PRIMARY]
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_z_DatasetFields] ON [dbo].[z_DatasetFields]
+FOR INSERT AS
+/* z_DatasetFields - Источники данных - Поля - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_DatasetFields ^ z_DataSets - Проверка в PARENT */
+/* Источники данных - Поля ^ Источники данных - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DSCode NOT IN (SELECT DSCode FROM z_DataSets))
+    BEGIN
+      EXEC z_RelationError 'z_DataSets', 'z_DatasetFields', 0
+      RETURN
+    END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_z_DatasetFields]', 'last', 'insert', null
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_z_DatasetFields] ON [dbo].[z_DatasetFields]
+FOR UPDATE AS
+/* z_DatasetFields - Источники данных - Поля - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_DatasetFields ^ z_DataSets - Проверка в PARENT */
+/* Источники данных - Поля ^ Источники данных - Проверка в PARENT */
+  IF UPDATE(DSCode)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.DSCode NOT IN (SELECT DSCode FROM z_DataSets))
+      BEGIN
+        EXEC z_RelationError 'z_DataSets', 'z_DatasetFields', 1
+        RETURN
+      END
+
+END
+GO
+EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_z_DatasetFields]', 'last', 'update', null
+GO
 ALTER TABLE [dbo].[z_DatasetFields] ADD CONSTRAINT [pk_z_DatasetFields] PRIMARY KEY CLUSTERED ([DSCode], [FieldName]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [FieldPosID] ON [dbo].[z_DatasetFields] ([FieldPosID]) ON [PRIMARY]
