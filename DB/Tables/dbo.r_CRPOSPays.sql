@@ -1,0 +1,13 @@
+CREATE TABLE [dbo].[r_CRPOSPays]
+(
+[POSPayID] [int] NOT NULL,
+[IsDefault] [bit] NOT NULL,
+[WPID] [int] NOT NULL DEFAULT ((0)),
+[UsePOSExport] [bit] NOT NULL DEFAULT ((0)),
+[POSPDFExportPath] [varchar] (250) NULL
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[r_CRPOSPays] ADD CONSTRAINT [pk_r_CRPosPays] PRIMARY KEY CLUSTERED ([WPID], [POSPayID]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [POSPayID] ON [dbo].[r_CRPOSPays] ([POSPayID]) ON [PRIMARY]
+GO

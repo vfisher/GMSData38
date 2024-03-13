@@ -1,0 +1,28 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[z_NewAChID](@TableName varchar(250), @AChID bigint OUTPUT)
+/* Возвращает новый код регистрации для подчиненной таблицы */
+AS 
+BEGIN  
+  DECLARE 
+    @SQLStr nvarchar(500),
+    @Params nvarchar(500),
+    @ChIDStart bigint,
+    @ChIDEnd bigint
+
+  SELECT @ChIDStart = ChStart, @ChIDEnd = ChEnd FROM dbo.zf_ChIDRange()
+
+  SELECT @SQLStr = N'SELECT @ChIDOUT = ISNULL(MAX(AChID), @AChIDStart - 1) + 1 FROM ' + @TableName + ' WITH(XLOCK, HOLDLOCK) WHERE AChID BETWEEN @AChIDStart AND @AChIDEnd'
+  SELECT @Params = N'@ChIDOUT bigint OUTPUT, @AChIDStart bigint, @AChIDEnd bigint'
+
+  EXECUTE sp_executesql @SQLStr, @Params, @ChIDOUT = @AChID OUTPUT, @AChIDStart = @ChIDStart, @AChIDEnd = @ChIDEnd
+
+  IF @AChID > @ChIDEnd
+    BEGIN
+      SET @AChID = NULL
+      RAISERROR('Новый код регистрации для таблицы %s находится вне допустимого диапазона', 18, 1, @TableName)
+    END
+END
+GO

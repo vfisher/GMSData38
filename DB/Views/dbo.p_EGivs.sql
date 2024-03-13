@@ -1,0 +1,50 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE VIEW [dbo].[p_EGivs] WITH VIEW_METADATA AS
+SELECT * FROM (
+SELECT ChID,
+  DocID,
+  IntDocID,
+  WOrderID,
+  DocDate,
+  WorkAppDate,
+  KursMC,
+  OurID,
+  CodeID1,
+  CodeID2,
+  CodeID3,
+  CodeID4,
+  CodeID5,
+  EmpID,
+  SubID,
+  DepID,
+  PostID,
+  EmpClass,
+  ShedID,
+  WorkCond,
+  GEmpType,
+  ContractType,
+  ContrEDate,
+  SubJob,
+  TrialMonths,
+  SalaryQty,
+  SalaryType,
+  SalaryForm,
+  SalaryMethod,
+  BSalary,
+  BSalaryPrc,
+  AdvSum,
+  Joint,
+  TimeNormType,
+  PensMethod,
+  PensCatID,
+  InsurSenYears,
+  InsurSenMonths,
+  InsurSenDays,
+  BankID,
+  CardAcc
+FROM p_EGiv
+) GMSView
+GO

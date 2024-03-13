@@ -1,0 +1,3 @@
+CREATE ROLE [Основная]
+AUTHORIZATION [dbo]
+GO
