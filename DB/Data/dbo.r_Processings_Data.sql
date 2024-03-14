@@ -1,0 +1,1 @@
+INSERT INTO [dbo].[r_Processings] ([ProcessingID], [ChID], [ProcessingName], [ProcessingType], [IP], [NetPort], [Path], [MaxDifference], [Multiplicity], [RetryTime], [RetryPeriod], [ExtraInfo]) VALUES (0, 0, N'Нет процессинга', 0, N'0', 0, NULL, 0, 1, '1900-01-01 00:00:00.000', 0, NULL)

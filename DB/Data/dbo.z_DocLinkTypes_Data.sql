@@ -1,0 +1,5 @@
+INSERT INTO [dbo].[z_DocLinkTypes] ([DocLinkTypeID], [DocLinkTypeName], [Notes], [SignType]) VALUES (0, N'Связь подчинения', NULL, 0)
+INSERT INTO [dbo].[z_DocLinkTypes] ([DocLinkTypeID], [DocLinkTypeName], [Notes], [SignType]) VALUES (11, N'Уменьшение задолженности', NULL, 1)
+INSERT INTO [dbo].[z_DocLinkTypes] ([DocLinkTypeID], [DocLinkTypeName], [Notes], [SignType]) VALUES (12, N'Увеличение задолженности', NULL, 2)
+INSERT INTO [dbo].[z_DocLinkTypes] ([DocLinkTypeID], [DocLinkTypeName], [Notes], [SignType]) VALUES (21, N'Основание для анализа первого события (Бухгалтерия)', NULL, 0)
+INSERT INTO [dbo].[z_DocLinkTypes] ([DocLinkTypeID], [DocLinkTypeName], [Notes], [SignType]) VALUES (31, N'Налоговая накладная', NULL, 0)

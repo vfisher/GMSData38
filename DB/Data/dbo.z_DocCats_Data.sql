@@ -1,0 +1,8 @@
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (-2, N'Мастера', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (-1, N'Балансы', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (0, N'Системные документы', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (1, N'Документы', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (2, N'Реестры документов', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (3, N'Справочники', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (4, N'Прочие документы', NULL)
+INSERT INTO [dbo].[z_DocCats] ([DocCatCode], [DocCatName], [DocCatInfo]) VALUES (5, N'Отчеты', NULL)

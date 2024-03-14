@@ -1,0 +1,7 @@
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (1, N'Вход в программу', N'Шаблон, обеспечивающий минимальный доступ для входа в программу')
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (2, N'Кассир', N'Шаблон, обеспечивающий минимальный доступ для работы торговых приложений')
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (3, N'Сервер синхронизации', N'Шаблон, обеспечивающий минимальный доступ для работы сервера синхронизации без публикации акций')
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (4, N'Анализатор - Выполнение отчетов', N'Шаблон, обеспечивающий доступ для выполнения отчетов')
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (5, N'Анализатор - Создание отчетов', N'Шаблон, обеспечивающий доступ для создания, изменения и удаления отчетов')
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (6, N'Официант', N'Шаблон, обеспечивающий минимальный доступ для работы официанта')
+INSERT INTO [dbo].[z_AccDefs] ([AccDefCode], [AccDefName], [AccDefDesc]) VALUES (7, N'Администратор салона', N'Шаблон, обеспечивающий минимальный доступ для работы администратора салона')
