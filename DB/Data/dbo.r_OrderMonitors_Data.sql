@@ -1,0 +1,1 @@
+INSERT INTO [dbo].[r_OrderMonitors] ([OrderMonitorID], [OrderMonitorName], [OrderMonitorType], [ShowProdNotes], [IntervalWarning], [IntervalCritical], [InUse], [WPIDFilter], [PProdFilter], [PCatFilter], [PGrFilter], [PGr1Filter], [PGr2Filter], [PGr3Filter], [Notes]) VALUES (0, N'Нет монитора заказов', 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)

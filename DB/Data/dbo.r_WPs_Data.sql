@@ -1,0 +1,1 @@
+INSERT INTO [dbo].[r_WPs] ([WPID], [ChID], [WPName], [Notes], [WPRoleID], [CRID], [ScaleID], [CollectMetrics], [MetricMaxDays], [UserName], [UserPassword], [AllowChequeClose], [ShowClientMonitor], [ExtraInfo], [AllowCashBack], [ExtraSettings], [Telemetry]) VALUES (1, 0, N'Общий', N'Кассовый аппарат по умолчанию', 1, 1, 0, 0, 20, NULL, NULL, 1, 0, NULL, 1, NULL, 0)

@@ -1,0 +1,8 @@
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (0, '1900-01-01 00:00:00.000', 0.000000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10001, '1900-01-01 00:00:00.000', 2.000000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10002, '1900-01-01 00:00:00.000', 10.000000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10003, '1900-01-01 00:00:00.000', 6.000000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10004, '1900-01-01 00:00:00.000', 15.000000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10005, '1900-01-01 00:00:00.000', 1.250000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10006, '1900-01-01 00:00:00.000', 6.250000000)
+INSERT INTO [dbo].[r_AssetGDeps] ([AGrID], [DocDate], [APercent]) VALUES (10007, '1900-01-01 00:00:00.000', 3.750000000)

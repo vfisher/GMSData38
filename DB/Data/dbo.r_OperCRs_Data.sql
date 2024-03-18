@@ -1,0 +1,1 @@
+INSERT INTO [dbo].[r_OperCRs] ([CRID], [OperID], [CROperID], [OperMaxQty], [CanEditDiscount], [CRVisible], [OperPwd], [AllowChequeClose], [AllowAddToChequeFromCat], [CRAdmin], [AllowChangeDCType], [PrivateKeyPath]) VALUES (1, 1, 1, 99.000000000, 1, 1, N'0', 1, 1, 1, 0, NULL)
