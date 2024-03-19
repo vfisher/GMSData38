@@ -1,12 +1,12 @@
 CREATE TABLE [dbo].[z_FRUDFs]
 (
 [OperName] [varchar] (255) NOT NULL,
-[RFormula] [varchar] (255) NOT NULL,
-[EFormula] [varchar] (255) NOT NULL,
-[RFormula1] [varchar] (255) NULL,
-[EFormula1] [varchar] (255) NULL,
-[RFormula2] [varchar] (255) NULL,
-[EFormula2] [varchar] (255) NULL,
+[RFormula] [varchar] (400) NOT NULL,
+[EFormula] [varchar] (400) NOT NULL,
+[RFormula1] [varchar] (400) NULL,
+[EFormula1] [varchar] (400) NULL,
+[RFormula2] [varchar] (400) NULL,
+[EFormula2] [varchar] (400) NULL,
 [OperDesc] [varchar] (255) NULL,
 [ArgDesc1] [varchar] (255) NULL,
 [ArgDesc2] [varchar] (255) NULL,
