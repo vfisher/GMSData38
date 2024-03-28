@@ -34,57 +34,6 @@ CREATE TABLE [dbo].[v_UReps]
 [ObjectDef] [text] NULL
 ) ON [PRIMARY]
 GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_v_UReps] ON [dbo].[v_UReps]
-FOR INSERT AS
-/* v_UReps - Анализатор - Отчеты пользователя - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
-
-/* v_UReps ^ r_Users - Проверка в PARENT */
-/* Анализатор - Отчеты пользователя ^ Справочник пользователей - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
-    BEGIN
-      EXEC z_RelationError 'r_Users', 'v_UReps', 0
-      RETURN
-    END
-
-END
-GO
-EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_v_UReps]', 'last', 'insert', null
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel2_Upd_v_UReps] ON [dbo].[v_UReps]
-FOR UPDATE AS
-/* v_UReps - Анализатор - Отчеты пользователя - UPDATE TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
-
-/* v_UReps ^ r_Users - Проверка в PARENT */
-/* Анализатор - Отчеты пользователя ^ Справочник пользователей - Проверка в PARENT */
-  IF UPDATE(UserID)
-    IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
-      BEGIN
-        EXEC z_RelationError 'r_Users', 'v_UReps', 1
-        RETURN
-      END
-
-END
-GO
-EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_v_UReps]', 'last', 'update', null
-GO
 ALTER TABLE [dbo].[v_UReps] ADD CONSTRAINT [pk_v_UReps] PRIMARY KEY CLUSTERED ([RepID], [UserID], [VerID]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [RepID] ON [dbo].[v_UReps] ([RepID]) ON [PRIMARY]
@@ -92,44 +41,6 @@ GO
 CREATE NONCLUSTERED INDEX [UserID] ON [dbo].[v_UReps] ([UserID]) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[v_UReps] ADD CONSTRAINT [FK_v_UReps_v_Reps] FOREIGN KEY ([RepID]) REFERENCES [dbo].[v_Reps] ([RepID]) ON DELETE CASCADE ON UPDATE CASCADE
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[RepID]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[UserID]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[DataWidth]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[RowHeight]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[Processors]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[FromLeft]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[FromTop]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[Width]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[Height]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[WindowState]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[GrandCols]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[GrandRows]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[AlwaysPrepare]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[Optimization]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[TempTable]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[FilterOnOpen]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[FilterOnPrepare]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[RepNotesOpen]'
-GO
-EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[OpenCount]'
 GO
 EXEC sp_bindefault N'[dbo].[DF_Zero]', N'[dbo].[v_UReps].[RepID]'
 GO

@@ -21,22 +21,6 @@ CREATE TABLE [dbo].[r_EmpNames]
 [Notes] [varchar] (250) NULL
 ) ON [PRIMARY]
 GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_EmpNames] ON [dbo].[r_EmpNames]FOR INSERT AS/* r_EmpNames - Справочник служащих: Изменение ФИО - INSERT TRIGGER */BEGIN  DECLARE @RCount Int  SELECT @RCount = @@RowCount  IF @RCount = 0 RETURN  SET NOCOUNT ON/* r_EmpNames ^ r_EmpMO - Проверка в PARENT *//* Справочник служащих: Изменение ФИО ^ Справочник служащих - Внутренние фирмы - Проверка в PARENT */  IF (SELECT COUNT(*) FROM r_EmpMO m WITH(NOLOCK), inserted i WHERE i.EmpID = m.EmpID AND i.OurID = m.OurID) <> @RCount    BEGIN      EXEC z_RelationError 'r_EmpMO', 'r_EmpNames', 0      RETURN    ENDEND
-GO
-EXEC sp_settriggerorder N'[dbo].[TRel1_Ins_r_EmpNames]', 'last', 'insert', null
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel2_Upd_r_EmpNames] ON [dbo].[r_EmpNames]FOR UPDATE AS/* r_EmpNames - Справочник служащих: Изменение ФИО - UPDATE TRIGGER */BEGIN  DECLARE @RCount Int  SELECT @RCount = @@RowCount  IF @RCount = 0 RETURN  SET NOCOUNT ON/* r_EmpNames ^ r_EmpMO - Проверка в PARENT *//* Справочник служащих: Изменение ФИО ^ Справочник служащих - Внутренние фирмы - Проверка в PARENT */  IF UPDATE(EmpID) OR UPDATE(OurID)    IF (SELECT COUNT(*) FROM r_EmpMO m WITH(NOLOCK), inserted i WHERE i.EmpID = m.EmpID AND i.OurID = m.OurID) <> @RCount      BEGIN        EXEC z_RelationError 'r_EmpMO', 'r_EmpNames', 1        RETURN      ENDEND
-GO
-EXEC sp_settriggerorder N'[dbo].[TRel2_Upd_r_EmpNames]', 'last', 'update', null
-GO
 ALTER TABLE [dbo].[r_EmpNames] ADD CONSTRAINT [pk_r_EmpNames] PRIMARY KEY CLUSTERED ([EmpID], [OurID], [ChDate]) ON [PRIMARY]
 GO
 CREATE NONCLUSTERED INDEX [Notes] ON [dbo].[r_EmpNames] ([Notes]) ON [PRIMARY]
