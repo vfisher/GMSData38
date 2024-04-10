@@ -2,6 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+
 CREATE PROCEDURE [dbo].[t_SaleEmptyTempTable](@ATempChID bigint, @ADocChID bigint) 
 /* Производит списание товара и перенос продаж из временной таблицы в документ продажи */ 
 AS 
@@ -64,7 +65,9 @@ BEGIN
   SELECT @WPID = WPID FROM t_SaleTemp WITH(NOLOCK) WHERE ChID = @ATempChID   
 
   /* Установка эксклюзивных блокировок на таблицы */ 
-  SELECT TOP 1 1 FROM z_LogDiscRec a WITH (XLOCK, HOLDLOCK) 
+
+  DECLARE @lock bit 
+  SELECT TOP 1 @lock = 1 FROM z_LogDiscRec a WITH (XLOCK, HOLDLOCK) 
   INNER JOIN z_LogDiscExp b WITH (XLOCK, HOLDLOCK) ON 1=1 
   INNER JOIN z_LogDiscExpP p WITH (XLOCK, HOLDLOCK) ON 1=1 
   WHERE a.DBiID = @DBiID AND b.DBiID = @DBiID AND p.DBiID = @DBiID 
