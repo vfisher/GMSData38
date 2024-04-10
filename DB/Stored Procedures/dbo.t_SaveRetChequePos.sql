@@ -134,10 +134,9 @@ BEGIN
         END 
 	  SET @RealPrice = @PriceCC_wt
 	  SET @RealSum =  @SumCC_wt
+END
 	  SET @Tax = @PriceCC_wt - @PriceCC_nt
 	  SET @TaxSum = @SumCC_wt - @SumCC_nt
-    END
-
   SET @SumCC_wt = dbo.zf_Round(@SumCC_wt, 0.01)
   SET @RealSum = dbo.zf_Round(@RealSum, 0.01)
 
@@ -194,7 +193,7 @@ BEGIN
         Qty = CASE WHEN @SrcPosIDFound = 0 THEN @ValidQty ELSE Qty + @ValidQty END, 
         PriceCC_nt = @PriceCC_nt, 
         SumCC_nt = CASE WHEN @SrcPosIDFound = 0 THEN @SumCC_nt ELSE SumCC_nt + @SumCC_nt END, 
-        Tax = CASE WHEN @SrcPosIDFound = 0 THEN @Tax ELSE Tax + @Tax END, 
+			  Tax = @Tax,
         TaxSum = CASE WHEN @SrcPosIDFound = 0 THEN @TaxSum ELSE TaxSum + @TaxSum END, 
         PriceCC_wt = @PriceCC_wt, 
         SumCC_wt = CASE WHEN @SrcPosIDFound = 0 THEN @SumCC_wt ELSE SumCC_wt + @SumCC_wt END, 
