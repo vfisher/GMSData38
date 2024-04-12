@@ -37,8 +37,8 @@ include_create_table = 1
 translate = False #True
 # Движок для перевода 'google', 'bing' ... Гугл любит банить за большой rps
 translation_engine = 'bing'
-# Задержка перед переводом каждой строки в сек (антибан). Гугл банит и на 4 сек, бинг работает нормально на 1 сек
-translation_delay = 0.1
+# Задержка перед переводом каждой строки в сек (антибан). Гугл банит и на 4 сек, бинг работает нормально на 1 сек, но для ускорения можно 0.01
+translation_delay = 0.01
 # Регексп для игнорируемых объектов БД
 ignore_obects_regexp = [r'(?i)t_GetValid\w*Discs_\d+'
     , r'(?i)t_SaleOnEvent'
@@ -328,6 +328,7 @@ if __name__ == '__main__':
     add_text_to_dict(connection_to_db, 'select FieldDesc as text from z_fieldsrep where FieldDesc is not null')
     add_text_to_dict(connection_to_db, 'select DocName as text from z_docs where DocName is not null')
     add_text_to_dict(connection_to_db, 'select DsName as text from z_datasets where DsName is not null')
+    add_text_to_dict(connection_to_db, 'select Distinct PageName as text from z_datasets where PageName is not null')
     finish(connection_to_db)
     if translate:
         print(f'Автоперевод...')
