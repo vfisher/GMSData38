@@ -1,3 +1,6 @@
+INSERT INTO [dbo].[z_WCopyUV] ([CopyID], [UVarAskPosID], [UVarDesc], [UVarNotes], [UVarPosID], [UVarType], [IntType]) VALUES (38, 63, N'Копировать значение поля "Акцизная марка"', NULL, 3041, 0, 0)
+INSERT INTO [dbo].[z_WCopyUV] ([CopyID], [UVarAskPosID], [UVarDesc], [UVarNotes], [UVarPosID], [UVarType], [IntType]) VALUES (38, 64, N'Копировать значение поля "Акцизная марка" в поле "Налоговая группа"', NULL, 3042, 2, 0)
+INSERT INTO [dbo].[z_WCopyUV] ([CopyID], [UVarAskPosID], [UVarDesc], [UVarNotes], [UVarPosID], [UVarType], [IntType]) VALUES (38, 65, N'Копировать значение поля "Акцизная марка" в поле "Акцизная марка"', NULL, 3043, 2, 0)
 INSERT INTO [dbo].[z_WCopyUV] ([CopyID], [UVarAskPosID], [UVarDesc], [UVarNotes], [UVarPosID], [UVarType], [IntType]) VALUES (1, 1, N'Копировать значение поля "Валюта"', N'', 1, 0, 0)
 INSERT INTO [dbo].[z_WCopyUV] ([CopyID], [UVarAskPosID], [UVarDesc], [UVarNotes], [UVarPosID], [UVarType], [IntType]) VALUES (1, 2, N'Копировать значение поля "Дата"', N'', 2, 0, 0)
 INSERT INTO [dbo].[z_WCopyUV] ([CopyID], [UVarAskPosID], [UVarDesc], [UVarNotes], [UVarPosID], [UVarType], [IntType]) VALUES (1, 3, N'Копировать значение поля "Дата источника"', N'', 3, 0, 0)
