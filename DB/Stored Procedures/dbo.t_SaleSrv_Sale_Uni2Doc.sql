@@ -2,6 +2,9 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+
+
+
 CREATE PROCEDURE [dbo].[t_SaleSrv_Sale_Uni2Doc]
 /* Создает документы на основании временной таблицы продаж */
 AS
@@ -14,8 +17,8 @@ BEGIN
   DECLARE
     @StateCode int,
     @OurID int,
-    @ChID int,
-    @DocID int,
+    @ChID bigint,
+    @DocID bigint,
     @StockID int,
     @CRID int,
     @SrcPosID int,
@@ -39,8 +42,8 @@ BEGIN
     @TIntQty numeric(21, 9),
     @PosID int, @UseShifts bit,
     /* Для курсора по чекам */
-    @ChShiftChID int,
-    @ChChID int,
+    @ChShiftChID bigint,
+    @ChChID bigint,
     @ChCRID smallint,
     @ChDocDate smalldatetime,
     @ChDocTime smalldatetime,
@@ -53,7 +56,7 @@ BEGIN
     @ChCodeID5 smallint,
     @ChCreditID varchar(50),
     @ChDCardID varchar(250),
-    @ChDCardChID INT,
+    @ChDCardChID bigint,
     @ChDiscount numeric(21, 9),
     @ChNotes varchar(200),
     @ChDeskCode int,
@@ -61,7 +64,7 @@ BEGIN
     @ChVisitors int,
     @ChCashSumCC numeric(21, 9),
     @ChChangeSumCC numeric(21, 9),
-    @ChSaleDocID int,
+    @ChSaleDocID bigint,
     @ChEmpID int,
     @ChIsPrinted bit,
     @ChOurID tinyint,
@@ -120,7 +123,7 @@ BEGIN
       /* Связь со сменой */
       IF (@UseShifts = 1) AND (@ChShiftChID IS NOT NULL)
         BEGIN
-          DECLARE @ParentChID int, @ParentDocDate smalldatetime, @ParentDocID varchar(50)
+          DECLARE @ParentChID bigint, @ParentDocDate smalldatetime, @ParentDocID varchar(50)
           SELECT @ParentChID = ChID, @ParentDocDate = DocDate, @ParentDocID = DocID
           FROM t_RestShift
           WHERE ChID = @ChShiftChID

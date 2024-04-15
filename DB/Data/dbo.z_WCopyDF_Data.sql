@@ -1,3 +1,4 @@
+INSERT INTO [dbo].[z_WCopyDF] ([AChID], [FieldPosID], [FieldName], [FieldDesc], [UserField], [ForFilterMode]) VALUES (143, 26, N'LevyMark', N'Акцизная марка', 0, 0)
 INSERT INTO [dbo].[z_WCopyDF] ([AChID], [FieldPosID], [FieldName], [FieldDesc], [UserField], [ForFilterMode]) VALUES (1, 2, N'DocID', N'Номер', 0, 0)
 INSERT INTO [dbo].[z_WCopyDF] ([AChID], [FieldPosID], [FieldName], [FieldDesc], [UserField], [ForFilterMode]) VALUES (1, 3, N'IntDocID', N'Вн. номер', 0, 0)
 INSERT INTO [dbo].[z_WCopyDF] ([AChID], [FieldPosID], [FieldName], [FieldDesc], [UserField], [ForFilterMode]) VALUES (1, 4, N'DocDate', N'Дата', 0, 0)
