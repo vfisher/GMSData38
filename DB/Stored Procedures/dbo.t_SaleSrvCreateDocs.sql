@@ -10,7 +10,7 @@ BEGIN
   SET XACT_ABORT ON
 
   DECLARE
-    @ChID bigint, @ChIDInt bigint, @DocID int, @OurID int, @StockID int, @CompID int, @SecID int,
+    @ChID bigint, @ChIDInt bigint, @DocID bigint, @OurID int, @StockID int, @CompID int, @SecID int,
     @CurrID smallint, @KursMC numeric(21, 9), @UM varchar(50), @BarCode varchar(42),
     @LogIDB int, @LogIDE int, @RowNum int, @RecType int, @OperID int, @OperIDInt int, @ChequeType int, @ChequeTypeInt int,
     @DocTime smalldatetime, @ChequeDocTime smalldatetime, @ChequeNum int, @ProdID int, @ProdIDInt int, @ItemRevoked int, @TaxID int, @TaxValue numeric(21, 9), @TaxTypeID int,
