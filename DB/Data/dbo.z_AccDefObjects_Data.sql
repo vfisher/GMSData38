@@ -196,6 +196,7 @@ INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (
 INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (2, 2706, 1)
 INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (2, 2708, 1)
 INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (2, 2709, 1)
+INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (2, 2713, 1)
 INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (3, 42, 1)
 INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (3, 1875, 1)
 INSERT INTO [dbo].[z_AccDefObjects] ([AccDefCode], [ObjCode], [AccRun]) VALUES (3, 1913, 1)

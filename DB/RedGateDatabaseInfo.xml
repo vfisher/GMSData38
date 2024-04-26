@@ -5,7 +5,9 @@
   <DefaultSchema>dbo</DefaultSchema>
   <DefaultUser>dbo</DefaultUser>
   <DefaultFilegroup>PRIMARY</DefaultFilegroup>
-  <DatabaseVersion>10</DatabaseVersion>
+  <DatabaseVersion>13</DatabaseVersion>
+  <CompatibilityLevel>1</CompatibilityLevel>
+  <EngineEdition>Enterprise</EngineEdition>
   <IsAzure>False</IsAzure>
   <ScriptFolderType>Default</ScriptFolderType>
   <MaxDataFileSize>10485760</MaxDataFileSize>
@@ -258,6 +260,9 @@
     <DataFile>dbo.r_WrkTypes_Data.sql</DataFile>
     <DataFile>dbo.r_WTSigns_Data.sql</DataFile>
     <DataFile>dbo.r_WWeeks_Data.sql</DataFile>
+    <DataFile>dbo.z_AccDefDocs_Data.sql</DataFile>
+    <DataFile>dbo.z_AccDefObjects_Data.sql</DataFile>
+    <DataFile>dbo.z_AccDefs_Data.sql</DataFile>
     <DataFile>dbo.z_AccDefTables_Data.sql</DataFile>
     <DataFile>dbo.z_AgentScripts_Data.sql</DataFile>
     <DataFile>dbo.z_AppDocs_Data.sql</DataFile>
@@ -328,8 +333,5 @@
     <DataFile>dbo.z_WCopyUV_Data.sql</DataFile>
     <DataFile>dbo.z_WCopyU_Data.sql</DataFile>
     <DataFile>dbo.z_WCopy_Data.sql</DataFile>
-    <DataFile>dbo.z_AccDefObjects_Data.sql</DataFile>
-    <DataFile>dbo.z_AccDefDocs_Data.sql</DataFile>
-    <DataFile>dbo.z_AccDefs_Data.sql</DataFile>
   </DataFileSet>
 </DatabaseInformation>

@@ -2566,3 +2566,4 @@ INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjT
 INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2710, N'TRel3_Del_z_LogSale', N'Обеспечение ссылочной целостности при удалении (Логи торговых модулей)', NULL, N'TR', 0)
 INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2711, N'z_InsertLogTools', N'Сохраняет данные в таблицу z_LogTools', NULL, N'P', 0)
 INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2712, N'z_SaleSaveTelemetry', N'Сохраняет данные телеметрии ТК', NULL, N'P', 0)
+INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2713, N't_GetPermissionCRRepair', N'Возвращает разрешение на паререгистрацию офлайн документов ПРРО без дополнительной проверки пароля пользователя', NULL, N'P', 0)
