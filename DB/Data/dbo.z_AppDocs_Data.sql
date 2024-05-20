@@ -1,3 +1,4 @@
+INSERT INTO [dbo].[z_AppDocs] ([AppCode], [DocCode]) VALUES (11000, 100003)
 INSERT INTO [dbo].[z_AppDocs] ([AppCode], [DocCode]) VALUES (101, 8001)
 INSERT INTO [dbo].[z_AppDocs] ([AppCode], [DocCode]) VALUES (101, 8020)
 INSERT INTO [dbo].[z_AppDocs] ([AppCode], [DocCode]) VALUES (101, 8030)

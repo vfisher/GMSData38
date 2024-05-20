@@ -2,10 +2,18 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[t_GetPriceCC](@DocCode int, @ChID bigint, @ProdID int, @PPID int, @RateMC numeric(21,9), @Discount numeric(21,9), @PLID int, @Result numeric(21,9) OUTPUT)
+CREATE PROCEDURE [dbo].[t_GetPriceCC]
+	@DocCode int,
+	@ChID bigint,
+	@ProdID int,
+	@PPID int,
+	@RateMC numeric(21,9),
+	@Discount numeric(21,9),
+	@PLID int,
+	@Result numeric(21,9) OUTPUT
 /* Возвращает цену для указанного документа */
 AS
-BEGIN
+
   DECLARE @PriceMode smallint
   /* Режимы цены:
     0 - Нулевая
@@ -17,12 +25,13 @@ BEGIN
     6 - Цена продажи из прайс-листа
     7 - Цена продажи из КЦП
     8 - Рекомендованая цена прихода
+	9 - Цена из Cпецификации поставщика
   */
 
   SELECT @PriceMode =
     CASE @DocCode
       WHEN 11001 THEN 3 /* Счет на оплату товара */
-      WHEN 11002 THEN 1 /* Приход товара */
+      WHEN 11002 THEN 9 /* Приход товара */
       WHEN 11003 THEN 0 /* Возврат товара от получателя */
       WHEN 11004 THEN 0 /* Возврат товара по чеку */
       WHEN 11011 THEN 1 /* Возврат товара поставщику */
@@ -77,5 +86,23 @@ BEGIN
       SELECT @Result = dbo.zf_CorrectPriceForTaxProd(@Result, @ProdID, dbo.zf_GetDocDate(@DocCode, @ChID))
     END
   ELSE IF @PriceMode = 8 SELECT @Result = dbo.zf_GetStdRecPriceCC(@ProdID)
-End
+  ELSE IF @PriceMode = 9
+      BEGIN
+		IF([dbo].[zf_Var]('IsUseSupplierSpecification') = 1) 
+	
+			BEGIN
+				SELECT TOP 1
+						@Result = T.PriceCC
+				FROM dbo.it_SupplierSpecification H WITH (NOLOCK)
+				INNER JOIN dbo.it_SupplierSpecificationD T WITH (NOLOCK) ON H.ChID = T.ChID
+				INNER JOIN dbo.t_Rec R WITH (NOLOCK) ON H.CompID = R.CompID AND H.DocDate <= R.DocDate
+				WHERE R.ChID = @ChID AND T.ProdID = @ProdID
+				ORDER BY H.DocDate DESC, H.ChID DESC
+			END
+		ELSE
+			BEGIN
+				SET @PriceMode = 1 
+				EXEC t_GetPriceCCIn @ProdID, @PPID, @RateMC, @Result OUTPUT
+			END
+	 END
 GO
