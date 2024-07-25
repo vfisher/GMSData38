@@ -54,11 +54,11 @@ BEGIN
       select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayBankAcquirer', (SELECT PoSPAYNAME FROM R_POSPAYS WHERE POSPAYID=@PospayID))
 
     if @cashtype not in (11, 15, 29) /* семейство exellio, kbm само дописывает имена */
-      if not (CHARINDEX(ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'), ''), 'Екв') > 0)
+      if not (CHARINDEX('Екв', ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'), '')) > 0)
         select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayBankAcquirer', 'Екв: ' + JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'))
 
     if @cashtype not in (11, 15, 29) /* семейство exellio, kbm само дописывает имена */
-      if not (CHARINDEX(ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'), ''), 'Термінал') > 0)
+      if not (CHARINDEX('Термінал', ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'), '')) > 0)
         select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayTerminalID', 'Термінал: ' + JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'))
 
     declare @issuer varchar(200)
