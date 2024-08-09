@@ -86,12 +86,13 @@ BEGIN
     , CASE p.IsMarked WHEN 1 THEN pm.DataMatrix ELSE p.Article3 END  + ' ' AS ProdParam1 /*Маркировка товаров*/ 
     , p.CstProdCode /*Код УКТВЭД*/  
     , d.LevyMark
+	, d.BarCode
   FROM t_SaleTempD d WITH(NOLOCK) 
   JOIN r_Prods p WITH(NOLOCK) ON d.ProdID = p.ProdID
   JOIN @GroupSrcPosID_Table g ON d.SrcPosID = g.SrcPosID
   LEFT JOIN r_ProdMarks pm WITH(NOLOCK) ON pm.MarkCode=d.MarkCode  
   WHERE d.ChID = @ChID AND d.Qty <> 0  
   GROUP BY d.ProdID, p.UM, p.ProdName, p.Notes, d.PLID, d.TaxTypeID, d.RealQty, d.PriceCC_wt, d.PurPriceCC_wt
-         , d.RealBarCode, g.GroupField, g.IsBonus, p.IsMarked, pm.DataMatrix,p.Article3, p.CstProdCode, d.LevyMark
+         , d.RealBarCode, g.GroupField, g.IsBonus, p.IsMarked, pm.DataMatrix,p.Article3, p.CstProdCode, d.LevyMark, d.BarCode
 END
 GO
