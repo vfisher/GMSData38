@@ -5,7 +5,7 @@
   <DefaultSchema>dbo</DefaultSchema>
   <DefaultUser>dbo</DefaultUser>
   <DefaultFilegroup>PRIMARY</DefaultFilegroup>
-  <DatabaseVersion>10</DatabaseVersion>
+  <DatabaseVersion>13</DatabaseVersion>
   <CompatibilityLevel>1</CompatibilityLevel>
   <EngineEdition>Enterprise</EngineEdition>
   <IsAzure>False</IsAzure>
@@ -292,6 +292,8 @@
     <DataFile>dbo.z_Docs_Data.sql</DataFile>
     <DataFile>dbo.z_DocUsers_Data.sql</DataFile>
     <DataFile>dbo.z_FieldsRepGrps_Data.sql</DataFile>
+    <DataFile>dbo.z_FieldsRep_Data.sql</DataFile>
+    <DataFile>dbo.z_Fields_Data.sql</DataFile>
     <DataFile>dbo.z_Files_Data.sql</DataFile>
     <DataFile>dbo.z_FRUDFRD_Data.sql</DataFile>
     <DataFile>dbo.z_FRUDFR_Data.sql</DataFile>
@@ -331,7 +333,5 @@
     <DataFile>dbo.z_WCopyUV_Data.sql</DataFile>
     <DataFile>dbo.z_WCopyU_Data.sql</DataFile>
     <DataFile>dbo.z_WCopy_Data.sql</DataFile>
-    <DataFile>dbo.z_Fields_Data.sql</DataFile>
-    <DataFile>dbo.z_FieldsRep_Data.sql</DataFile>
   </DataFileSet>
 </DatabaseInformation>

@@ -1148,6 +1148,7 @@ INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo
 INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1011016, N'OfflineNextLocalNum', 13, NULL, 1, 4, NULL)
 INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1011016, N'OfflineSeed', 7, NULL, 1, 128, NULL)
 INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1011016, N'OfflineSessionId', 8, NULL, 1, 128, NULL)
+INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1011016, N'SrcPosID', 19, NULL, 1, 4, N'((0))')
 INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1011016, N'Status', 5, NULL, 1, 4, NULL)
 INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1011016, N'XMLTextCheque', 9, NULL, 0, -1, NULL)
 INSERT INTO [dbo].[z_Fields] ([TableCode], [FieldName], [FieldPosID], [FieldInfo], [Required], [DataSize], [DBDefault]) VALUES (1012001, N'BDate', 4, NULL, 1, 4, NULL)
