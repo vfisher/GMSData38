@@ -59,7 +59,11 @@ CREATE TABLE [dbo].[t_zRep]
 [ChequesCountRet] [int] NOT NULL DEFAULT ((0)),
 [ChequesCountCashBack] [int] NOT NULL DEFAULT ((0)),
 [SumCashBack] [numeric] (21, 9) NOT NULL DEFAULT ((0)),
-[SaleSumCCardCashBack] [numeric] (21, 9) NOT NULL DEFAULT ((0))
+[SaleSumCCardCashBack] [numeric] (21, 9) NOT NULL DEFAULT ((0)),
+[SaleSumCustom4] [numeric] (21, 9) NOT NULL DEFAULT ((0)),
+[SaleSumCustom5] [numeric] (21, 9) NOT NULL DEFAULT ((0)),
+[SumRetCustom4] [numeric] (21, 9) NOT NULL DEFAULT ((0)),
+[SumRetCustom5] [numeric] (21, 9) NOT NULL DEFAULT ((0))
 ) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[t_zRep] ADD CONSTRAINT [pk_t_zRep] PRIMARY KEY CLUSTERED ([ChID]) ON [PRIMARY]
