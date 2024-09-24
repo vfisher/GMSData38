@@ -8,7 +8,7 @@ AS
   BEGIN
   DECLARE @DocTime DATETIME, @OfflineSeed VARCHAR(250), @OfflineSessionId VARCHAR(250), @OfflineNextLocalNum INT,
           @NextLocalNum INT, @DocHash VARCHAR(250),
-          @LastChequeDocTime DATETIME, @LastDocCode INT, @LastInetChequeNum VARCHAR(250),
+          @LastChequeDocTime DATETIME, @LastDocCode INT, @LastInetChequeNum VARCHAR(250), @LastChID BIGINT,
           @OfflineSessionsMonthlyDuration BIGINT, @OfflineSessionDuration BIGINT,
           @LastOfflineSessionDateTime DATETIME,
           @IsTesting BIT, @ExtraInfo VARCHAR(max), @ShiftOpenedOperName VARCHAR(250), @SubjectKeyID VARCHAR(250),
@@ -19,11 +19,13 @@ AS
   CREATE TABLE #BeginOfflineSession (ID int IDENTITY (1, 1), CRID INT, DocCode INT, DocTime DATETIME, OfflineSeed VARCHAR(250), OfflineSessionId VARCHAR(250), NextLocalNum INT)
   CREATE TABLE #OfflineSessionDurationTable (ID int IDENTITY (1, 1), OfflineSeed VARCHAR(250), OfflineSessionId VARCHAR(250), BeginOfflineSessionDateTime DATETIME, EndOfflineSessionDateTime DATETIME, OfflineSessionDuration BIGINT)
 
-  SELECT TOP 1 @LastChequeDocTime = DocTime, @LastDocCode = DocCode, @LastInetChequeNum = InetChequeNum FROM t_CashRegInetCheques WHERE CRID = @CRID And [Status] in (0,1,3) ORDER BY DocTime DESC, NextLocalNum DESC
+  SELECT TOP 1 @LastChequeDocTime = DocTime, @LastDocCode = DocCode, @LastInetChequeNum = InetChequeNum, @LastChID = ChID 
+  FROM t_CashRegInetCheques WHERE CRID = @CRID And [Status] in (0,1,3) ORDER BY DocTime DESC, NextLocalNum DESC
 
   SET @LastChequeDocTime = ISNULL(@LastChequeDocTime,CAST('1900-01-01T00:00:00' AS datetime))
   SET @LastDocCode= ISNULL(@LastDocCode ,0)
   SET @LastInetChequeNum = ISNULL(@LastInetChequeNum, '-1')
+  SET @LastChID = ISNULL(@LastChID, '-1')
 
   SET @BDate = dbo.zf_GetMonthFirstDay(dbo.zf_GetDate(GETDATE()))
   SET @EDate = DATEADD(ss,-1,DATEADD(d,1,dbo.zf_GetMonthLastDay(dbo.zf_GetDate(GETDATE()))))
@@ -153,6 +155,7 @@ AS
     ISNULL(@SubjectKeyID, '') AS SubjectKeyID,
     @LastChequeDocTime AS LastChequeDocTime,
     @LastDocCode AS LastDocCode,
-    @LastInetChequeNum AS LastInetChequeNum
+    @LastInetChequeNum AS LastInetChequeNum,
+    @LastChID AS LastChID
 END
 GO
