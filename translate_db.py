@@ -19,7 +19,7 @@ import os.path
 __author__ = "Oleksii Veseliev"
 __copyright__ = "Copyright (C) 2024 Oleksii Veseliev, GMS Service LLC"
 __license__ = "Public Domain"
-__version__ = "1.2"
+__version__ = "1.3"
 
 
 # # ---=== Настройки ===---
@@ -73,15 +73,7 @@ go
 
 if OBJECT_ID (N'z_Translations', N'U') IS NULL 
     create table z_Translations(
-        MsgID int not null primary key
-        , RU varchar(max) 
-        , UK varchar(max)
-    )
-go
-
-if OBJECT_ID (N'z_TranslationsMetadata', N'U') IS NULL 
-    create table z_TranslationsMetadata(
-        MetaID int not null
+        MsgID int not null
         , TypeID tinyint not null
         , RU varchar(max) 
         , UK varchar(max)
@@ -100,9 +92,9 @@ begin
   set @lng = Cast(SESSION_CONTEXT(N'language') as varchar(20))
 
   if @lng = 'Russian' 
-    select @s = COALESCE(RU, cast(MsgID as varchar(10))) from z_Translations where RU = @RUText
+    select @s = COALESCE(RU, cast(MsgID as varchar(10))) from z_Translations where TypeID = 0 And RU = @RUText
   else if @lng = 'Ukrainian' or @lng = '' or @lng is null
-    select @s = COALESCE(UK, RU, cast(MsgID as varchar(10))) from z_Translations where RU = @RUText
+    select @s = COALESCE(UK, RU, cast(MsgID as varchar(10))) from z_Translations where TypeID = 0 And RU = @RUText
 
   If @s is NULL
     set @s = @RUText
@@ -115,21 +107,21 @@ IF object_id('zf_TranslateMetadata', 'FN') IS NOT NULL
     DROP FUNCTION dbo.zf_TranslateMetadata
 go
 
-create function dbo.zf_TranslateMetadata(@MetaID int, @TypeID tinyint)
+create function dbo.zf_TranslateMetadata(@MsgID int, @TypeID tinyint)
 returns varchar(max)
 as
 begin
-  /* TypeID: 1:FieldDesc 2:DocName 3:DsName 4:PageName */
+  /* TypeID: 0:Text 1:FieldDesc 2:DocName 3:DsName 4:PageName */
   declare @lng varchar(20), @s varchar(max)
   set @lng = Cast(SESSION_CONTEXT(N'language') as varchar(20))
 
   if @lng = 'Russian' 
-    select @s = COALESCE(RU, cast(MetaID as varchar(10))) from z_TranslationsMetadata where MetaID = @MetaID and TypeID = @TypeID
+    select @s = COALESCE(RU, cast(MsgID as varchar(10))) from z_Translations where MsgID = @MsgID and TypeID = @TypeID
   else if @lng = 'Ukrainian' or @lng = '' or @lng is null
-    select @s = COALESCE(UK, RU, cast(MetaID as varchar(10))) from z_TranslationsMetadata where MetaID = @MetaID and TypeID = @TypeID
+    select @s = COALESCE(UK, RU, cast(MsgID as varchar(10))) from z_Translations where MsgID = @MsgID and TypeID = @TypeID
 
   If @s is NULL
-    set @s = 'Null: ' + cast(@MetaID as varchar(10))
+    set @s = 'Null: ' + cast(@MsgID as varchar(10))
 
   return @s
 end
@@ -485,8 +477,9 @@ def finish(conn):
 @print_durations()
 def fill_table_with_phrases(phrases):
     script = f"print 'Adding data to z_Translations'\ngo\n"
-    script += f'\ndelete from z_Translations where MsgID >= {msg_id_base}\n'
-    insert = '\ninsert into z_Translations(MsgID, ru, uk) values \n   '
+    script += f'\ndelete from z_Translations\n'
+    # script += f'\ndelete from z_Translations where MsgID >= {msg_id_base}\n'
+    insert = '\ninsert into z_Translations(MsgID, TypeID, ru, uk) values \n   '
     #script += insert
     # for list
     # numerate = lambda x: [f'({t}, \'{x[t]}\')' for t in range(len(x))]
@@ -495,7 +488,7 @@ def fill_table_with_phrases(phrases):
     i = msg_id_base
     l = set()
     for key in phrases:
-        l.add(f'({i}, \'{key}\', {'\'' + phrases[key] + '\'' if phrases[key] != '' else 'null'})')
+        l.add(f'({i}, 0, \'{key}\', {'\'' + phrases[key] + '\'' if phrases[key] != '' else 'null'})')
         i += 1
     # разбиваем по 900 строк в инстерте (ограничение mssql 1000)
     for b in itertools.batched(l, 900):
@@ -506,9 +499,9 @@ def fill_table_with_phrases(phrases):
 
 @print_durations()
 def fill_table_with_metadata(lst):
-    script = f"print 'Adding data to z_TranslationsMetadata'\ngo\n"
-    script += f'\ndelete from z_TranslationsMetadata\n'
-    insert = '\ninsert into z_TranslationsMetadata(MetaID, TypeID, ru, uk) values \n   '
+    script = f"print 'Adding data to z_Translations'\ngo\n"
+    #script += f'\ndelete from z_Translations\n'
+    insert = '\ninsert into z_Translations(MsgID, TypeID, ru, uk) values \n   '
     #script += insert
     # for list
     # numerate = lambda x: [f'({t}, \'{x[t]}\')' for t in range(len(x))]
