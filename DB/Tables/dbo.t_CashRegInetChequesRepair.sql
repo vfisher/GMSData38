@@ -16,10 +16,11 @@ CREATE TABLE [dbo].[t_CashRegInetChequesRepair]
 [DocHash] [varchar] (250) NULL,
 [CRID] [smallint] NOT NULL,
 [IsTesting] [bit] NOT NULL,
-[ExtraInfo] [varchar] (8000) NULL
+[ExtraInfo] [varchar] (8000) NULL,
+[SrcPosID] [int] NOT NULL DEFAULT ((0))
 ) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[t_CashRegInetChequesRepair] ADD CONSTRAINT [pk_t_CashRegInetChequesRepair] PRIMARY KEY CLUSTERED ([ChID], [DocCode]) ON [PRIMARY]
+ALTER TABLE [dbo].[t_CashRegInetChequesRepair] ADD CONSTRAINT [pk_t_CashRegInetChequesRepair] PRIMARY KEY CLUSTERED ([DocCode], [ChID], [SrcPosID]) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[t_CashRegInetChequesRepair] ADD CONSTRAINT [FK_t_CashRegInetChequesRepair_z_Docs] FOREIGN KEY ([DocCode]) REFERENCES [dbo].[z_Docs] ([DocCode]) ON DELETE CASCADE ON UPDATE CASCADE
 GO

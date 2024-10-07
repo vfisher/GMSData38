@@ -5,7 +5,7 @@
   <DefaultSchema>dbo</DefaultSchema>
   <DefaultUser>dbo</DefaultUser>
   <DefaultFilegroup>PRIMARY</DefaultFilegroup>
-  <DatabaseVersion>10</DatabaseVersion>
+  <DatabaseVersion>13</DatabaseVersion>
   <CompatibilityLevel>1</CompatibilityLevel>
   <EngineEdition>Enterprise</EngineEdition>
   <IsAzure>False</IsAzure>
