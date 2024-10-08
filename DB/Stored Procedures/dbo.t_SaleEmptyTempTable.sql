@@ -3,7 +3,7 @@ GO
 SET ANSI_NULLS ON
 GO
 
-CREATE PROCEDURE [dbo].[t_SaleEmptyTempTable](@ATempChID bigint, @ADocChID bigint) 
+CREATE PROCEDURE [dbo].[t_SaleEmptyTempTable](@ParamsIn varchar(max), @ParamsOut varchar(max) OUTPUT) 
 /* Производит списание товара и перенос продаж из временной таблицы в документ продажи */ 
 AS 
 BEGIN 
@@ -47,13 +47,21 @@ BEGIN
   DECLARE @SrcBookingPosID_Table table(SrcPosID int NOT NULL, DetSrcPosID int NOT NULL) 
 
   DECLARE @BookingChID bigint 
-  DECLARE @UseBooking bit 
+  DECLARE @UseBooking bit
+  
+  DECLARE @ATempChID bigint, @ADocChID bigint, @ReturnValue int, @AppCode int
 
   SELECT @BookingChID = ChID FROM t_Booking WITH (NOLOCK) WHERE DocCode = 1011 AND DocChID = @ATempChID 
   IF @BookingChID IS NULL 
   SELECT @UseBooking = 0 
   ELSE 
   SELECT @UseBooking = 1 
+
+  SET @ParamsOut = '{}'
+
+  SET @ATempChID = JSON_VALUE(@ParamsIn, '$.ATempChID')
+  SET @ADocChID = JSON_VALUE(@ParamsIn, '$.ADocChID')
+  SET @AppCode = JSON_VALUE(@ParamsIn, '$.AppCode')
 
   SET NOCOUNT ON 
   SET XACT_ABORT ON 
@@ -546,12 +554,12 @@ BEGIN
        CreditID = d.Notes 
     FROM t_Sale m, t_SalePays d 
     WHERE m.ChID = d.ChID AND m.ChID = @ADocChID AND d.PayFormCode = 2 
-
-  /* Установка статуса документа */ 
-  UPDATE t_Sale 
-  SET 
-     StateCode = dbo.zf_Var('t_ChequeStateCode') 
-  WHERE ChID = @ADocChID 
+  
+  /* Установка статуса документа */
+  IF @AppCode <> 26000
+    UPDATE t_Sale 
+    SET StateCode = dbo.zf_Var('t_ChequeStateCode') 
+    WHERE ChID = @ADocChID 
 
   /* Установка статуса заявки */ 
   UPDATE t_Booking 
@@ -561,7 +569,9 @@ BEGIN
 
 
   COMMIT TRAN 
-  RETURN 1 
+  SET @ReturnValue = 1 
+  SET @ParamsOut = (SELECT @ReturnValue AS ReturnValue  FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+  RETURN SELECT @ParamsOut 
 
 Error: 
   ROLLBACK TRAN 
@@ -571,6 +581,8 @@ Error:
   DEALLOCATE appClientT 
   CLOSE appPaysCursor 
   DEALLOCATE appPaysCursor 
-  RETURN 2 
+  SET @ReturnValue = 2 
+  SET @ParamsOut = (SELECT @ReturnValue AS ReturnValue  FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+  RETURN SELECT @ParamsOut 
 END
 GO
