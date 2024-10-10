@@ -13,9 +13,10 @@ CREATE TABLE [dbo].[t_MonIntExp]
 [SumCC] [numeric] (21, 9) NOT NULL,
 [Notes] [varchar] (200) NULL,
 [OperID] [int] NOT NULL,
-[StateCode] [int] NOT NULL DEFAULT (0),
+[StateCode] [int] NOT NULL DEFAULT ((0)),
 [DocID] [bigint] NOT NULL,
-[IntDocID] [varchar] (250) NULL
+[IntDocID] [varchar] (250) NULL,
+[GUID] [uniqueidentifier] NOT NULL DEFAULT (newid())
 ) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[t_MonIntExp] ADD CONSTRAINT [pk_t_MonIntExp] PRIMARY KEY CLUSTERED ([ChID]) ON [PRIMARY]
