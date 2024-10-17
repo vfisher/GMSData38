@@ -49,7 +49,7 @@ BEGIN
   DECLARE @BookingChID bigint 
   DECLARE @UseBooking bit
   
-  DECLARE @ATempChID bigint, @ADocChID bigint, @ReturnValue int, @AppCode int
+  DECLARE @ATempChID bigint, @ADocChID bigint, @ReturnValue int, @AppCode int, @CashType int
 
   SELECT @BookingChID = ChID FROM t_Booking WITH (NOLOCK) WHERE DocCode = 1011 AND DocChID = @ATempChID 
   IF @BookingChID IS NULL 
@@ -88,9 +88,11 @@ BEGIN
     @appOurID = OurID, 
     @appStockID = StockID, 
     @appSecID = SecID, 
-    @appCRID = CRID 
+    @appCRID = CRID
   FROM dbo.tf_SaleGetChequeParams(@ATempChID) 
-  IF @@ERROR <> 0 GOTO Error 
+  IF @@ERROR <> 0 GOTO Error
+
+  SET @CashType = ISNULL((SELECT CashType FROM r_CRs WITH(NOLOCK) WHERE CRID = @appCRID),0)
 
   IF @UseBooking = 1 
     UPDATE t_Booking SET DocCode = 11035, DocChID = @ADocChID WHERE ChID = @BookingChID  
@@ -556,7 +558,7 @@ BEGIN
     WHERE m.ChID = d.ChID AND m.ChID = @ADocChID AND d.PayFormCode = 2 
   
   /* Установка статуса документа */
-  IF @AppCode <> 26000
+  IF @AppCode <> 26000 OR (@AppCode = 26000 AND @CashType <> 39)
     UPDATE t_Sale 
     SET StateCode = dbo.zf_Var('t_ChequeStateCode') 
     WHERE ChID = @ADocChID 
