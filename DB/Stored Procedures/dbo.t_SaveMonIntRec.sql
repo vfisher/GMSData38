@@ -16,7 +16,7 @@ BEGIN
   DECLARE 
     @ChID bigint, @OurID int, @CRID smallint, @DocTime datetime, @SumCC numeric(21,9),
     @OperID int, @CodeID1 smallint, @CodeID2 smallint, @CodeID3 smallint, @CodeID4 smallint, @CodeID5 smallint,
-    @IntDocID varchar(50), @Notes varchar(200), @AppCode int,
+    @IntDocID varchar(50), @Notes varchar(200), @AppCode int, @GUID uniqueidentifier,
     @Continue int, @Msg varchar(200)
 
   SET @ParamsOut = '{}'
@@ -33,12 +33,15 @@ BEGIN
   SET @IntDocID = JSON_VALUE(@ParamsIn, '$.IntDocID')
   SET @Notes = JSON_VALUE(@ParamsIn, '$.Notes')
   SET @AppCode = JSON_VALUE(@ParamsIn, '$.AppCode')
-  
+  SET @GUID = JSON_VALUE(@ParamsIn, '$.GUID')
+ 
   SET @Continue = 2
   SET @Msg = '' /* Сообщение, выводимое на клиенте в независимости от остальных возвращаемых параметров */
   DECLARE @DocID BIGINT, @StateCode INT
   SET @StateCode = 0
   IF @DocTime IS NULL SET @DocTime = GETDATE()
+  IF @GUID IS NULL SET @GUID = NEWID()
+
   BEGIN TRANSACTION
   EXEC z_NewChID 't_MonIntRec', @ChID OUTPUT
   IF @@ERROR <> 0
@@ -59,8 +62,8 @@ BEGIN
   IF @IntDocID IS NULL SET @IntDocID = @DocID
 
   IF @Continue = 2 AND (@AppCode <> 26000) SET @StateCode = dbo.zf_Var('t_ChequeStateCode')
-  INSERT INTO t_MonIntRec (ChID, OurID, DocID, CRID, SumCC, Notes, OperID, CodeID1, CodeID2, CodeID3, CodeID4, CodeID5, DocDate, DocTime, IntDocID, StateCode)
-  VALUES (@ChID, @OurID, @DocID, @CRID, @SumCC, @Notes, @OperID, @CodeID1, @CodeID2, @CodeID3, @CodeID4, @CodeID5, dbo.zf_GetDate(@DocTime), @DocTime, @IntDocID, @StateCode)
+  INSERT INTO t_MonIntRec (ChID, OurID, DocID, CRID, SumCC, Notes, OperID, CodeID1, CodeID2, CodeID3, CodeID4, CodeID5, DocDate, DocTime, IntDocID, StateCode, GUID)
+  VALUES (@ChID, @OurID, @DocID, @CRID, @SumCC, @Notes, @OperID, @CodeID1, @CodeID2, @CodeID3, @CodeID4, @CodeID5, dbo.zf_GetDate(@DocTime), @DocTime, @IntDocID, @StateCode, @GUID)
   COMMIT TRANSACTION
   SET @ParamsOut = (SELECT @ChID AS ChID, @Continue AS [Continue], @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END

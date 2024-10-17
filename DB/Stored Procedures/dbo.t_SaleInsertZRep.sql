@@ -12,7 +12,7 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(max), @ParamsOut var
      1 - проводим только по базе
      2 - проводим по базе и по РРО
    */
-  declare 
+  DECLARE 
    @ACRID int, @AOperID int, @AZRepNum int, @ASumCC_wt numeric(21,9),
    @ASum_A numeric(21,9), @ASum_B numeric(21,9), @ASum_C numeric(21,9), @ASum_D numeric(21,9), @ASum_E numeric(21,9), @ASum_F numeric(21,9),
    @ARetSum_A numeric(21,9), @ARetSum_B numeric(21,9), @ARetSum_C numeric(21,9), @ARetSum_D numeric(21,9), @ARetSum_E numeric(21,9), @ARetSum_F numeric(21,9),
@@ -24,7 +24,7 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(max), @ParamsOut var
    @SaleSumCustom1 numeric(21,9), @SaleSumCustom2 numeric(21,9), @SaleSumCustom3 numeric(21,9), @SaleSumCustom4 numeric(21,9), @SaleSumCustom5 numeric(21,9), 
    @SumRetCustom1 numeric(21,9), @SumRetCustom2 numeric(21,9), @SumRetCustom3 numeric(21,9), @SumRetCustom4 numeric(21,9), @SumRetCustom5 numeric(21,9),
    @ADocDateTime datetime, @ChequesCountSale int, @ChequesCountRet int, 
-   @ChequesCountCashBack int, @SumCashBack numeric(21,9), @SaleSumCCardCashBack numeric(21,9),  
+   @ChequesCountCashBack int, @SumCashBack numeric(21,9), @SaleSumCCardCashBack numeric(21,9), @GUID uniqueidentifier,  
    @Continue int, @Msg varchar(200)
 
    SET @Continue = 2
@@ -88,7 +88,8 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(max), @ParamsOut var
     @ChequesCountRet = JSON_VALUE(@ParamsIn, '$.QtyAnnul'), -- возвраты
     @ChequesCountCashBack = JSON_VALUE(@ParamsIn, '$.ChequesCountCashBack'),
     @SumCashBack = JSON_VALUE(@ParamsIn, '$.SumCashBack'),
-    @SaleSumCCardCashBack = JSON_VALUE(@ParamsIn, '$.SaleSumCCardCashBack')
+    @SaleSumCCardCashBack = JSON_VALUE(@ParamsIn, '$.SaleSumCCardCashBack'),
+	@GUID = JSON_VALUE(@ParamsIn, '$.GUID')
            
    BEGIN TRANSACTION
    DECLARE @AChID bigint, @ADocID bigint, @AOurID int
@@ -110,6 +111,7 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(max), @ParamsOut var
 
    If @ADocDateTime IS NULL
      SET @ADocDateTime = GETDATE()
+   IF @GUID IS NULL SET @GUID = NEWID()
 
    INSERT INTO t_zRep(ChID, OurID, DocID, DocDate, DocTime, CRID, OperID, FacID, FinID, ZRepNum,
      SumCC_wt, Sum_A, Sum_B, Sum_C, Sum_D, Sum_E, Sum_F, RetSum_A, RetSum_B, RetSum_C, RetSum_D, RetSum_E, RetSum_F,
@@ -117,13 +119,13 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(max), @ParamsOut var
      SumCash, SumCard, SumCredit, SumCheque, SumOther, RetSumCash, RetSumCard, RetSumCredit, RetSumCheque, RetSumOther,
      SumMonRec, SumMonExp, SumRem, Notes, SaleSumCustom1, SaleSumCustom2, SaleSumCustom3, SaleSumCustom4, SaleSumCustom5,
      SumRetCustom1, SumRetCustom2, SumRetCustom3, SumRetCustom4, SumRetCustom5, ChequesCountSale, ChequesCountRet, ChequesCountCashBack,
-     SumCashBack, SaleSumCCardCashBack)
+     SumCashBack, SaleSumCCardCashBack, GUID)
    SELECT @AChID, @AOurID, @ADocID, dbo.zf_GetDate(@ADocDateTime), @ADocDateTime, @ACRID, @AOperID, FacID, FinID, @AZRepNum,
      @ASumCC_wt, @ASum_A, @ASum_B, @ASum_C, @ASum_D, @ASum_E, @ASum_F, @ARetSum_A, @ARetSum_B, @ARetSum_C, @ARetSum_D, @ARetSum_E, @ARetSum_F,
      @ATax_A, @ATax_B, @ATax_C, @ATax_D, @ATax_E, @ATax_F, @ARetTax_A, @ARetTax_B, @ARetTax_C, @ARetTax_D, @ARetTax_E, @ARetTax_F, 
      @ASumCash, @ASumCard, @ASumCredit, @ASumCheque, @ASumOther, @ARetSumCash, @ARetSumCard, @ARetSumCredit, @ARetSumCheque, @ARetSumOther,
      @ASumMonRec, @ASumMonExp, @ASumRem, @Notes, @SaleSumCustom1, @SaleSumCustom2, @SaleSumCustom3, @SaleSumCustom4, @SaleSumCustom5, @SumRetCustom1, @SumRetCustom2, @SumRetCustom3, @SumRetCustom4, @SumRetCustom5, 
-	 @ChequesCountSale, @ChequesCountRet, @ChequesCountCashBack, @SumCashBack, @SaleSumCCardCashBack
+	 @ChequesCountSale, @ChequesCountRet, @ChequesCountCashBack, @SumCashBack, @SaleSumCCardCashBack, @GUID
    FROM r_CRs
    WHERE CRID = @ACRID
    COMMIT TRANSACTION
