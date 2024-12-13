@@ -12,6 +12,7 @@ AS
 BEGIN
   DECLARE @DocCode INT, @ChID BIGINT, @OurID INT, @CRID INT 
   DECLARE @InetChequeNum VARCHAR(50), @Comment VARCHAR(250), @SaleChID BIGINT, @ExtraInfo VARCHAR(MAX), @DocID BIGINT, @CashType INT
+  DECLARE @FinID VARCHAR(50), @DocTime DATETIME
 
   DROP TABLE IF EXISTS #SaleCashRegInetCheques
   DROP TABLE IF EXISTS #Sale
@@ -30,7 +31,7 @@ BEGIN
 	     FROM t_Sale m WITH(NOLOCK)
 	     WHERE m.DocID IN (SELECT TOP 1 SrcDocID FROM t_CRRet WITH(NOLOCK) WHERE ChID = @ChID)
 
-	     SELECT TOP 1 @InetChequeNum = InetChequeNum
+	     SELECT TOP 1 @InetChequeNum = InetChequeNum, @FinID = FinID, @DocTime = DocTime
       FROM t_CashRegInetCheques WITH(NOLOCK)
 	     WHERE ChID = @SaleChID And DocCode = 11035
 
@@ -39,13 +40,17 @@ BEGIN
 	  /* IF ISNULL(@SaleChID,0) = 0 */
 	  /*   BEGIN */
 	  /*     SELECT TOP 1 @SaleChID = m.ChID, @DocID = m.DocID, */
-   /*       @CashType = (SELECT TOP 1 CashType FROM r_CRs WHERE CRID = m.CRID), */
-   /*       @ExtraInfo = m.ExtraInfo */
+      /*       @CashType = (SELECT TOP 1 CashType FROM r_CRs WHERE CRID = m.CRID), */
+      /*       @ExtraInfo = m.ExtraInfo */
 	  /*     FROM t_SaleShadow m WITH(NOLOCK) */
 	  /*     WHERE m.DocID IN (SELECT TOP 1 SrcDocID FROM t_CRRet WITH(NOLOCK) WHERE ChID = @ChID) */
 
 	  /*     IF @ExtraInfo <> '' */
-	  /*       SET @InetChequeNum = ISNULL(JSON_VALUE(@ExtraInfo, '$.InetChequeNum'), '') */ 
+	  /*       BEGIN */
+	  /*         SET @InetChequeNum = ISNULL(JSON_VALUE(@ExtraInfo, '$.InetChequeNum'), '') */
+	  /*         SET @FinID = ISNULL(JSON_VALUE(@ExtraInfo, '$.FinID'), '') */
+	  /*         SET @DocTime = ISNULL(JSON_VALUE(@ExtraInfo, '$.DocTime'), '') */
+	  /*       END */
 	  /*   END */
 
 
@@ -86,13 +91,20 @@ BEGIN
     END
   END
 
-  SET @Comment = ISNULL(@DocID,'')
-  SET @Comment = CASE WHEN @Comment <> '' THEN 'Чек продажу: ' + @Comment END   
+  IF ISNULL(@CashType,0) = 39 AND ISNULL(@InetChequeNum,'') <> '' 
+    BEGIN
+	  SET @Comment = 'RNO=' + @InetChequeNum + ' FN=' + @FinID + ' TS=' + CONVERT(VARCHAR(8), @DocTime, 112)
+	END
+  ELSE
+    BEGIN
+      SET @Comment = ISNULL(@DocID,'')
+      SET @Comment = CASE WHEN @Comment <> '' THEN 'Чек продажу: ' + @Comment END
+    END  
 
   SELECT 
     ISNULL(@InetChequeNum, '') AS InetChequeNum,
     ISNULL(@SaleChID, 0) AS SaleChID,
     @Comment AS Comment,
-	   ISNULL(@ExtraInfo, '') AS ExtraInfo
+	ISNULL(@ExtraInfo, '') AS ExtraInfo
 END
 GO
