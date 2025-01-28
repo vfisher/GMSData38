@@ -213,7 +213,13 @@ BEGIN
     END  
   ELSE
     BEGIN
-      RAISERROR('Невозможно рассчитать сборы - указан неверный код документа.', 16, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Невозможно рассчитать сборы - указан неверный код документа.')
+
+      RAISERROR(@Error_msg1, 16, 1)
+      END
+
       RETURN
     END
 
@@ -371,4 +377,5 @@ BEGIN
     END 
   RETURN
 END
+
 GO

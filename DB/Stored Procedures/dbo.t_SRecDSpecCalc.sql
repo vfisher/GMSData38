@@ -29,7 +29,13 @@ BEGIN
  
   IF @SubBarCode IS NULL OR @SubBarCode = '' 
     BEGIN  
-      RAISERROR ('Для товара-комплектующего %u невозможно получить штрихкод основной единицы измерения "%s".', 18, 1, @ProdID, @SubUM) 
+      BEGIN
+  
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Для товара-комплектующего %u невозможно получить штрихкод основной единицы измерения "%s".')
+  
+      RAISERROR (@Error_msg1, 18, 1, @ProdID, @SubUM)   
+      END
+
       RETURN 1  
     END 
  
@@ -147,4 +153,5 @@ BEGIN
         END 
   END 
 END
+
 GO

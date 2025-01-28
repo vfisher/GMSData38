@@ -10,7 +10,7 @@ BEGIN
   DECLARE @tmpBDate datetime
   SET @tmpBDate = dbo.pf_GetEmpGivDate(@DocDate, @EmpID, @OurID)
 
-  IF @DocName = 'Отпуск: Лимиты по видам'
+  IF @DocName = dbo.zf_Translate('Отпуск: Лимиты по видам')
   BEGIN
     INSERT INTO @tmpLeavSchedPeriod
     SELECT
@@ -56,4 +56,5 @@ BEGIN
   END 
 RETURN
 END
+
 GO

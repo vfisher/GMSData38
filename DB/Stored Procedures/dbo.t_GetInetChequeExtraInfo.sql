@@ -105,7 +105,7 @@ BEGIN
   */
 
   SET @Comment = ISNULL(@DocID,'')
-  SET @Comment = CASE WHEN @Comment <> '' THEN 'Чек продажу: ' + @Comment END
+  SET @Comment = CASE WHEN @Comment <> '' THEN dbo.zf_Translate('Чек продажу: ') + @Comment END
 
   SELECT 
     ISNULL(@InetChequeNum, '') AS InetChequeNum,
@@ -115,4 +115,5 @@ BEGIN
     @Comment AS Comment,
 	ISNULL(@ExtraInfo, '') AS ExtraInfo
 END
+
 GO

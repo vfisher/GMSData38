@@ -29,20 +29,21 @@ BEGIN
     END
 
   INSERT INTO @Out(Col1) VALUES('--------------------');
-  INSERT INTO @Out(Col1) VALUES('НОМЕР КАРТКИ: ' + @DCardID);
+  INSERT INTO @Out(Col1) VALUES(dbo.zf_Translate('НОМЕР КАРТКИ: ') + @DCardID);
   IF @Status = 1
     BEGIN
-      INSERT INTO @Out(Col1) VALUES('КАРТКА БУДЕ АКТИВОВАНА ПІЗНІШЕ');
-      INSERT INTO @Out(Col1) VALUES('ПРИНОСИМО СВОЇ ВИБАЧЕННЯ');
+      INSERT INTO @Out(Col1) VALUES(dbo.zf_Translate('КАРТКА БУДЕ АКТИВОВАНА ПІЗНІШЕ'));
+      INSERT INTO @Out(Col1) VALUES(dbo.zf_Translate('ПРИНОСИМО СВОЇ ВИБАЧЕННЯ'));
     END
   IF @Status = 2 OR @Status = 3
     BEGIN
-      INSERT INTO @Out(Col1) VALUES('ВАМ НАРАХОВАНІ БОНУСИ');
-      INSERT INTO @Out(Col1) VALUES('БАЛАНС УТОЧНЮЙТЕ В ОСОБИСТОМУ КАБІНЕТІ');
+      INSERT INTO @Out(Col1) VALUES(dbo.zf_Translate('ВАМ НАРАХОВАНІ БОНУСИ'));
+      INSERT INTO @Out(Col1) VALUES(dbo.zf_Translate('БАЛАНС УТОЧНЮЙТЕ В ОСОБИСТОМУ КАБІНЕТІ'));
     END
 
   IF EXISTS(SELECT TOP 1 1 FROM @Out) INSERT INTO @Out(Col1) VALUES ('--------------------')
 
   SELECT Col1 FROM @Out ORDER BY SrcPosID
 END
+
 GO

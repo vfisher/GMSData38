@@ -19,7 +19,7 @@ BEGIN
   IF @oddMoneyProdID IS NOT NULL
     IF EXISTS (SELECT * FROM dbo.r_ProdMQ WHERE ProdID = @oddMoneyProdID AND BarCode = @BarCode)
       BEGIN
-        SET @Msg = 'Товар-копейку для копилки вернуть невозможно.'
+        SET @Msg = dbo.zf_Translate('Товар-копейку для копилки вернуть невозможно.')
         SET @Continue = 0
         RETURN
       END
@@ -39,9 +39,10 @@ BEGIN
       WHERE m.ChID = @ChID AND m.SrcDocID = cm.SrcDocID AND m.OurID = cm.OurID AND cm.ChID = cd.ChID AND cd.BarCode = @BarCode AND
         cd.RealPrice = @Price AND cd.SrcPosID <> @SrcPosID AND (cd.SaleSrcPosID = @SaleSrcPosID OR @SaleSrcPosID <= 0)), 0) - @Qty < 0
   BEGIN
-    SET @Msg = 'Попытка вернуть количество товара больше, чем было продано по соответствующей цене.'
+    SET @Msg = dbo.zf_Translate('Попытка вернуть количество товара больше, чем было продано по соответствующей цене.')
     SET @Continue = 0
     RETURN
   END
 END
+
 GO

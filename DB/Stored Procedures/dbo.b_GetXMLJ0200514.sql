@@ -58,7 +58,7 @@ INNER JOIN (
               (SELECT u.RefID, u.RefName
                FROM r_UniTypes ut
                INNER JOIN dbo.r_Uni u ON ut.RefTypeID = u.RefTypeID
-               AND ut.RefTypeName = 'Справочник причин корректировки налоговых накладных') u
+               AND ut.RefTypeName = dbo.zf_Translate('Справочник причин корректировки налоговых накладных')) u
                ON e.TaxCorrType = u.RefID
                INNER JOIN dbo.r_Prods p ON d.ProdID = p.ProdID
                INNER JOIN b_InvD dd ON dd.ChID = dbo.bf_GetInvChID(m.ChID, d.ProdID, d.PPID, d.PriceCC_wt) AND dd.ProdID = d.ProdID AND dd.PPID = d.PPID AND dd.PriceCC_wt = d.PriceCC_wt AND e.OurID = m.OurID AND m.OurID = @OurID
@@ -157,7 +157,7 @@ DECLARE Rows cursor fast_forward for
     (SELECT u.RefID, u.RefName
      FROM r_UniTypes ut
      INNER JOIN dbo.r_Uni u ON ut.RefTypeID = u.RefTypeID
-     AND ut.RefTypeName = 'Справочник причин корректировки налоговых накладных') u
+     AND ut.RefTypeName = dbo.zf_Translate('Справочник причин корректировки налоговых накладных')) u
   ON e.TaxCorrType = u.RefID
   INNER JOIN r_Comps c on e.CompID = c.CompID
   LEFT JOIN (SELECT t.*, m.IntDocID, m.DocDate FROM @t1 t
@@ -337,7 +337,7 @@ INNER JOIN
   (SELECT u.RefID, u.RefName
    FROM r_UniTypes ut
    INNER JOIN dbo.r_Uni u ON ut.RefTypeID = u.RefTypeID
-   AND ut.RefTypeName = 'Справочник причин корректировки налоговых накладных') u
+   AND ut.RefTypeName = dbo.zf_Translate('Справочник причин корректировки налоговых накладных')) u
 ON e.TaxCorrType = u.RefID
 INNER JOIN r_Comps c on e.CompID = c.CompID
 WHERE e.PosType <> 1 AND e.OurID = @OurID AND e.DocDate BETWEEN dbo.zf_GetMonthFirstDay(@DocDate) AND dbo.zf_GetMonthLastDay(@DocDate)
@@ -423,4 +423,5 @@ deallocate ROWS
 	    '</DECLAR>'
 
 SELECT XMLText FROM @UT order by RowID
+
 GO

@@ -6,5 +6,9 @@ CREATE PROCEDURE [dbo].[t_GetPriceCCCostReal] @ProdID int, @PPID int, @RateMC nu
 /* Возвращает себестоимость ВС для указанного товара, для указанного курса документа и указанной КЦП*/
 AS
   SELECT @Result = dbo.zf_RoundPriceRec((SELECT CostCC FROM t_PInP WHERE ProdID = @ProdID AND PPID = @PPID))
-  IF @Result IS NULL RAISERROR('Себестоимость ВС не обнаружена для данного товара.', 16, 1)
+  IF @Result IS NULL BEGIN
+ DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Себестоимость ВС не обнаружена для данного товара.')
+ RAISERROR(@Error_msg1, 16, 1) END
+
+
 GO

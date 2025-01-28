@@ -30,6 +30,7 @@ BEGIN
   SELECT @v1 = ISNULL(@v1, 0)
   SELECT @v = @v + @v1       
 
-  IF @Qty > @v SELECT @Result = 'ВНИМАНИЕ! Количество товара превышает остаток на данном КЦП (партии).'
+  IF @Qty > @v SELECT @Result = dbo.zf_Translate('ВНИМАНИЕ! Количество товара превышает остаток на данном КЦП (партии).')
 END
+
 GO

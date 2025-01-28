@@ -53,7 +53,10 @@ BEGIN
       WHEN 11901 THEN 1 /* Входящие остатки товара */
       ELSE 0
     END
-  IF @PriceMode = -1 RAISERROR('Для документа не определен режим цены (t_GetPriceCC)', 16, 1)
+  IF @PriceMode = -1 BEGIN
+ DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Для документа не определен режим цены (t_GetPriceCC)')
+ RAISERROR(@Error_msg1, 16, 1) END
+
 
   IF      @PriceMode = 0 SET @Result = 0
   ELSE IF @PriceMode = 1 EXEC t_GetPriceCCIn @ProdID, @PPID, @RateMC, @Result OUTPUT
@@ -78,4 +81,5 @@ BEGIN
     END
   ELSE IF @PriceMode = 8 SELECT @Result = dbo.zf_GetStdRecPriceCC(@ProdID)
 End
+
 GO

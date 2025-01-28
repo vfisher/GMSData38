@@ -7,5 +7,12 @@ CREATE PROCEDURE [dbo].[t_GetPriceCCInReal] @ProdID int, @PPID int, @RateMC nume
 AS
   SELECT @Result = dbo.zf_RoundPriceRec((SELECT PriceCC_In FROM t_PInP WHERE ProdID = @ProdID AND PPID = @PPID))
   IF @Result IS NULL
-    RAISERROR ('Цена прихода ВС не обнаружена для данного товара', 16, 1)
+    BEGIN
+
+    DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Цена прихода ВС не обнаружена для данного товара')
+
+    RAISERROR (@Error_msg1, 16, 1)
+    END
+
+
 GO

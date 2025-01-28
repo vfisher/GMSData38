@@ -78,7 +78,7 @@ BEGIN
   IF @ParentDocCode IN (11045, 11046, 14113, 14131, 14310, 14311, 14011, 14012, 14021, 14022, 14031, 14032)
     BEGIN
       SELECT
-        @Msg = 'Документ не поддерживает создание налоговой накладной.',
+        @Msg = dbo.zf_Translate('Документ не поддерживает создание налоговой накладной.'),
         @Continue = 0
       RETURN
     END
@@ -95,7 +95,7 @@ BEGIN
   ELSE
   BEGIN
     SELECT
-      @Msg = 'Создание налоговой накладной из данного документа невозможно.',
+      @Msg = dbo.zf_Translate('Создание налоговой накладной из данного документа невозможно.'),
       @Continue = 0
     RETURN
   END
@@ -139,7 +139,7 @@ BEGIN
     @SumCC_ntOUT = @SumCC_nt_Closed OUTPUT, @TaxSumOUT = @TaxSum_Closed OUTPUT, @SumCC_wtOUT = @SumCC_wt_Closed OUTPUT
   SELECT @SumCC_nt = @SumCC_nt - @SumCC_nt_Closed, @TaxSum = @TaxSum - @TaxSum_Closed, @SumCC_wt = @SumCC_wt - @SumCC_wt_Closed
   SELECT
-    @TJ_Prompt = 'Необходимо указать свойства налоговой накладной. Указанные свойства будут занесены в книгу продаж/приобретений. Для отмены создания налоговой накладной нажмите "Отмена".',
+    @TJ_Prompt = dbo.zf_Translate('Необходимо указать свойства налоговой накладной. Указанные свойства будут занесены в книгу продаж/приобретений. Для отмены создания налоговой накладной нажмите "Отмена".'),
     @TJ_ShowDialog = 1,
     @ChID = NULL,
     @DocID = NULL,
@@ -236,15 +236,16 @@ BEGIN
   SELECT @ABegin = BDate, @AEnd = EDate FROM dbo.zf_GetOpenAges(@GetDate) WHERE OurID = @OurID
   IF EXISTS(SELECT 1 FROM #_TaxDocs WHERE ParentDocDate < @ABegin)
   BEGIN
-    SELECT @AErr = 'Дата документа меньше даты открытого периода - ' + dbo.zf_DatetoStr(@ABegin)
+    SELECT @AErr = dbo.zf_Translate('Дата документа меньше даты открытого периода - ') + dbo.zf_DatetoStr(@ABegin)
     RAISERROR (@AErr, 18, 1)
     RETURN
   END
   IF EXISTS(SELECT 1 FROM #_TaxDocs WHERE ParentDocDate > @AEnd)
   BEGIN
-    SELECT @AErr = 'Дата документа больше даты открытого периода - ' + dbo.zf_DatetoStr(@AEnd)
+    SELECT @AErr = dbo.zf_Translate('Дата документа больше даты открытого периода - ') + dbo.zf_DatetoStr(@AEnd)
     RAISERROR (@AErr, 18, 1)
     RETURN
   END
 END
+
 GO

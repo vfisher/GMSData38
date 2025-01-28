@@ -51,7 +51,7 @@ BEGIN
           INSERT INTO @Out(Col1, Col2, Col3, Barcode)
           SELECT
             '' Col1,
-            'Отмены (чек#' + CAST(@SaleDocID AS varchar(20)) + ')' Col2,
+            dbo.zf_Translate('Отмены (чек#') + CAST(@SaleDocID AS varchar(20)) + ')' Col2,
             '--------------------------' Col3,
             '' Barcode
           UNION ALL
@@ -86,8 +86,8 @@ BEGIN
           @Time = @LastZRep,
           @LastZRep = ISNULL((SELECT TOP 1 DocTime FROM t_zRep WHERE CRID = @CRID AND DocTime < @LastZRep ORDER BY DocTime DESC), '1900-01-01 00:00:00')
 
-      IF @Action = 11 SELECT @s1 = 'X-отчет'
-      IF @Action = 12 SELECT @s1 = 'Z-отчет'
+      IF @Action = 11 SELECT @s1 = dbo.zf_Translate('X-отчет')
+      IF @Action = 12 SELECT @s1 = dbo.zf_Translate('Z-отчет')
 
       INSERT INTO @Out(Col1, Col2, Col3, Barcode)
       SELECT
@@ -97,8 +97,8 @@ BEGIN
         '' Barcode
       UNION ALL
       SELECT
-        /* 1 */ 'ВСЕГО ОТМЕН:@WidthJustify@' + CAST(COUNT(*) AS varchar(20)) Col1,
-        /* 2 */ 'СУММА ОТМЕН:@WidthJustify@' + CAST(LTRIM(STR(-SUM(c.SumCC_wt), 50, 2)) AS varchar(20)) Col2,
+        /* 1 */ dbo.zf_Translate('ВСЕГО ОТМЕН:@WidthJustify@') + CAST(COUNT(*) AS varchar(20)) Col1,
+        /* 2 */ dbo.zf_Translate('СУММА ОТМЕН:@WidthJustify@') + CAST(LTRIM(STR(-SUM(c.SumCC_wt), 50, 2)) AS varchar(20)) Col2,
         /* 3 */ '' Col3,
         '' Barcode
       FROM t_Sale m WITH(NOLOCK), t_SaleC c WITH(NOLOCK)
@@ -129,8 +129,8 @@ BEGIN
 
       INSERT INTO @Out(Col1, Col2, Col3, Barcode)
       SELECT
-        'ІНФОРМАЦІЯ' Col1,
-        'ПРО ПОДАРУНКОВИЙ СЕРТИФІКАТ' Col2,
+        dbo.zf_Translate('ІНФОРМАЦІЯ') Col1,
+        dbo.zf_Translate('ПРО ПОДАРУНКОВИЙ СЕРТИФІКАТ') Col2,
         ' ' Col3,
         '' Barcode
 
@@ -138,7 +138,7 @@ BEGIN
         INSERT INTO @Out(Col1, Col2, Col3, Barcode)
         SELECT
         '-----------------------------' Col1,
-        '         НЕДІЙСНИЙ   ' Col2,
+        dbo.zf_Translate('         НЕДІЙСНИЙ   ') Col2,
         '-----------------------------' Col3,
         '' Barcode
 
@@ -146,32 +146,32 @@ BEGIN
         INSERT INTO @Out(Col1, Col2, Col3, Barcode)
         SELECT
         '-----------------------------' Col1,
-        '        ПРОСТРОЧЕНИЙ   ' Col2,
+        dbo.zf_Translate('        ПРОСТРОЧЕНИЙ   ') Col2,
         '-----------------------------' Col3,
         '' Barcode
 
       INSERT INTO @Out(Col1, Col2, Col3, Barcode)
       SELECT
-        'НОМЕР:@WidthJustify@' + @DCardID Col1,
+        dbo.zf_Translate('НОМЕР:@WidthJustify@') + @DCardID Col1,
         ' ' Col2,
-        'НОМІНАЛ:@WidthJustify@' + CAST(@Value AS VARCHAR(20)) Col3,
+        dbo.zf_Translate('НОМІНАЛ:@WidthJustify@') + CAST(@Value AS VARCHAR(20)) Col3,
         '' Barcode
       UNION ALL
       SELECT
         ' ' Col1,
-        'АКТИВОВАНИЙ:@WidthJustify@' + CONVERT(varchar(20), @BDate, 104) Col2,
+        dbo.zf_Translate('АКТИВОВАНИЙ:@WidthJustify@') + CONVERT(varchar(20), @BDate, 104) Col2,
         '' Col3,
         '' Barcode
       UNION ALL
       SELECT
         ' ' Col1,
-        'ДІЄ ДО:@WidthJustify@' + ISNULL(CONVERT(varchar(20), @EDate, 104), 'не визначено') Col2,
+        dbo.zf_Translate('ДІЄ ДО:@WidthJustify@') + ISNULL(CONVERT(varchar(20), @EDate, 104), dbo.zf_Translate('не визначено')) Col2,
         ' ' Col3,
         '' Barcode
       UNION ALL
       SELECT
-        'У разі виникнення питань' Col1,
-        'звертайтесь до Гарячої линії' Col2,
+        dbo.zf_Translate('У разі виникнення питань') Col1,
+        dbo.zf_Translate('звертайтесь до Гарячої линії') Col2,
         '-----------------------------' Col3,
         '' Barcode
     END
@@ -180,4 +180,5 @@ BEGIN
 
   SELECT Col1, Col2, Col3, Barcode FROM @Out ORDER BY SrcPosID
 END
+
 GO

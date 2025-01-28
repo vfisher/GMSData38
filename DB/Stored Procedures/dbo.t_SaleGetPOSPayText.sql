@@ -14,9 +14,9 @@ BEGIN
 
   SET @TransactionTypeName = ''
   IF @TransactionType = 1
-    SET @TransactionTypeName = 'Оплата' 
+    SET @TransactionTypeName = dbo.zf_Translate('Оплата') 
   IF @TransactionType = 2
-    SET @TransactionTypeName = 'Повернення'	  
+    SET @TransactionTypeName = dbo.zf_Translate('Повернення')	  
 
   IF ISNULL(@BankName,'') = ''
     BEGIN 
@@ -28,13 +28,13 @@ BEGIN
         SET @BankName = (SELECT TOP 1 POSPayName FROM r_POSPays WHERE  POSPayID IN (SELECT POSPayID FROM t_CRRetPays WHERE ChID = @ChID))
     END
   SELECT @Msg = 
-    'Екв.: ' + @BankName + @mcr + 
-    'Терминал: ' + @TerminalID + @mcr +
+    dbo.zf_Translate('Екв.: ') + @BankName + @mcr + 
+    dbo.zf_Translate('Терминал: ') + @TerminalID + @mcr +
     @TransactionTypeName + @mcr + 
-    'ЕПЗ ' + @PAN + @mcr + 
-    'ПЛАТІЖНА СИСТЕМА ' + @Issuer + @mcr +
-    'КОД ТРАНЗ. ' + @RRN + @mcr + 
-    'КОД АВТ. ' + @ApprovalCode + @mcr
+    dbo.zf_Translate('ЕПЗ ') + @PAN + @mcr + 
+    dbo.zf_Translate('ПЛАТІЖНА СИСТЕМА ') + @Issuer + @mcr +
+    dbo.zf_Translate('КОД ТРАНЗ. ') + @RRN + @mcr + 
+    dbo.zf_Translate('КОД АВТ. ') + @ApprovalCode + @mcr
 
     /*  
     'N.посилання: ' + @RRN + @mcr + 
@@ -45,11 +45,12 @@ BEGIN
     */
   IF @NeedSignVerif = 1 
     SELECT @Msg = @Msg + @mcr + 
-      'КАСИР ________________' + @mcr + 
-      'ДЕРЖАТЕЛЬ ЕПЗ ________' + @mcr
+      dbo.zf_Translate('КАСИР ________________') + @mcr + 
+      dbo.zf_Translate('ДЕРЖАТЕЛЬ ЕПЗ ________') + @mcr
   ELSE 
     SELECT @Msg = @Msg + @mcr +
-      'Касир підпис не потрібен' + @mcr
+      dbo.zf_Translate('Касир підпис не потрібен') + @mcr
   SELECT @Msg 
 END
+
 GO

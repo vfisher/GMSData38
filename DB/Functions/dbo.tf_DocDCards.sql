@@ -23,14 +23,15 @@ BEGIN
         DECLARE @xml xml
         SET @xml = @ExtraInfo
         INSERT INTO @Out(DCTypeName, DCardID)
-        SELECT 'Купон',
+        SELECT dbo.zf_Translate('Купон'),
           c.value('(./text())[1]','Varchar(200)') as [Barcode]
           FROM @xml.nodes('//BPM/RequestCoupons/child::node()') as a(c) 
         UPDATE @out SET DCardChID = CAST(DCardID AS BIGINT) 
-        WHERE DCTypeName = 'Купон'
+        WHERE DCTypeName = dbo.zf_Translate('Купон')
       END
     END
 
   RETURN
 END
+
 GO

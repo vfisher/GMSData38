@@ -46,7 +46,7 @@ BEGIN
       INSERT INTO @Out(Col1, Col2, Col3, BarCode)
       SELECT 
         '--------------------' Col1,
-        'Список отмен по чеку' Col2,
+        dbo.zf_Translate('Список отмен по чеку') Col2,
         '--------------------' Col3,
         '' Barcode
       UNION ALL
@@ -67,12 +67,12 @@ BEGIN
       INSERT INTO @Out(Col1, Col2, Col3, Barcode)
       SELECT
         '--------------------' Col1,
-        'Скидки по чеку' Col2,
+        dbo.zf_Translate('Скидки по чеку') Col2,
         '--------------------' Col3,
         '' Barcode
       UNION ALL
       SELECT 
-        /* 1 */ d.DiscName + ' ' + CASE WHEN l.Discount <> 0 THEN (CAST(CAST(l.Discount AS int) AS varchar(20))) + '%' ELSE (CAST(CAST(l.SumBonus AS numeric(21, 2)) AS varchar(20))) + ' грн.' END Col1,
+        /* 1 */ d.DiscName + ' ' + CASE WHEN l.Discount <> 0 THEN (CAST(CAST(l.Discount AS int) AS varchar(20))) + '%' ELSE (CAST(CAST(l.SumBonus AS numeric(21, 2)) AS varchar(20))) + dbo.zf_Translate(' грн.') END Col1,
         /* 2 */ '' Col2,
         /* 3 */ '' Col3,
         '' BarCode
@@ -96,4 +96,5 @@ BEGIN
 
   SELECT Col1, Col2, Col3, Barcode FROM @Out ORDER BY SrcPosID
 END
+
 GO

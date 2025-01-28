@@ -13,7 +13,13 @@ BEGIN
 
   IF @VenExcessPP > 2
     BEGIN
-      RAISERROR ('Некорректный метод приходования излишков инвентаризации', 18, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Некорректный метод приходования излишков инвентаризации')
+
+      RAISERROR (@Error_msg1, 18, 1)
+      END
+
       RETURN
     END
 
@@ -91,11 +97,18 @@ BEGIN
   SELECT @PPID = dbo.tf_NewPPID(@ProdID)
   IF @PPID IS NULL GOTO Error
   INSERT INTO t_PInP (ProdID, PPID, PPDesc, PriceMC_In, PriceMC, Priority, ProdDate, CurrID, CompID, Article, CostAC, PPWeight, PriceCC_In, CostCC, PPDelay, IsCommission)
-  VALUES (@ProdID, @PPID, 'Излишек инвентаризации', @CostAC, 0, 0, @DocDate, @CurrID, @CompID, '', @CostAC, 0, @CostCC, @CostCC, 0, 0)
+  VALUES (@ProdID, @PPID, dbo.zf_Translate('Излишек инвентаризации'), @CostAC, 0, 0, @DocDate, @CurrID, @CompID, '', @CostAC, 0, @CostCC, @CostCC, 0, 0)
   RETURN
 
 Error:
   SET @PPID = 0
-  RAISERROR('Новый номер партии для таблицы t_pInP находится вне допустимого диапазона', 18, 1)
+  BEGIN
+
+  DECLARE @Error_msg2 varchar(2000) = dbo.zf_Translate('Новый номер партии для таблицы t_pInP находится вне допустимого диапазона')
+
+  RAISERROR(@Error_msg2, 18, 1)
+  END
+
 END
+
 GO

@@ -27,13 +27,13 @@ BEGIN
         s.TaxTypeID = s1.TaxTypeID AND s.RealQty = s1.RealQty AND s.PriceCC_wt = s1.PriceCC_wt 
       GROUP BY s.ProdID 
       HAVING SUM(s.Qty) <> 0) SrcPosID, 
-      'Полная стоимость ' + (CAST(CAST(( 
+      dbo.zf_Translate('Полная стоимость ') + (CAST(CAST(( 
       SELECT SUM(s.PurPriceCC_wt*s.Qty)  
       FROM t_SaleTempD s WITH(NOLOCK) 
       WHERE s.ChID = @ChID AND s.ProdID = s1.ProdID AND s.PLID = s1.PLID AND s.BarCode = s1.BarCode AND 
         s.TaxTypeID = s1.TaxTypeID AND s.RealQty = s1.RealQty AND s.PriceCC_wt = s1.PriceCC_wt 
       GROUP BY s.ProdID 
-      HAVING SUM(s.Qty) <> 0) AS numeric(21, 2)) AS varchar(20)))  + ' грн.' AS Col1, 
+      HAVING SUM(s.Qty) <> 0) AS numeric(21, 2)) AS varchar(20)))  + dbo.zf_Translate(' грн.') AS Col1, 
     '' Col2, 
     '' Col3, 
     '' Barcode 
@@ -52,13 +52,13 @@ BEGIN
      s.TaxTypeID = s1.TaxTypeID AND s.RealQty = s1.RealQty AND s.PriceCC_wt = s1.PriceCC_wt 
      GROUP BY s.ProdID 
      HAVING SUM(s.Qty) <> 0) SrcPosID, 
-     'Полная стоимость ' + (CAST(CAST(( 
+     dbo.zf_Translate('Полная стоимость ') + (CAST(CAST(( 
      SELECT SUM(s.PurPriceCC_wt*s.Qty)  
      FROM t_SaleTempD s WITH(NOLOCK) 
      WHERE s.ChID = @ChID AND s.ProdID = s1.ProdID AND s.PLID = s1.PLID AND s.BarCode = s1.BarCode AND 
      s.TaxTypeID = s1.TaxTypeID AND s.RealQty = s1.RealQty AND s.PriceCC_wt = s1.PriceCC_wt 
      GROUP BY s.ProdID 
-     HAVING SUM(s.Qty) <> 0) AS numeric(21, 2)) AS varchar(20)))  + ' грн.' AS Col1, 
+     HAVING SUM(s.Qty) <> 0) AS numeric(21, 2)) AS varchar(20)))  + dbo.zf_Translate(' грн.') AS Col1, 
    '' Col2, 
    '' Col3, 
    '' Barcode 
@@ -74,7 +74,7 @@ BEGIN
         s.TaxTypeID = s1.TaxTypeID AND s.RealQty = s1.RealQty AND s.PriceCC_wt = s1.PriceCC_wt 
       GROUP BY s.ProdID 
       HAVING SUM(s.Qty) <> 0) SrcPosID, 
-    d.DiscName + ' ' + CASE WHEN l.Discount <> 0 THEN (CAST(CAST(l.Discount AS int) AS varchar(20))) + '%' ELSE (CAST(CAST(l.SumBonus AS numeric(21, 2)) AS varchar(20))) + ' грн.' END Col1, 
+    d.DiscName + ' ' + CASE WHEN l.Discount <> 0 THEN (CAST(CAST(l.Discount AS int) AS varchar(20))) + '%' ELSE (CAST(CAST(l.SumBonus AS numeric(21, 2)) AS varchar(20))) + dbo.zf_Translate(' грн.') END Col1, 
     '' Col2, 
     '' Col3, 
     '' Barcode 
@@ -96,4 +96,5 @@ BEGIN
                  
   SELECT SrcPosID, Col1, Col2, Col3, Barcode FROM @Out 
 END
+
 GO

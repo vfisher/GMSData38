@@ -15,10 +15,16 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM r_Comps WHERE CompID = @CompID) RETURN
   SET @FirstEventMode = NULL
   SELECT @FirstEventMode = FirstEventMode, @s = CompName FROM r_Comps WHERE CompID = @CompID
-  IF (@FirstEventMode IS NULL) OR (NOT @FirstEventMode IN (0, 1)) RAISERROR('Некорректный тип расчета первого события для предприятия "%s" с кодом %d' , 16, 1, @s, @CompID)
+  IF (@FirstEventMode IS NULL) OR (NOT @FirstEventMode IN (0, 1)) BEGIN
+ DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Некорректный тип расчета первого события для предприятия "%s" с кодом %d')
+ RAISERROR(@Error_msg1 , 16, 1, @s, @CompID) END
+
   SET @AccType = NULL
   SELECT @AccType = GAccType, @s = GAccName FROM r_GAccs WHERE GAccID = @AccID
-  IF (@AccType IS NULL) OR (NOT @AccType IN (0, 1, 2)) RAISERROR('Некорректный тип у счета %d "%s"', 16, 1, @AccID, @s)
+  IF (@AccType IS NULL) OR (NOT @AccType IN (0, 1, 2)) BEGIN
+ DECLARE @Error_msg2 varchar(2000) = dbo.zf_Translate('Некорректный тип у счета %d "%s"')
+ RAISERROR(@Error_msg2, 16, 1, @AccID, @s) END
+
   SET @SummD = 0
   SET @SummC = 0
 
@@ -113,4 +119,5 @@ BEGIN
       END
   END
 END
+
 GO

@@ -36,15 +36,15 @@ DECLARE  @PayTypes TABLE (PayTypeID int, IsSicLeav tinyint) /*1-признак �
 
 /* типы выплат по больничным */
 INSERT INTO @PayTypes (PayTypeID, IsSicLeav)
-SELECT PayTypeID, 1 FROM r_PayTypes WHERE SrcDocTypeE LIKE '%p_ESic%' AND PayTypeName NOT LIKE '%беремен%'
+SELECT PayTypeID, 1 FROM r_PayTypes WHERE SrcDocTypeE LIKE '%p_ESic%' AND PayTypeName NOT LIKE dbo.zf_Translate('%беремен%')
 
 /*типы выплат по отпускам*/
 INSERT INTO @PayTypes (PayTypeID, IsSicLeav)
-SELECT PayTypeID, 2 FROM r_PayTypes WHERE SrcDocTypeE LIKE '%p_ELeav%' AND PayTypeName NOT LIKE '%компенс%'
+SELECT PayTypeID, 2 FROM r_PayTypes WHERE SrcDocTypeE LIKE '%p_ELeav%' AND PayTypeName NOT LIKE dbo.zf_Translate('%компенс%')
 
 /*типы выплат по беременности и родам*/
 INSERT INTO @PayTypes (PayTypeID, IsSicLeav)
-SELECT PayTypeID, 3 FROM r_PayTypes WHERE SrcDocTypeE LIKE '%p_ESic%' AND PayTypeName LIKE '%беремен%'
+SELECT PayTypeID, 3 FROM r_PayTypes WHERE SrcDocTypeE LIKE '%p_ESic%' AND PayTypeName LIKE dbo.zf_Translate('%беремен%')
 
 /* получить данные о начислениях за указанный период */
 DECLARE  @Pays TABLE (StepID int DEFAULT 1, OurID int, EmpID int, SumCC numeric(21,9),
@@ -187,4 +187,5 @@ GROUP BY
   t.NRM, t.NUMIDENT, t.KD_NZP, t.KD_VP, t.NRC, t.UniSocDedRate, t.UniSocChargeRate, t1.UniSocChargeСС  
 HAVING  SUM(t.SUM_TOTAL) < @MinSalary
 END
+
 GO

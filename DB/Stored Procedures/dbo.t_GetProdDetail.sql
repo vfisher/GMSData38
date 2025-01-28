@@ -48,7 +48,13 @@ BEGIN
   /* Определяем партию и количество */
   IF dbo.zf_Var('t_PPQC') = 0
     BEGIN
-      RAISERROR('Списание без опции "Учет текущих остатков" не поддерживается.', 16, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Списание без опции "Учет текущих остатков" не поддерживается.')
+
+      RAISERROR(@Error_msg1, 16, 1)
+      END
+
       RETURN
     END
   SET @IgnorePPList = ',' + @IgnorePPList + ','
@@ -67,9 +73,9 @@ BEGIN
     BEGIN
       SELECT @APPID1 = dbo.tf_GetSPPID(@OurID, @StockID, @ProdID, @SecID, NULL), @AQty1 = 0
       IF dbo.zf_Var('t_UseAlts') = 0 OR EXISTS (SELECT * FROM r_Prods WITH(NOLOCK/*, FASTFIRSTROW */) WHERE ProdID = @ProdID AND UseAlts = 0)
-      SELECT @Msg = 'Недостаточно остатка товара.'
+      SELECT @Msg = dbo.zf_Translate('Недостаточно остатка товара.')
       SELECT @AccQty = SUM(AccQty) FROM t_Rem WHERE ProdID = @ProdID AND OurID = @OurID AND StockID = @StockID AND SecID = @SecID
-      IF @AccQty > 0 SELECT @Msg = @Msg + ' Количество единиц товара в резерве: ' + CAST(CAST(@AccQty AS numeric(21, 3)) AS VARCHAR (20))
+      IF @AccQty > 0 SELECT @Msg = @Msg + dbo.zf_Translate(' Количество единиц товара в резерве: ') + CAST(CAST(@AccQty AS numeric(21, 3)) AS VARCHAR (20))
     END
 
   SELECT
@@ -89,4 +95,5 @@ BEGIN
   ELSE
     SELECT @QtyField = @AQty1
 END
+
 GO

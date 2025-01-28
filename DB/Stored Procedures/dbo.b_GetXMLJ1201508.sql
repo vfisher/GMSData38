@@ -104,7 +104,7 @@ SELECT
   SUBSTRING(c.Notes, PATINDEX('%[0-9]%', c.Notes), 2) ELSE c.Notes END AS T1G42S,
   (CASE WHEN a.IsCorrection = 1 THEN 'У' ELSE '' END) AS T1G43S,
   CASE
-    WHEN (SUBSTRING(c.Notes, PATINDEX('%[0-9]%', c.Notes), 2) IN ('02','11')) OR (b.TaxPayer = 0) THEN 'Неплатник'
+    WHEN (SUBSTRING(c.Notes, PATINDEX('%[0-9]%', c.Notes), 2) IN ('02','11')) OR (b.TaxPayer = 0) THEN dbo.zf_Translate('Неплатник')
     WHEN SUBSTRING(c.Notes, PATINDEX('%[0-9]%', c.Notes), 2) IN ('07') THEN '' ELSE b.CompName
   END AS T1G5S,
   CASE
@@ -304,4 +304,5 @@ UNION ALL SELECT
 	'</DECLAR>'
 
 SELECT XMLText FROM @UT order by RowID
+
 GO

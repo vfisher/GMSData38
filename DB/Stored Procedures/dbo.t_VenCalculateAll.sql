@@ -38,7 +38,7 @@ BEGIN
   INNER JOIN t_PInP pp WITH (NOLOCK) ON d.DetProdID = pp.ProdID AND d.PPID = pp.PPID
   WHERE ChID = @ChID AND 
         d.NewQty - d.Qty > 0 AND  
-        pp.PPDesc = 'Излишек инвентаризации' AND 
+        pp.PPDesc = dbo.zf_Translate('Излишек инвентаризации') AND 
         pp.ProdDate = @DocDate
 
   /* Убираем старый расчет */
@@ -244,4 +244,5 @@ BEGIN
 
   UPDATE t_Ven SET StateCode = 21 WHERE ChID = @ChID
 END
+
 GO

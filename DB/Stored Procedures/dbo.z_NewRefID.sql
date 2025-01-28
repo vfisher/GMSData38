@@ -23,7 +23,14 @@ BEGIN
   IF @RefID > @RefID_End
     BEGIN
       SET @RefID = NULL
-      RAISERROR('Новый код справочника(%s) для таблицы %s находится вне допустимого диапазона(%d-%d)', 18, 1, @FieldName, @TableName, @RefID_Start, @RefID_End)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Новый код справочника(%s) для таблицы %s находится вне допустимого диапазона(%d-%d)')
+
+      RAISERROR(@Error_msg1, 18, 1, @FieldName, @TableName, @RefID_Start, @RefID_End)
+      END
+
     END
 END
+
 GO

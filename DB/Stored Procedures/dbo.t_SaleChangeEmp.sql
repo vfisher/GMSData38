@@ -22,7 +22,10 @@ BEGIN
   DECLARE @EmpName varchar(200)
 
   SELECT @EmpName = EmpName FROM r_Emps WHERE EmpID = @EmpID
-  IF @EmpName IS NULL RAISERROR('Пользователь не обнаружен.', 16, 1)
+  IF @EmpName IS NULL BEGIN
+ DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Пользователь не обнаружен.')
+ RAISERROR(@Error_msg1, 16, 1) END
+
 
   IF (@UseEmpIDForCheque >= 1)
     BEGIN
@@ -50,4 +53,5 @@ BEGIN
     UPDATE t_SaleTempD SET EmpID = @EmpID, EmpName = @EmpName
     WHERE ChID = @DocChID AND (SrcPosID = @SrcPosID OR CSrcPosID = @SrcPosID)
 END
+
 GO

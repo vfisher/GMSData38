@@ -54,7 +54,7 @@ BEGIN
           WHERE m.ChID = d.ChID AND d.ProdID = @ProdID AND m.OurID = @OurID AND 
             m.StockID = @StockID AND NOT (m.ChID = @ChID AND d.SrcPosID = @SrcPosID)), 0) - @Qty * @RealQty < 0 
         BEGIN 
-          SET @Msg = 'Недостаточно остатка товара для продажи.' 
+          SET @Msg = dbo.zf_Translate('Недостаточно остатка товара для продажи.') 
           SET @Continue = 0 
           RETURN 
         END 
@@ -63,7 +63,7 @@ BEGIN
   /* Если вместо акцизной марки передали мусор */
   IF EXISTS(SELECT * FROM r_Prods WITH(NOLOCK) WHERE ProdID = @ProdID AND RequireLevyMark = 1 AND @AskLevyMark = 1 AND @LevyMark NOT LIKE '[a-z][a-z][a-z][a-z][0-9][0-9][0-9][0-9][0-9][0-9]')
     BEGIN 
-      SET @Msg = 'Формат акцизной марки некорректен.' 
+      SET @Msg = dbo.zf_Translate('Формат акцизной марки некорректен.') 
       SET @Continue = 0 
       RETURN 
     END 
@@ -76,7 +76,7 @@ BEGIN
   SET @CountAddProds = ISNULL((SELECT SUM(Qty) FROM t_SaleTempD WITH(NOLOCK) WHERE ChID = @ChID /*AND ProdID = @ProdID*/ AND @AskLevyMark = 1 And @LevyMark IS NOT NULL And LevyMark = @LevyMark),0)
   IF (@CountAddProds > 0) And @CSrcPosID IS NULL
     BEGIN
-      SET @Msg = 'Товар с такой акцизной маркой уже присутствует в этом чеке.' 
+      SET @Msg = dbo.zf_Translate('Товар с такой акцизной маркой уже присутствует в этом чеке.') 
       SET @Continue = 0 
       RETURN 
     END
@@ -98,7 +98,13 @@ BEGIN
     BEGIN 
       IF @SrcPosID IS NULL 
         BEGIN 
-          RAISERROR('Позиция в базе данных отсутствует.', 16, 1) 
+          BEGIN
+ 
+          DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Позиция в базе данных отсутствует.')
+ 
+          RAISERROR(@Error_msg1, 16, 1)  
+          END
+
           RETURN 
         END 
 
@@ -108,9 +114,9 @@ BEGIN
         IF (@OldQty > @Qty) 
           BEGIN 
             IF @OldQty > 0 
-              SET @Msg = 'Запрещено уменьшение количества товара. Воспользуйтесь функцией отмены товара.' 
+              SET @Msg = dbo.zf_Translate('Запрещено уменьшение количества товара. Воспользуйтесь функцией отмены товара.') 
             ELSE 
-              SET @Msg = 'Запрещено увеличение количества возвращаемого товара. Воспользуйтесь функцией отмены товара.' 
+              SET @Msg = dbo.zf_Translate('Запрещено увеличение количества возвращаемого товара. Воспользуйтесь функцией отмены товара.') 
             SET @Continue = 0 
             RETURN 
           END 
@@ -147,4 +153,5 @@ BEGIN
 
   EXEC t_DiscAfterSavePos 1011, @ChID, @SrcPosID, @Msg OUTPUT, @Continue OUTPUT 
 END
+
 GO

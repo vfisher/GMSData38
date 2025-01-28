@@ -9,7 +9,7 @@ BEGIN
 	IF NOT @ARRN LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]' 
 	SELECT  
 	  @CorrectedARRN = @ARRN,  
-    @Msg = 'Номер транзакции должен содержать в себе 12 цифр.', 
+    @Msg = dbo.zf_Translate('Номер транзакции должен содержать в себе 12 цифр.'), 
     @Continue = 0 
   ELSE   
   SELECT 
@@ -17,4 +17,5 @@ BEGIN
     @Msg = '', 
     @Continue = 1      
 END
+
 GO

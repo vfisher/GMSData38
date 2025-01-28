@@ -2,7 +2,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
 CREATE PROCEDURE [dbo].[t_SaleEmptyTempTable](@ParamsIn varchar(max), @ParamsOut varchar(max) OUTPUT) 
 /* Производит списание товара и перенос продаж из временной таблицы в документ продажи */ 
 AS 
@@ -398,11 +397,11 @@ BEGIN
       SELECT @LogIDInt = ISNULL(MAX(SrcPosID), 0) + 1 FROM t_SaleTempPays WHERE ChID = @ATempChID
       SELECT @AddAmount = CashBack FROM t_SaleTempPays WHERE PayFormCode = 11 AND ChID = @ATempChID
       INSERT INTO t_SalePays(ChID, SrcPosID, PayFormCode, SumCC_wt, POSPayID, POSPayDocID, POSPayRRN, Notes, ChequeText, BServID, PayPartsQty, ContractNo, PosPayText, TransactionInfo) 
-      SELECT @ADocChID, @LogIDInt, 11, @AddAmount, POSPayID, POSPayDocID, POSPayRRN, 'Видача готівки', '', BServID, PayPartsQty, ContractNo, '', NULL
+      SELECT @ADocChID, @LogIDInt, 11, @AddAmount, POSPayID, POSPayDocID, POSPayRRN, dbo.zf_Translate('Видача готівки'), '', BServID, PayPartsQty, ContractNo, '', NULL
       FROM t_SaleTempPays WHERE PayFormCode = 11 AND ChID = @ATempChID
       SELECT @LogIDInt = @LogIDInt + 1
       INSERT INTO t_SalePays(ChID, SrcPosID, PayFormCode, SumCC_wt, POSPayID, POSPayDocID, POSPayRRN, Notes, ChequeText, BServID, PayPartsQty, ContractNo, PosPayText, TransactionInfo) 
-      SELECT @ADocChID, @LogIDInt, 1, -@AddAmount, POSPayID, POSPayDocID, POSPayRRN, 'Видача готівки', '', BServID, PayPartsQty, ContractNo, '', NULL
+      SELECT @ADocChID, @LogIDInt, 1, -@AddAmount, POSPayID, POSPayDocID, POSPayRRN, dbo.zf_Translate('Видача готівки'), '', BServID, PayPartsQty, ContractNo, '', NULL
       FROM t_SaleTempPays WHERE PayFormCode = 11 AND ChID = @ATempChID
 
       INSERT INTO t_CashBack(ChID, SaleSrcDocID, CRID, DocDate, DocTime, DocID, OurID, OperID, POSPayID, SumCC_wt, TransactionInfo)
@@ -587,4 +586,5 @@ Error:
   SET @ParamsOut = (SELECT @ReturnValue AS ReturnValue  FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
   RETURN SELECT @ParamsOut 
 END
+
 GO

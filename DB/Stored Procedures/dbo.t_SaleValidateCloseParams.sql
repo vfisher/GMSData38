@@ -25,10 +25,11 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM r_Codes1 WHERE CodeID1 = @CodeID1) SET @Msg = '1'
   IF (@Msg <> '')
     BEGIN
-      SET @Msg = 'Указано некорректное значение для Признака ' + @Msg
+      SET @Msg = dbo.zf_Translate('Указано некорректное значение для Признака ') + @Msg
       RETURN
     END 
 
   SET @Result = 1
 END
+
 GO

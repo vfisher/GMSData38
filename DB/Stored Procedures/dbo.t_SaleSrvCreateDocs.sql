@@ -175,7 +175,13 @@ BEGIN
               SELECT @ProdIDInt = ProdID, @BarCode = BarCode FROM r_CRMP WITH(NOLOCK) WHERE CRID = @CRID AND CRProdID = @ProdID
               IF @ProdIDInt IS NULL
                 BEGIN
-                  RAISERROR('Неверный код товара ЭККА', 16, 1)
+                  BEGIN
+
+                  DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Неверный код товара ЭККА')
+
+                  RAISERROR(@Error_msg1, 16, 1)
+                  END
+
                   GOTO Error
                 END
 
@@ -192,7 +198,7 @@ BEGIN
 
               IF @TaxTypeID IS NULL
                 BEGIN
-                  SELECT @Msg = 'Неверно задан код налоговой группы товара в ЭККА. ProdID = ' + CAST(@ProdIDInt AS varchar(20)) + ' TaxID = ' + CAST(@TaxID AS varchar(20))
+                  SELECT @Msg = dbo.zf_Translate('Неверно задан код налоговой группы товара в ЭККА. ProdID = ') + CAST(@ProdIDInt AS varchar(20)) + ' TaxID = ' + CAST(@TaxID AS varchar(20))
                   RAISERROR(@Msg, 16, 1)
                   GOTO Error
                 END
@@ -214,7 +220,10 @@ BEGIN
                       SET @SrcPosIDDisc = @SrcPosID
                       EXEC @Result = t_SaleInsertProd @SrcPosID OUTPUT, @ProdIDInt, @TaxTypeID, @Qty, @PriceCC_wt, @SumCC_wt, @PriceCC_wt, @SumCC_wt,
                         @BarCode, @UM, @ChID, @OurID, @StockID, @SecID, @CRID, 0, @PLIDInt, @RealQty, NULL, @EmpID, @ADate, @ADate
-                      IF @Result <> 1 RAISERROR('Ошибка при сохранении товара в документе продажи', 16, 1)
+                      IF @Result <> 1 BEGIN
+ DECLARE @Error_msg2 varchar(2000) = dbo.zf_Translate('Ошибка при сохранении товара в документе продажи')
+ RAISERROR(@Error_msg2, 16, 1) END
+
 
                       UPDATE t_SaleD SET PriceCC_wt = RealPrice, SumCC_wt = RealSum, PurPriceCC_wt = RealPrice WHERE ChID = @ChID AND SrcPosID = @SrcPosIDDisc
                     END
@@ -341,13 +350,13 @@ BEGIN
                 BEGIN
                   SELECT @SrcPosIDInt = ISNULL(MAX(SrcPosID), 0) + 1 FROM t_SalePays WITH(XLOCK, HOLDLOCK) WHERE ChID = @ChID
                   INSERT INTO t_SalePays (ChID, SrcPosID, PayFormCode, SumCC_wt, Notes)
-                  SELECT @ChID, @SrcPosIDInt, @PayFormCode, @SumCC_wt, CASE WHEN @SumCC_wt < 0 THEN 'Сдача' ELSE NULL END
+                  SELECT @ChID, @SrcPosIDInt, @PayFormCode, @SumCC_wt, CASE WHEN @SumCC_wt < 0 THEN dbo.zf_Translate('Сдача') ELSE NULL END
                 END
               ELSE
                 BEGIN
                   SELECT @SrcPosIDInt = ISNULL(MAX(SrcPosID), 0) + 1 FROM t_CRRetPays WITH(XLOCK, HOLDLOCK) WHERE ChID = @ChID
                   INSERT INTO t_CRRetPays (ChID, SrcPosID, PayFormCode, SumCC_wt, Notes)
-                  SELECT @ChID, @SrcPosIDInt, @PayFormCode, @SumCC_wt, CASE WHEN @SumCC_wt < 0 THEN 'Сдача' ELSE NULL END
+                  SELECT @ChID, @SrcPosIDInt, @PayFormCode, @SumCC_wt, CASE WHEN @SumCC_wt < 0 THEN dbo.zf_Translate('Сдача') ELSE NULL END
                 END
             END
           IF @@ERROR <> 0 GOTO Error
@@ -577,4 +586,5 @@ BEGIN
     DEALLOCATE SaleSrvCursor
     ROLLBACK TRANSACTION
 END
+
 GO

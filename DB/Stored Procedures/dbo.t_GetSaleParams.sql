@@ -41,14 +41,14 @@ BEGIN
           IF @InUse = 1 AND @IsProcessing = 0
             BEGIN
               SET @Result = 0
-              SET @Msg = 'Подарочный сертификат уже продан.'
+              SET @Msg = dbo.zf_Translate('Подарочный сертификат уже продан.')
               RETURN
             END
 
           IF @Qty <> 1
             BEGIN
               SET @Result = 0
-              SET @Msg = 'Невозможно изменять количество для подарочного сертификата или бонусной карты.'
+              SET @Msg = dbo.zf_Translate('Невозможно изменять количество для подарочного сертификата или бонусной карты.')
               RETURN
             END
 
@@ -56,7 +56,7 @@ BEGIN
           IF @Sum > 0
             BEGIN
               SET @Result = 0
-              SET @Msg = 'Подарочный сертификат или бонусная карта уже добавлены в чек.'
+              SET @Msg = dbo.zf_Translate('Подарочный сертификат или бонусная карта уже добавлены в чек.')
               RETURN
             END
         END
@@ -65,4 +65,5 @@ BEGIN
   IF @PriceChanged = CAST(1 AS bit) RETURN
   EXEC t_GetProdPrice @DocCode, @ChID, @CRID, @BarCode, @PriceCC_wt OUTPUT, @PLID OUTPUT
 END
+
 GO

@@ -47,7 +47,13 @@ BEGIN
     END 
   ELSE 
     BEGIN 
-      RAISERROR ('t_Insert_Sales: Данный режим больше не поддерживается', 18, 1) 
+      BEGIN
+ 
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('t_Insert_Sales: Данный режим больше не поддерживается')
+ 
+      RAISERROR (@Error_msg1, 18, 1)  
+      END
+
       IF @@ERROR <> 0 GOTO Error 
     END 
 
@@ -55,4 +61,5 @@ BEGIN
   ERROR: 
     RETURN 0 
 END
+
 GO

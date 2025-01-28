@@ -284,7 +284,7 @@ BEGIN
         @ChID, @DocID, @DocID, @DocDate, @KursMC, @OurID, @StockID, 
         0 CodeID1, 0 CodeID2, @CodeID3 AS CodeID3, 0 CodeID4, 0 CodeID5, @EmpID, 
         CASE 
-          WHEN @DocCode = 11016 THEN 'Списание' 
+          WHEN @DocCode = 11016 THEN dbo.zf_Translate('Списание') 
           ELSE ''
         END Notes, 
         @DocDate, @SubStockID, 0 Value1, 0 Value2, 0 Value3, @CurrID,
@@ -470,4 +470,5 @@ BEGIN
   CLOSE SRec
   DEALLOCATE SRec
 END
+
 GO

@@ -69,7 +69,13 @@ ELSE IF (@DocCode = 14141)
   SELECT @KeyField = 'ChID', @RefTable = '', @TaxTypeExp = '0'
 ELSE
 BEGIN
-  RAISERROR ('Невозможно получить данные документа', 18, 1)
+  BEGIN
+
+  DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Невозможно получить данные документа')
+
+  RAISERROR (@Error_msg1, 18, 1)
+  END
+
   RETURN
 END
 
@@ -83,4 +89,5 @@ ELSE
     FROM ' + @DTableName + ' d JOIN ' + @MTableName + ' m ON d.ChID = m.ChID ' + @RefTable + ' WHERE d.ChID = ' + CAST(@ChID AS varchar(50))
 EXEC sp_executesql @SQLStr
 END
+
 GO
