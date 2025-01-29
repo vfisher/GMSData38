@@ -19,7 +19,7 @@ import os.path
 __author__ = "Oleksii Veseliev"
 __copyright__ = "Copyright (C) 2024 Oleksii Veseliev, GMS Service LLC"
 __license__ = "Public Domain"
-__version__ = "1.3"
+__version__ = "1.4"
 
 
 # # ---=== Настройки ===---
@@ -433,6 +433,10 @@ def parse_functions(conn):
     return parse_sql(cursor)
 
 
+def prepare_text(s):
+    return "\r\n".join(s.splitlines())
+
+
 def parse_sql(cursor):
     global counter
     parsed_script = ''
@@ -454,6 +458,7 @@ def parse_sql(cursor):
             if s1 == row.text:
                 # print('ХП пропущена: ' + row.name)
                 continue
+            s1 = prepare_text(s1)
             raisefixer = regex.compile(r"(?i)(?m)((\s*)(RAISERROR\s*\(\s*)(dbo.zf_Translate\('[^']*(?:\'\')*[^']*'\))(.*))", cache_pattern=True)
             counter = 1
             s1 = raisefixer.sub(repl_raiserror, s1)
