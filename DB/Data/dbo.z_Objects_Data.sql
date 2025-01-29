@@ -2570,3 +2570,5 @@ INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjT
 INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2714, N't_SaleGetRetContractID', N'Get bank contract id for sending to terminal', NULL, N'P', 1)
 INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2715, N'zf_Translate', N'Возвращает перевод для фразы', NULL, N'FN', 1)
 INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2716, N'zf_TranslateMetadata', N'Возвращает перевод для метаданных', NULL, N'FN', 1)
+INSERT INTO [dbo].[z_Objects] ([ObjCode], [ObjName], [ObjDesc], [ObjInfo], [ObjType], [RevID]) VALUES (2717, N't_SaleGetProdImage', N'Возвращает изображение товара для дополнительной панели ТК', NULL, N'P', 0)
+
