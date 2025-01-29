@@ -113,7 +113,7 @@ BEGIN
       SELECT @DocCRID = CRID FROM r_CRs WITH(NOLOCK) WHERE CRName = @STATION
       IF @DocCRID IS NULL
         BEGIN
-          SET @ErrorMessage = 'Невозможно сопоставить терминал ЭККА. В справочнике ЭККА не указан терминал (' + @STATION + ')'
+          SET @ErrorMessage = dbo.zf_Translate('Невозможно сопоставить терминал ЭККА. В справочнике ЭККА не указан терминал (') + @STATION + ')'
           GOTO Error
         END
 
@@ -178,7 +178,7 @@ BEGIN
         SELECT @DocCRID = CRID FROM r_CRs WITH(NOLOCK) WHERE CRName = @STATION
         IF @DocCRID IS NULL
           BEGIN
-            SET @ErrorMessage = 'Невозможно сопоставить терминал ЭККА. В справочнике ЭККА отсутствует терминал (' + @STATION + ')'
+            SET @ErrorMessage = dbo.zf_Translate('Невозможно сопоставить терминал ЭККА. В справочнике ЭККА отсутствует терминал (') + @STATION + ')'
             GOTO Error
           END
 
@@ -195,7 +195,7 @@ BEGIN
                                       EmpID, OurID, StockID, DCardID, CompID, CurrID)
         VALUES (@ShiftChID, @ChID, @DocCRID, @DATE0, @DATE0 + @TIME0, 0, @KursMC, 0, 0, 0, 0 ,0,
                 '', @NACENKA, @BILL, @DeskCode, @OperID, 0, @CHECKSUM, 0, 0,
-                @EmpID, @AOurID, @StockID, '<Нет дисконтной карты>', @CompID, @CurrID)
+                @EmpID, @AOurID, @StockID, dbo.zf_Translate('<Нет дисконтной карты>'), @CompID, @CurrID)
 
         /* По товарам чека */
         DECLARE CurFDCheck CURSOR LOCAL FAST_FORWARD FOR
@@ -244,12 +244,12 @@ BEGIN
         INTO @PAYCODE, @PAYSUM, @PAYRATE, @PAYCARD, @CARDTYPE
         WHILE @@FETCH_STATUS = 0
         BEGIN
-          SET @Notes = CASE WHEN @PAYSUM < 0 THEN 'Сдача' ELSE NULL END
+          SET @Notes = CASE WHEN @PAYSUM < 0 THEN dbo.zf_Translate('Сдача') ELSE NULL END
           SET @PayFormCode = NULL
           SELECT @PayFormCode = PayFormCode FROM r_PayForms WHERE PayFormCode = CAST(@CARDTYPE AS int)
           IF @PayFormCode IS NULL
             BEGIN
-              SET @ErrorMessage = 'Невозможно сопоставить коды платежей (' + @CARDTYPE + ')'
+              SET @ErrorMessage = dbo.zf_Translate('Невозможно сопоставить коды платежей (') + @CARDTYPE + ')'
               GOTO Error
             END
 
@@ -291,4 +291,5 @@ Error:
   IF @ErrorMessage IS NOT NULL RAISERROR (@ErrorMessage, 18, 1)
   RETURN 1
 END
+
 GO

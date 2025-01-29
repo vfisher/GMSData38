@@ -95,23 +95,23 @@ GROUP BY m.ProdID,
      pp.Article,
      UM,
      ((pl.PriceMC / c.KursMC) * @KursMC@)', 3, N'')
-INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (14, 0, N'Общие данные', 1, 1, N'SELECT m.ProdID, m.ProdName, m.UMFROM r_Prods m WITH ( NOLOCK ), @Table@ d WITH ( NOLOCK )WHERE d.ProdID=m.ProdID AND d.@Field@ LIKE @Value@ ORDER BY d.@Field@', 3, N'Общие данные')
-INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (15, 1, N'Баланс', 1, 1, N'SELECT ''Приход товара'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Rec m, t_RecD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Приход товара по ГТД'' DocName, SUM(SumCC_In) TSumCC, SUM(Qty) TQty FROM t_Cst m, t_CstD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Возврат товара поставщику'' DocName, -SUM(@SumCCField@) TSumCC, -SUM(Qty) TQty FROM t_CRet m, t_CRetD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@AND d.ProdID=@ProdID@', 3, N'Баланс')
+INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (14, 0, N'Общие данные', 1, 1, N'SELECT m.ProdID, m.ProdName, m.UMFROM r_Prods m WITH ( NOLOCK ), @Table@ d WITH ( NOLOCK )WHERE d.ProdID=m.ProdID AND d.@Field@ LIKE @Value@ ORDER BY d.@Field@', 3, N'tab_Comm')
+INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (15, 1, N'Баланс', 1, 1, N'SELECT ''Приход товара'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Rec m, t_RecD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Приход товара по ГТД'' DocName, SUM(SumCC_In) TSumCC, SUM(Qty) TQty FROM t_Cst m, t_CstD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Возврат товара поставщику'' DocName, -SUM(@SumCCField@) TSumCC, -SUM(Qty) TQty FROM t_CRet m, t_CRetD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@AND d.ProdID=@ProdID@', 3, N'tab_Balance')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (15, 2, N'Приход товара', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, c.CurrName, p.PriceAC, @PriceCCField@ AS PriceCC, p.PriceCC AS PriceCC_In, Sum(@SumCCField@) AS T@SumCCField@, Sum(Qty) AS TQty 
 FROM t_Rec m, t_RecD d, t_PInPs p, r_Currs c 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@ AND  p.CurrID = c.CurrID
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@, p.PriceCC, c.CurrName, p.PriceAC
 ORDER BY m.DocDate, m.DocID
-', 3, N'')
+', 3, N'tab_Rec')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (15, 3, N'Приход товара по ГТД', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, d.PriceCC_In AS PriceCC, p.PriceCC AS PriceCC_In, Sum(SumCC_In) AS SumCC, Sum(Qty) AS TQty FROM t_Cst m, t_CstD d, t_PInPs p WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, d.PriceCC_In, p.PriceCC ORDER BY m.DocDate, m.DocID', 3, N'')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (15, 4, N'Возврат товара поставщику', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@ AS PriceCC, p.PriceCC PriceCC_In, Sum(@SumCCField@) AS T@SumCCField@, Sum(Qty) AS TQty FROM t_CRet m, t_CRetD d, t_PInPs p WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@, p.PriceCC ORDER BY m.DocDate, m.DocID', 3, N'')
-INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (16, 1, N'Баланс', 1, 1, N'SELECT ''Расходная накладная'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Inv m, t_InvD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Расходный документ'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Exp m, t_ExpD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Расходный документ в ценах прихода'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Epp m, t_EppD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Возврат товара от получателя'' DocName, -SUM(@SumCCField@) TSumCC, -SUM(Qty) TQty FROM t_Ret m, t_RetD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@', 3, N'Баланс')
+INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (16, 1, N'Баланс', 1, 1, N'SELECT ''Расходная накладная'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Inv m, t_InvD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Расходный документ'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Exp m, t_ExpD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Расходный документ в ценах прихода'' DocName, SUM(@SumCCField@) TSumCC, SUM(Qty) TQty FROM t_Epp m, t_EppD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@UNIONSELECT ''Возврат товара от получателя'' DocName, -SUM(@SumCCField@) TSumCC, -SUM(Qty) TQty FROM t_Ret m, t_RetD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@', 3, N'tab_Balance')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (16, 2, N'Расходная накладная', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, c.CurrName, @PriceCCField@ AS PriceCC, p.PriceCC AS PriceCC_In, Sum(@SumCCField@) AS T@SumCCField@, Sum(Qty) AS TQty 
 FROM t_Inv m, t_InvD d, t_PInPs p, r_Currs c 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@ AND m.CurrID = c.CurrID
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@, p.PriceCC, c.CurrName
-ORDER BY m.DocDate, m.DocID', 3, N'')
-INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (16, 3, N'Расходный документ', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@ AS PriceCC, p.PriceCC AS PriceCC_In, Sum(@SumCCField@) AS T@SumCCField@, Sum(Qty) AS TQty FROM t_Exp m, t_ExpD d, t_PInPs p WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@, p.PriceCC ORDER BY m.DocDate, m.DocID', 3, N'')
+ORDER BY m.DocDate, m.DocID', 3, N'tab_Inv')
+INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (16, 3, N'Расходный документ', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@ AS PriceCC, p.PriceCC AS PriceCC_In, Sum(@SumCCField@) AS T@SumCCField@, Sum(Qty) AS TQty FROM t_Exp m, t_ExpD d, t_PInPs p WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, @PriceCCField@, p.PriceCC ORDER BY m.DocDate, m.DocID', 3, N'tab_Exp')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (16, 4, N'Расходный документ в ЦП', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, c.CurrName, @PriceCCField@ AS PriceCC, p.PriceCC AS PriceCC_In, Sum(@SumCCField@) AS T@SumCCField@, Sum(Qty) AS TQty 
 FROM t_Epp m, t_EppD d, t_PInPs p, r_Currs c 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@ AND m.CurrID = c.CurrID
@@ -134,31 +134,31 @@ UNION
 SELECT ''Приход товара'' DocName, SUM(CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN SumCC_wt ELSE SumCC_nt END) TSumCC, SUM(Qty) TQty FROM b_Rec m, b_RecD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@
 UNION
 SELECT ''Возврат товара'' DocName, SUM(CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN SumCC_wt ELSE SumCC_nt END) TSumCC, SUM(Qty) TQty FROM b_Ret m, b_RetD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@
-', 3, N'Баланс')
+', 3, N'tab_Balance')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (19, 1, N'Расходная накладная', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Inv m, b_InvD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Расходная накладная')
+', 3, N'tab_Inv')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (19, 2, N'Расходный документ', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Exp m, b_ExpD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Расходный документ')
+', 3, N'tab_Exp')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (19, 3, N'Приход товара', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Rec m, b_RecD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Приход товара')
+', 3, N'tab_Rec')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (19, 4, N'Возврат товара', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Ret m, b_RetD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Возврат товара')
+', 3, N'tab_Ret')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (20, 0, N'Баланс', 1, 1, N'SELECT ''Расходная накладная'' DocName, SUM(CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN SumCC_wt ELSE SumCC_nt END) TSumCC, SUM(Qty) TQty FROM b_Inv m, b_InvD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@
 UNION
 SELECT ''Расходный документ'' DocName, SUM(CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN SumCC_wt ELSE SumCC_nt END) TSumCC, SUM(Qty) TQty FROM b_Exp m, b_ExpD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@
@@ -166,31 +166,31 @@ UNION
 SELECT ''Приход товара'' DocName, SUM(CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN SumCC_wt ELSE SumCC_nt END) TSumCC, SUM(Qty) TQty FROM b_Rec m, b_RecD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@
 UNION
 SELECT ''Возврат товара'' DocName, SUM(CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN SumCC_wt ELSE SumCC_nt END) TSumCC, SUM(Qty) TQty FROM b_Ret m, b_RetD d WHERE m.ChID=d.ChID AND m.OurID=@OurID@  AND m.StockID=@StockID@ AND m.CompID=@CompID@ AND d.ProdID=@ProdID@
-', 3, N'Баланс')
+', 3, N'tab_Balance')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (20, 1, N'Расходная накладная', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Inv m, b_InvD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Расходная накладная')
+', 3, N'tab_Inv')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (20, 2, N'Расходный документ', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Exp m, b_ExpD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Расходный документ')
+', 3, N'tab_Exp')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (20, 3, N'Приход товара', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Rec m, b_RecD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Приход товара')
+', 3, N'tab_Rec')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (20, 4, N'Возврат товара', 1, 1, N'SELECT m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END AS SumCC, p.PriceCC, Sum(SumCC_wt) AS TSumCC_wt, Sum(SumCC_nt) AS TSumCC_nt, Sum(TaxSum) AS TTaxSum, Sum(Qty) AS TQty 
 FROM b_Ret m, b_RetD d, b_PInPs p 
 WHERE m.ChID=d.ChID AND d.ProdID=p.ProdID AND d.PPID=p.PPID AND m.OurID=@OurID@ AND m.CompID=@CompID@ AND m.StockID=@StockID@ AND d.ProdID=@ProdID@
 GROUP BY m.ChID, m.DocID, m.DocDate, d.PPID, CASE dbo.zf_Var(''b_WithTax'') WHEN 1 THEN PriceCC_wt ELSE PriceCC_nt END, p.PriceCC 
 ORDER BY m.DocDate, m.DocID
-', 3, N'Возврат товара')
+', 3, N'tab_Ret')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (21, 1, N'Партии', 1, 1, N'IF dbo.zf_UserPPAcc() = 1
     SELECT PPID, PriceCC_In, CompName, PPDelay, ProdDate, Article
     FROM b_PInP m, r_Comps c
@@ -251,7 +251,7 @@ INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle
   ISNULL(ROUND((SELECT Sum(LinkSumCC) FROM z_DocLinks d WHERE m.ChID = d.@LinkChIDField@ AND d.@LinkDocCodeField@ = @LinkDocCode@),2), 0) AS LinkSumCC 
 FROM @TableName@ m, @IdentifierTableName@
 WHERE m.OurID = @OurID@ AND m.@IdentifierIDNoAlias@ = @IdentifierID@
-', 3, N'Список')
+', 3, N'tab_List')
 INSERT INTO [dbo].[z_ToolPages] ([ToolCode], [PageIndex], [PageName], [PageStyle], [PageVisible], [SQLStr], [SQLType], [IntName]) VALUES (42, 1, N'Проводник по товарам', 5, 1, N'-- CreateTree(PCatName, PGrName, PGrName1, PGrName2, PGrName3)  
 -- CreateGridLevel(0, ProdName, UM, PriceCC, RemQty, ProdID, Barcode, Notes, PCatID, PGrID, PGrID1, PGrID2, PGrID3, PGrName, PGrName1, PGrName2, PGrName3) 
 -- CreateGridLevel(1, ProdName, UM, PriceCC, RemQty, ProdID, Barcode, Notes, PCatID, PGrID, PGrID1, PGrID2, PGrID3, PGrName1, PGrName2, PGrName3) 

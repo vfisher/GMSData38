@@ -40,7 +40,7 @@ GROUP BY OurID, EmpID, CASE WHEN GEmpType = 3 THEN 3 ELSE 1 END
 /* 
 /* Смена фамилии */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note) 
-SELECT  n.OurID, n.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END), MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END), CASE WHEN GEmpType = 3 THEN 3 ELSE 1 END, 'смена фамилии' 
+SELECT  n.OurID, n.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END), MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END), CASE WHEN GEmpType = 3 THEN 3 ELSE 1 END, dbo.zf_Translate('смена фамилии') 
 FROM   r_EmpMPst r JOIN r_EmpNamesDates n ON n.OurID = r.OurID AND n.EmpID = r.EmpID 
 WHERE  n.OurID = @OurID AND n.BDate BETWEEN @PeriodBegin AND @PeriodEnd 
 GROUP BY n.OurID, n.EmpID, CASE WHEN GEmpType = 3 THEN 3 ELSE 1 END 
@@ -48,28 +48,28 @@ GROUP BY n.OurID, n.EmpID, CASE WHEN GEmpType = 3 THEN 3 ELSE 1 END
  
 /* Больничный по беременности и родам */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note) 
-SELECT  n.OurID, n.EmpID, MIN(n.SickBDate)/*MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END)*/, MIN(n.SickEDate)/*MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END)*/, 5 /*PensCatID*/, 'беременность и роды - больничный' 
+SELECT  n.OurID, n.EmpID, MIN(n.SickBDate)/*MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END)*/, MIN(n.SickEDate)/*MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END)*/, 5 /*PensCatID*/, dbo.zf_Translate('беременность и роды - больничный') 
 FROM   r_EmpMPst r JOIN p_ESic n ON n.OurID = r.OurID AND n.EmpID = r.EmpID AND n.SickType IN (8) 
 WHERE  n.OurID = @OurID AND n.SickBDate BETWEEN @PeriodBegin AND @PeriodEnd 
 GROUP BY n.OurID, n.EmpID, PensCatID 
  
 /* Отпуск по уходу за ребенком до 3 лет */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note) 
-SELECT  m.OurID, n.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END), MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END), 6, 'беременность и роды, отпуск по уходу - отпуски' 
+SELECT  m.OurID, n.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END), MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END), 6, dbo.zf_Translate('беременность и роды, отпуск по уходу - отпуски') 
 FROM   r_EmpMPst r JOIN (p_ELeav m JOIN p_ELeavD n ON m.ChID = n.ChID) ON m.OurID = r.OurID AND n.EmpID = r.EmpID AND n.LeavType IN (41,1042) 
 WHERE  m.OurID = @OurID AND n.BDate BETWEEN @PeriodBegin AND @PeriodEnd 
 GROUP BY m.OurID, n.EmpID, PensCatID 
  
 /* Отпуск по уходу за ребенком до 6 лет */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note) 
-SELECT  m.OurID, n.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END), MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END), 4, 'беременность и роды, отпуск по уходу - отпуски' 
+SELECT  m.OurID, n.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END), MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END), 4, dbo.zf_Translate('беременность и роды, отпуск по уходу - отпуски') 
 FROM   r_EmpMPst r JOIN (p_ELeav m JOIN p_ELeavD n ON m.ChID = n.ChID) ON m.OurID = r.OurID AND n.EmpID = r.EmpID AND n.LeavType IN (42,1043) 
 WHERE  m.OurID = @OurID AND n.BDate BETWEEN @PeriodBegin AND @PeriodEnd 
 GROUP BY m.OurID, n.EmpID, PensCatID 
 */ 
  
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT s.OurID, s.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN s.BDate ELSE NULL END), null, CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ 'принятые', 
+SELECT s.OurID, s.EmpID, MIN(CASE WHEN IsGivDoc = 1 THEN s.BDate ELSE NULL END), null, CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ dbo.zf_Translate('принятые'), 
 m.DocDate, m.WOrderID AS BDateWOrderID,  s.PostID 
 FROM   r_EmpMPst s  
 LEFT JOIN p_EGiv m ON m.OurID = s.OurID AND m.EmpID = s.EmpID 
@@ -78,7 +78,7 @@ GROUP BY s.OurID, s.EmpID, m.WOrderID, m.DocDate,m.WorkAppDate, s.PostID, CASE W
 HAVING MIN(CASE WHEN IsGivDoc = 1 THEN s.BDate ELSE NULL END) = m.WorkAppDate  
  
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT s.OurID, s.EmpID, null, MAX(CASE WHEN IsDisDoc = 1 THEN s.EDate ELSE NULL END ), CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ 'уволенные',  
+SELECT s.OurID, s.EmpID, null, MAX(CASE WHEN IsDisDoc = 1 THEN s.EDate ELSE NULL END ), CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ dbo.zf_Translate('уволенные'),  
 m1.DocDate, m1.WOrderID AS EDateWOrderID,  s.PostID 
 FROM   r_EmpMPst s  
 LEFT JOIN p_EDis m1 ON m1.OurID = s.OurID AND m1.EmpID = s.EmpID  
@@ -87,7 +87,7 @@ GROUP BY s.OurID, s.EmpID, m1.WOrderID, m1.DocDate, m1.DisDate, s.PostID, CASE W
 HAVING  MAX(CASE WHEN IsDisDoc = 1 THEN s.EDate ELSE NULL END ) = m1.DisDate 
  
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT s.OurID, s.EmpID, s.BDate, s.EDate, CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ 'перемещение', 
+SELECT s.OurID, s.EmpID, s.BDate, s.EDate, CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ dbo.zf_Translate('перемещение'), 
  m1.DocDate, m1.WOrderID AS EDateWOrderID,s.PostID 
 FROM   r_EmpMPst s  
 LEFT JOIN p_EExc AS m1 ON m1.OurID = s.OurID AND m1.EmpID = s.EmpID AND m1.ExcDate BETWEEN s.BDate AND s.EDate AND s.IsDisDoc = 0 AND s.IsGivDoc = 0 
@@ -95,7 +95,7 @@ WHERE  s.OurID = @OurID AND s.BDate BETWEEN @PeriodBegin AND @PeriodEnd AND (IsD
 AND DATEADD(d,-1,m1.ExcDate) BETWEEN f.BDate AND f.EDate) 
  
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT s.OurID, s.EmpID, s.BDate, s.EDate, CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ 'перемещение-списком', 
+SELECT s.OurID, s.EmpID, s.BDate, s.EDate, CASE WHEN s.GEmpType = 3 THEN 3 ELSE 1 END, /* PensCatID, */ dbo.zf_Translate('перемещение-списком'), 
 m.DocDate, m.WOrderID AS EDateWOrderID, s.PostID 
 FROM   r_EmpMPst s  
 LEFT JOIN (p_LExc AS m RIGHT JOIN p_LExcD n ON m.ChID=n.ChID) ON m.OurID = s.OurID AND n.EmpID = s.EmpID AND m.ExcDate BETWEEN s.BDate AND s.EDate AND s.IsDisDoc = 0 AND s.IsGivDoc = 0 
@@ -105,7 +105,7 @@ AND DATEADD(d,-1,m.ExcDate) BETWEEN f.BDate AND f.EDate)
  
 /* Больничный по беременности и родам */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT  n.OurID, n.EmpID, MIN(n.SickBDate)/*MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END)*/, MIN(n.SickEDate)/*MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END)*/, 5 /*PensCatID*/, 'беременность и роды - больничный' 
+SELECT  n.OurID, n.EmpID, MIN(n.SickBDate)/*MIN(CASE WHEN IsGivDoc = 1 THEN r.BDate ELSE NULL END)*/, MIN(n.SickEDate)/*MAX(CASE WHEN IsDisDoc = 1 THEN r.EDate ELSE NULL END)*/, 5 /*PensCatID*/, dbo.zf_Translate('беременность и роды - больничный') 
 ,n.DocDate,n.SickDocID,  r.PostID 
 FROM   r_EmpMPst r JOIN p_ESic n ON n.OurID = r.OurID AND n.EmpID = r.EmpID AND n.SickType IN (8) 
 WHERE  n.OurID = @OurID AND n.SickBDate BETWEEN @PeriodBegin AND @PeriodEnd 
@@ -115,7 +115,7 @@ HAVING MIN(n.SickBDate) IS NOT NULL AND MIN(n.SickEDate) IS NOT NULL
  
 /* Отпуск по уходу за ребенком до 3 лет */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT  m.OurID, n.EmpID, CASE WHEN n.BDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.BDate ELSE NULL END, CASE WHEN n.EDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.EDate ELSE NULL END, 6, 'беременность и роды, отпуск по уходу - отпуски' 
+SELECT  m.OurID, n.EmpID, CASE WHEN n.BDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.BDate ELSE NULL END, CASE WHEN n.EDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.EDate ELSE NULL END, 6, dbo.zf_Translate('беременность и роды, отпуск по уходу - отпуски') 
 ,m.DocDate, m.WOrderID,  r.PostID 
 FROM   r_EmpMPst r JOIN (p_ELeav m JOIN p_ELeavD n ON m.ChID = n.ChID) ON m.OurID = r.OurID AND n.EmpID = r.EmpID AND n.LeavType IN (41,1042) 
 WHERE  m.OurID = @OurID 
@@ -124,7 +124,7 @@ AND (CASE WHEN n.BDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.BDate ELSE NUL
  
 /* Отпуск по уходу за ребенком до 6 лет */ 
 INSERT INTO @EmpMPst(OurID, EmpID, BDate, EDate, PensCatID, note, DocDate, WOrderID, PostID) 
-SELECT  m.OurID, n.EmpID,  CASE WHEN n.BDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.BDate ELSE NULL END, CASE WHEN n.EDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.EDate ELSE NULL END, 4, 'беременность и роды, отпуск по уходу - отпуски' 
+SELECT  m.OurID, n.EmpID,  CASE WHEN n.BDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.BDate ELSE NULL END, CASE WHEN n.EDate BETWEEN @PeriodBegin AND @PeriodEnd THEN n.EDate ELSE NULL END, 4, dbo.zf_Translate('беременность и роды, отпуск по уходу - отпуски') 
 ,m.DocDate, m.WOrderID,  r.PostID 
 FROM   r_EmpMPst r JOIN (p_ELeav m JOIN p_ELeavD n ON m.ChID = n.ChID) ON m.OurID = r.OurID AND n.EmpID = r.EmpID AND n.LeavType IN (42,1043) 
 WHERE  m.OurID = @OurID  
@@ -161,7 +161,7 @@ SELECT  CASE WHEN e.TaxCode = '' THEN CASE
         /* AS ZKPP,  */
         p.PostClassifierCode  AS PROF, 
         UPPER(LEFT(p.PostName,1))+LOWER(SUBSTRING(p.PostName,2,LEN(p.PostName))) AS POS, 
-        ISNULL('Наказ від ' + convert(varchar, s.DocDate, 104)  + ' №' +  s.WOrderID, '')     AS PID, 
+        ISNULL(dbo.zf_Translate('Наказ від ') + convert(varchar, s.DocDate, 104)  + ' №' +  s.WOrderID, '')     AS PID, 
         note, s.empid 
 FROM    (SELECT t1.* FROM @EmpMPst t1 /*JOIN (SELECT MIN(ID) ID, OurID, EmpID FROM @EmpMPst GROUP BY OurID, EmpID) t2 ON t2.ID = t1.ID*/) s 
         INNER JOIN r_Emps e ON e.EmpID = s.EmpID 
@@ -179,22 +179,22 @@ DECLARE @numident VARCHAR(25)
 DECLARE CursorEmp CURSOR LOCAL FAST_FORWARD FOR  
  SELECT numident, pid 
  FROM @ResEmpMPst 
- WHERE note='принятые' 
+ WHERE note=dbo.zf_Translate('принятые') 
  
   OPEN CursorEmp  
   FETCH NEXT FROM CursorEmp  
   INTO @numident, @pid 
   WHILE @@FETCH_STATUS = 0  
     BEGIN  
-    IF EXISTS (SELECT pid FROM @ResEmpMPst WHERE note='уволенные' AND @numident=numident)  
+    IF EXISTS (SELECT pid FROM @ResEmpMPst WHERE note=dbo.zf_Translate('уволенные') AND @numident=numident)  
     	BEGIN 
         UPDATE @ResEmpMPst 
-        SET	pid = @pid + ',' + (SELECT pid FROM @ResEmpMPst WHERE note='уволенные' AND @numident=numident), 
-        END_DT = (SELECT END_DT FROM @ResEmpMPst WHERE note='уволенные' AND @numident=numident), 
-        PID_ZV = (SELECT PID_ZV FROM @ResEmpMPst WHERE note='уволенные' AND @numident=numident) 
-        WHERE note='принятые' AND @numident=numident 
+        SET	pid = @pid + ',' + (SELECT pid FROM @ResEmpMPst WHERE note=dbo.zf_Translate('уволенные') AND @numident=numident), 
+        END_DT = (SELECT END_DT FROM @ResEmpMPst WHERE note=dbo.zf_Translate('уволенные') AND @numident=numident), 
+        PID_ZV = (SELECT PID_ZV FROM @ResEmpMPst WHERE note=dbo.zf_Translate('уволенные') AND @numident=numident) 
+        WHERE note=dbo.zf_Translate('принятые') AND @numident=numident 
          
-        DELETE FROM @ResEmpMPst WHERE note='уволенные' AND @numident=numident 
+        DELETE FROM @ResEmpMPst WHERE note=dbo.zf_Translate('уволенные') AND @numident=numident 
        END 
        
     	FETCH NEXT FROM CursorEmp  
@@ -206,4 +206,5 @@ DECLARE CursorEmp CURSOR LOCAL FAST_FORWARD FOR
    
 SELECT * FROM @ResEmpMPst 
 END
+
 GO

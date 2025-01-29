@@ -24,7 +24,13 @@ BEGIN
   WHERE m.WPID = @WPID
   IF @ForRet = 0 AND @BTime < DATEADD(hh, -@BookingOpenWorkHours, GETDATE())
     BEGIN
-      RAISERROR('Указанное время услуги находится за пределами открытого периода. Измените время услуги.', 16, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Указанное время услуги находится за пределами открытого периода. Измените время услуги.')
+
+      RAISERROR(@Error_msg1, 16, 1)
+      END
+
       RETURN     
     END
 
@@ -60,4 +66,5 @@ BEGIN
         END    
     END
 END
+
 GO

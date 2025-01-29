@@ -10,7 +10,7 @@ BEGIN
 IF @ActualDate = '19000101'
   SET @ActualDate = GETDATE()
 
-IF @DocName = 'Структура предприятия'
+IF @DocName = dbo.zf_Translate('Структура предприятия')
 BEGIN
   INSERT INTO @tmpStrucDoc(ID, ChID, SrcPosID, SubID, FSubID, SubName, ParentSubID,  EmpCount, EmpCountFree, Height, Width)
   SELECT TOP 1 0 ID, m.ChID, 0 SrcPosID, 0 SubID, 0 FSubID, (SELECT OurName FROM r_Ours WHERE OurID = m.OurID) SubName, 0 ParentSubID, 0, 0,
@@ -26,7 +26,7 @@ BEGIN
   FROM p_SubStruc m, p_SubStrucD d
   WHERE m.ChID = d.ChID AND m.OurID = @OurID AND d.ChID = @ChID
 END
-IF @DocName = 'Структура должностей'
+IF @DocName = dbo.zf_Translate('Структура должностей')
 BEGIN
 
 /*Создание таблицы для формирования наименований в блоках по коду должности в структуре*/
@@ -169,7 +169,7 @@ ISNULL(r.Joint, dd1.Joint) AS Joint,
        CASE WHEN (ISNULL(r.EmpID, CASE WHEN dd1.OrderType <> 1 THEN dd1.EmpID END) IS NOT NULL) AND  
         /* dd1.Joint = 1 */
                 ISNULL(r.Joint, dd1.Joint) = 1
-       THEN '(совм)' ELSE '' END  AS EmpName 
+       THEN dbo.zf_Translate('(совм)') ELSE '' END  AS EmpName 
      FROM p_PostStrucD dd
      INNER JOIN p_PostStruc mm ON dd.ChID = mm.ChID AND mm.OurID = @OurID  AND mm.ChID = @ChID
      LEFT JOIN r_EmpMPst r ON mm.OurID = r.OurID 
@@ -208,8 +208,8 @@ SELECT
   UPPER(S1.SubName) + Char(10) + replicate('_',20) + Char(10) +
   S1.PostName  + Char(10) + replicate('_',20) + Char(10) +
   CASE WHEN t.EmpName <> '' THEN t.EmpName + CHAR(10) ELSE '' END +
-  CASE WHEN t.EmpCount <> 0 THEN ('( ' + CAST(t.EmpCount AS varchar(8000)) + ' чел. )') + CHAR(10) ELSE '' END +
-  CASE WHEN t.EmpCountFree <> 0 THEN ('( вакансий: ' + CAST(t.EmpCountFree AS varchar(8000)) + ' )') ELSE '' END AS SubName,
+  CASE WHEN t.EmpCount <> 0 THEN ('( ' + CAST(t.EmpCount AS varchar(8000)) + dbo.zf_Translate(' чел. )')) + CHAR(10) ELSE '' END +
+  CASE WHEN t.EmpCountFree <> 0 THEN (dbo.zf_Translate('( вакансий: ') + CAST(t.EmpCountFree AS varchar(8000)) + ' )') ELSE '' END AS SubName,
   S1.ParentSubID,
 
   t.EmpCount AS EmpCount,
@@ -219,8 +219,8 @@ SELECT
     LEN(S1.SubName) = 0 THEN 20 ELSE LEN(S1.SubName) END +
     LEN(Char(10) + '______________________' + Char(10) +  S1.PostName  + Char(10) + '______________________' + Char(10) +
     CASE WHEN t.EmpName <> '' THEN t.EmpName + CHAR(10) ELSE '' END +
-    CASE WHEN t.EmpCount <> 0 THEN ('( ' + CAST(t.EmpCount AS varchar(8000)) + ' чел. )') + CHAR(10) ELSE '' END +
-    CASE WHEN t.EmpCountFree <> 0 THEN ('( вакансий: ' + CAST(t.EmpCountFree AS varchar(8000)) + ' )') ELSE '' END) + 20 AS Height,
+    CASE WHEN t.EmpCount <> 0 THEN ('( ' + CAST(t.EmpCount AS varchar(8000)) + dbo.zf_Translate(' чел. )')) + CHAR(10) ELSE '' END +
+    CASE WHEN t.EmpCountFree <> 0 THEN (dbo.zf_Translate('( вакансий: ') + CAST(t.EmpCountFree AS varchar(8000)) + ' )') ELSE '' END) + 20 AS Height,
   150 AS Width
 FROM
 (
@@ -282,4 +282,5 @@ JOIN @tmpStruc t ON S1.PostID = t.PostID AND S1.SubID = t.SubID AND S1.ParentSub
 END
 RETURN
 END
+
 GO

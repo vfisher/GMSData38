@@ -47,7 +47,13 @@ BEGIN
   /* Если вместо акцизной марки передали мусор */
   IF EXISTS(SELECT * FROM r_Prods WITH(NOLOCK) WHERE ProdID = @ProdID AND RequireLevyMark = 1 AND @AskLevyMark = 1 AND @LevyMark NOT LIKE '[a-z][a-z][a-z][a-z][0-9][0-9][0-9][0-9][0-9][0-9]')
     BEGIN 
-      RAISERROR('Формат акцизной марки некорректен.', 16, 1) 
+      BEGIN
+ 
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Формат акцизной марки некорректен.')
+ 
+      RAISERROR(@Error_msg1, 16, 1)  
+      END
+
       RETURN 
     END 
 
@@ -56,7 +62,13 @@ BEGIN
             WHERE ChID = @ChID AND ProdID = @ProdID AND SrcPosID <> @SrcPosID AND @Qty > 0 AND @AskLevyMark = 1 And @LevyMark IS NOT NULL AND LevyMark = @LevyMark
            )
     BEGIN 
-      RAISERROR('Товар с такой акцизной маркой уже присутствует в этом чеке.', 16, 1) 
+      BEGIN
+ 
+      DECLARE @Error_msg2 varchar(2000) = dbo.zf_Translate('Товар с такой акцизной маркой уже присутствует в этом чеке.')
+ 
+      RAISERROR(@Error_msg2, 16, 1)  
+      END
+
       RETURN 
     END 
 
@@ -159,7 +171,13 @@ END
       SELECT TOP 1 @PPID = PPID FROM dbo.tf_GetRetPPIDs(@OurID, @CompID, @ProdID, @SrcDocDate, @SrcDocID, 1, @StockID) 
       IF @PPID IS NULL AND @UseZeroPPID = 0 
         BEGIN 
-          RAISERROR('Невозможно определить партию для документа возврата.', 16, 1) 
+          BEGIN
+ 
+          DECLARE @Error_msg3 varchar(2000) = dbo.zf_Translate('Невозможно определить партию для документа возврата.')
+ 
+          RAISERROR(@Error_msg3, 16, 1)  
+          END
+
           RETURN 
         END 
       SET @PPID = ISNULL(@PPID, 0) 
@@ -182,7 +200,13 @@ END
     BEGIN 
       IF @SrcPosID IS NULL 
         BEGIN 
-          RAISERROR('Позиция в базе данных отсутствует.', 16, 1) 
+          BEGIN
+ 
+          DECLARE @Error_msg4 varchar(2000) = dbo.zf_Translate('Позиция в базе данных отсутствует.')
+ 
+          RAISERROR(@Error_msg4, 16, 1)  
+          END
+
           RETURN 
         END 
       UPDATE t_CRRetD 
@@ -257,4 +281,5 @@ END
   SET @ValidQty = @Qty - @ValidQty 
   IF @ValidQty <> 0 EXEC t_SaveRetChequePos -1, @ChID, @ProdID, @TaxTypeID, @UM, @ValidQty, @PriceCC_wt, @BarCode, -1, @LinkSale, @EmpID, @CReasonID, @UseZeroPPID, @MarkCode, @AskLevyMark, @LevyMark
 END
+
 GO

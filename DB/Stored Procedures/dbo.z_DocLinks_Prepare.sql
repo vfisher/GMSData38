@@ -93,6 +93,7 @@ BEGIN
     @ParentDocCode, @ParentDocName, @ParentChID, @ParentDocID, @ParentDocDate, @ParentSumCC, @ParentSumCCClosed, @ParentSumCCFree,
     @ChildDocCode, @ChildDocName, @ChildChID, @ChildDocID, @ChildDocDate, @ChildSumCC, @ChildSumCCClosed, @ChildSumCCFree,
     @DocLinkTypeID, @LinkSumCC, @RepToolCode, @ToolCode, @ShowDialog,
-    'Укажите сумму связи и тип. Сумма связи, как правило, влияет на размер дебиторской задолженности. Тип связи определяет логический смысл связи и используется при дальнейшем анализе')
+    dbo.zf_Translate('Укажите сумму связи и тип. Сумма связи, как правило, влияет на размер дебиторской задолженности. Тип связи определяет логический смысл связи и используется при дальнейшем анализе'))
 END
+
 GO

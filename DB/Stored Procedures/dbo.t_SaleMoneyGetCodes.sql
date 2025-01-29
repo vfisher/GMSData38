@@ -32,11 +32,12 @@ BEGIN
 SELECT m.MPayDesc, m.CodeID1, m.CodeID2, m.CodeID3, m.CodeID4, m.CodeID5, m.SumCC, CASE WHEN m.SumCC <> 0 THEN 1 ELSE 0 END AS IsReadOnly
 FROM (
 SELECT MPayDesc, CodeID1, CodeID2, CodeID3, CodeID4, CodeID5,
-  CASE WHEN @IsRec = 1 AND MPayDesc = 'Служебный внос' AND @LastMonIntExp - @FirstMonIntRec > 0 THEN @LastMonIntExp ELSE 
-    CASE WHEN @IsRec = 0 AND MPayDesc = 'Служебный вынос' THEN @SumCash ELSE 0 END END AS SumCC
+  CASE WHEN @IsRec = 1 AND MPayDesc = dbo.zf_Translate('Служебный внос') AND @LastMonIntExp - @FirstMonIntRec > 0 THEN @LastMonIntExp ELSE 
+    CASE WHEN @IsRec = 0 AND MPayDesc = dbo.zf_Translate('Служебный вынос') THEN @SumCash ELSE 0 END END AS SumCC
 FROM r_CRMM 
 WHERE WPRoleID = @WPRoleID AND IsRec = @IsRec 
 /*WHERE CRID = @CRID AND IsRec = @IsRec */
 ) m	
 END
+
 GO

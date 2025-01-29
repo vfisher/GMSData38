@@ -25,30 +25,30 @@ BEGIN
 
   IF @DCardChID IS NULL
     BEGIN
-      SET @Msg = 'Дисконтная карта с номером ''' + @DCardID + ''' не существует.'
+      SET @Msg = dbo.zf_Translate('Дисконтная карта с номером ''') + @DCardID + dbo.zf_Translate(''' не существует.')
       RETURN
     END
 
   IF EXISTS (SELECT TOP 1 1 FROM z_DocDC WHERE DCardChID = @DCardChID AND ChID = @ChID AND DocCode = @DocCode)
     BEGIN
-      SET @Msg = 'Дисконтная карта с номером ''' + @DCardID + ''' уже используется.'
+      SET @Msg = dbo.zf_Translate('Дисконтная карта с номером ''') + @DCardID + dbo.zf_Translate(''' уже используется.')
       RETURN
     END
 
   IF @DCardDate IS NOT NULL AND @DCardDate < dbo.zf_GetDate(GetDate())
     BEGIN
-      SET @Msg = 'Срок действия дисконтной карты истек.'
+      SET @Msg = dbo.zf_Translate('Срок действия дисконтной карты истек.')
       RETURN
     END
   IF @DCardInUse = 0
     BEGIN
-      SET @Msg = 'Дисконтная карта заблокирована.'
+      SET @Msg = dbo.zf_Translate('Дисконтная карта заблокирована.')
       RETURN
     END
 
   IF @DCTypeCode = 0
     BEGIN
-      SET @Msg = 'Тип данной карты не указан.'
+      SET @Msg = dbo.zf_Translate('Тип данной карты не указан.')
       RETURN
     END
 
@@ -58,9 +58,9 @@ BEGIN
   IF @MaxQty <> 0 AND (SELECT COUNT(*) FROM z_DocDC d WITH(NOLOCK), r_DCards r  WITH(NOLOCK) WHERE d.DCardChID = r.ChID AND d.DocCode = @DocCode AND d.ChID = @ChID AND r.DCTypeCode = @DCTypeCode) >= @MaxQty
     BEGIN
       IF @MaxQty = 1 
-        SET @Msg = 'Дисконтная карта данного типа уже используется.'
+        SET @Msg = dbo.zf_Translate('Дисконтная карта данного типа уже используется.')
       ELSE 
-        SET @Msg = 'Невозможно использовать дисконтную карту данного типа. Максимально возможное количество: ' + CAST(@MaxQty AS varchar(10))
+        SET @Msg = dbo.zf_Translate('Невозможно использовать дисконтную карту данного типа. Максимально возможное количество: ') + CAST(@MaxQty AS varchar(10))
       RETURN
     END
 
@@ -70,8 +70,8 @@ BEGIN
   IF (@MainDialogCur = 1 AND @DCTypeGCode <> 0) OR (@MainDialogCur = 0 AND @DCTypeGCode <> @DCTypeGCodeCur)
     BEGIN
       IF @MainDialogCur = 1 AND @DCTypeGCode <> 0 
-        SELECT @DCTypeGNameCur = 'Дисконтные карты'
-      SET @Msg = 'Данная дисконтная карта должна вводиться в окно ''' + @DCTypeGNameCur + '''.'
+        SELECT @DCTypeGNameCur = dbo.zf_Translate('Дисконтные карты')
+      SET @Msg = dbo.zf_Translate('Данная дисконтная карта должна вводиться в окно ''') + @DCTypeGNameCur + '''.'
       RETURN
     END
 
@@ -80,4 +80,5 @@ BEGIN
 
   SET @Result = 1
 END
+
 GO

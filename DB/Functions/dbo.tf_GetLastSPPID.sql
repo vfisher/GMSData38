@@ -39,7 +39,7 @@ BEGIN
     ON d.DetProdID = pp.ProdID AND d.PPID = pp.PPID
     WHERE 
       d.NewQty > d.Qty AND m.DocDate = pp.ProdDate
-      AND pp.PPDesc = 'Инвентаризация'
+      AND pp.PPDesc = dbo.zf_Translate('Инвентаризация')
       AND m.OurID = ISNULL(@OurID, m.OurID) 
       AND m.StockID = ISNULL(@StockID, m.StockID)
       AND m.DocDate <= @DocDate
@@ -84,4 +84,5 @@ BEGIN
       DocDate DESC, PPID DESC
   RETURN ISNULL(@PPID, 0)
 END
+
 GO

@@ -33,7 +33,7 @@ BEGIN
   SELECT @AChID = ChID, @SaleDocID = DocID, @DocDate = DocDate FROM t_Sale WHERE DocID = @DocID AND OurID = @OurID
   IF @SaleDocID IS NULL
     BEGIN
-      SELECT @Msg = 'Чек с номером ' + CAST(@DocID AS varchar(20)) + ' не существует.'
+      SELECT @Msg = dbo.zf_Translate('Чек с номером ') + CAST(@DocID AS varchar(20)) + dbo.zf_Translate(' не существует.')
       SELECT @Continue = 0
       RETURN
     END
@@ -46,7 +46,7 @@ BEGIN
         f.AutoCalcSum <> 0 AND f.DCTypeGCode <> 0 AND d.ChID = @AChID
       IF @PayFormName IS NOT NULL
         BEGIN
-          SELECT @Msg = 'Возврат по чеку, содержащему форму оплаты ' + @PayFormName + ', при использовании контроля форм оплаты, невозможен.'
+          SELECT @Msg = dbo.zf_Translate('Возврат по чеку, содержащему форму оплаты ') + @PayFormName + dbo.zf_Translate(', при использовании контроля форм оплаты, невозможен.')
           SELECT @Continue = 0
           RETURN
         END
@@ -57,10 +57,11 @@ BEGIN
       SELECT @InetChequeNum = InetChequeNum FROM t_CashRegInetCheques WITH (NOLOCK) WHERE ChID = @AChID AND DocCode = 11035
       IF @InetChequeNum IS NULL
 		     BEGIN
-		       SELECT @Msg = 'Не найден внешний фискальный номер чека продажи. Возврат невозможен.'
+		       SELECT @Msg = dbo.zf_Translate('Не найден внешний фискальный номер чека продажи. Возврат невозможен.')
 		       SELECT @Continue = 0
 		       RETURN
 		     END   	
     END
 END
+
 GO

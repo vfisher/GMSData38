@@ -22,7 +22,14 @@ BEGIN
   IF @AChID > @ChIDEnd
     BEGIN
       SET @AChID = NULL
-      RAISERROR('Новый код регистрации для таблицы %s находится вне допустимого диапазона', 18, 1, @TableName)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Новый код регистрации для таблицы %s находится вне допустимого диапазона')
+
+      RAISERROR(@Error_msg1, 18, 1, @TableName)
+      END
+
     END
 END
+
 GO

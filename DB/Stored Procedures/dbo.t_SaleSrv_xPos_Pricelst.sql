@@ -2,5 +2,11 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[t_SaleSrv_xPos_Pricelst](@CRID int)/* xPOS: Выгружает прайс-листы */ASBEGIN  SELECT PLID AS CODE, 'грн' AS CURRCODE, PLName AS NAME FROM r_PLsEND
+CREATE PROCEDURE [dbo].[t_SaleSrv_xPos_Pricelst](@CRID int)
+/* xPOS: Выгружает прайс-листы */
+AS
+BEGIN
+  SELECT PLID AS CODE, dbo.zf_Translate('грн') AS CURRCODE, PLName AS NAME FROM r_PLs
+END
+
 GO

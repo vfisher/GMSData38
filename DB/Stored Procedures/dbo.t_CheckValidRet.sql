@@ -9,6 +9,7 @@ BEGIN
   DECLARE @v numeric(21, 9)
   SELECT @Result = ''
   EXEC t_GetRetComp @ChID, @OurID, @CompID, @SrcPosID, @ProdID, @PPID, @SecID, @IgnoreCurPos, @v OUTPUT
-  IF @Qty > @v SELECT @Result = 'Количество возврата превышает общее количество расхода товара на данное предприятие.'
+  IF @Qty > @v SELECT @Result = dbo.zf_Translate('Количество возврата превышает общее количество расхода товара на данное предприятие.')
 END
+
 GO

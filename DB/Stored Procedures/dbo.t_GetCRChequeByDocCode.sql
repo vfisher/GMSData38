@@ -32,7 +32,7 @@ BEGIN
 		                      CASE WHEN @TaxPayer = 1 THEN m.TaxTypeID ELSE 1 END TaxTypeIDWithCheckTax
 		                    FROM t_SaleD m WITH(NOLOCK), r_Prods p WITH(NOLOCK) WHERE m.ProdID = p.ProdID AND m.CHID = @ChID FOR JSON PATH),'{}'),
             /* Если форма оплаты: Картой с выдачей наличных, то нам нужно получить запись только по 2 форме оплаты */
-		     DocPays = ISNULL((SELECT m.* FROM t_SalePays m WITH(NOLOCK) WHERE m.CHID = @ChID AND m.Notes <> 'Видача готівки' FOR JSON PATH),'{}'),
+		     DocPays = ISNULL((SELECT m.* FROM t_SalePays m WITH(NOLOCK) WHERE m.CHID = @ChID AND m.Notes <> dbo.zf_Translate('Видача готівки') FOR JSON PATH),'{}'),
 		     DocDLV = ISNULL((SELECT * FROM t_SaleDLV WHERE CHID = @ChID FOR JSON PATH),'{}')
 	     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
     END
@@ -73,4 +73,5 @@ BEGIN
 	     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
     END 	
 END
+
 GO

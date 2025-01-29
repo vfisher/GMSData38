@@ -45,21 +45,21 @@ BEGIN
     if ISNULL(LTRIM(RTRIM(JSON_VALUE(@TransactionInfo, '$.POSPayOperationName'))), '') = ''
       begin
         if @DocCode = 1011
-          set @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayOperationName', 'Оплата')
+          set @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayOperationName', dbo.zf_Translate('Оплата'))
         else
-          set @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayOperationName', 'Повернення')
+          set @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayOperationName', dbo.zf_Translate('Повернення'))
       end
 
     if ISNULL(LTRIM(RTRIM(JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'))), '') = ''
       select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayBankAcquirer', (SELECT PoSPAYNAME FROM R_POSPAYS WHERE POSPAYID=@PospayID))
 
     if @cashtype not in (11, 15, 29, 39) /* семейство exellio, kbm само дописывает имена */
-      if not (CHARINDEX('Екв', ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'), '')) > 0)
-        select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayBankAcquirer', 'Екв: ' + JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'))
+      if not (CHARINDEX(dbo.zf_Translate('Екв'), ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'), '')) > 0)
+        select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayBankAcquirer', dbo.zf_Translate('Екв: ') + JSON_VALUE(@TransactionInfo, '$.POSPayBankAcquirer'))
 
     if @cashtype not in (11, 15, 29, 39) /* семейство exellio, kbm само дописывает имена */
-      if not (CHARINDEX('Термінал', ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'), '')) > 0)
-        select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayTerminalID', 'Термінал: ' + JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'))
+      if not (CHARINDEX(dbo.zf_Translate('Термінал'), ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'), '')) > 0)
+        select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.POSPayTerminalID', dbo.zf_Translate('Термінал: ') + JSON_VALUE(@TransactionInfo, '$.POSPayTerminalID'))
 
     declare @issuer varchar(200)
     select @issuer = ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayIssuerName'), '')
@@ -72,7 +72,7 @@ BEGIN
     /* Доп. текст. Поддерживается многострочность */
     if CAST(ISNULL(JSON_VALUE(@TransactionInfo, '$.POSPayNeedSignVerif'), 0) as bit) = 0
       begin
-        select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.AdditionalText', 'Касир підпис не потрібен')
+        select @TransactionInfo = JSON_MODIFY(@TransactionInfo, '$.AdditionalText', dbo.zf_Translate('Касир підпис не потрібен'))
       end
     END
   ELSE
@@ -85,6 +85,13 @@ BEGIN
       INSERT INTO t_CRRetPays (ChID, SrcPosID, PayFormCode, SumCC_wt, Notes, POSPayID, SrcPayPosID, POSPayDocID, POSPayRRN, PrintState, ChequeText, BServID, POSPayText, TransactionInfo)
       VALUES (@ChID, @SrcPosID, @PayFormCode, @SumCC_wt, @Notes, @POSPayID, @SrcPayPosID, @POSPayDocID, @POSPayRRN, 0, @PosPayChequeText, @BServID, @PosPayText, @TransactionInfo)
     ELSE
-      RAISERROR ('t_SaleSavePays: Некорректный код документа!', 18, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('t_SaleSavePays: Некорректный код документа!')
+
+      RAISERROR (@Error_msg1, 18, 1)
+      END
+
   END
+
 GO

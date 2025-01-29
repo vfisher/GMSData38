@@ -22,7 +22,14 @@ BEGIN
   IF @DocID > @DocIDEnd
     BEGIN
       SET @DocID = NULL
-      RAISERROR('Новый номер документа для таблицы %s находится вне допустимого диапазона', 18, 1, @TableName)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Новый номер документа для таблицы %s находится вне допустимого диапазона')
+
+      RAISERROR(@Error_msg1, 18, 1, @TableName)
+      END
+
     END
 END
+
 GO

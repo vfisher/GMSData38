@@ -34,11 +34,18 @@ BEGIN
   EXEC sp_executesql N'SELECT TOP 1 @PersonID = PersonID FROM r_Persons WITH (NOLOCK) WHERE Phone LIKE @P2', N'@PersonID int OUTPUT, @P2 varchar(500)', @PersonID OUTPUT, @PhoneExpression 
   IF @PersonID IS NULL 
     BEGIN
-      RAISERROR('Не найден клиент по заданому номеру телефона', 16, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Не найден клиент по заданому номеру телефона')
+
+      RAISERROR(@Error_msg1, 16, 1)
+      END
+
       RETURN
     END
 
   SELECT d.DCardID FROM r_PersonDC m JOIN r_DCards d ON m.DCardChID = d.ChID
   WHERE PersonID = @PersonID AND d.InUse = 1 AND (d.EDate IS NULL OR d.EDate >= GETDATE())
 END
+
 GO

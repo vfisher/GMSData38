@@ -23,7 +23,7 @@ BEGIN
   ELSE
     BEGIN
       SELECT
-        @Msg = 'Создание налоговой накладной из данного документа невозможно.',
+        @Msg = dbo.zf_Translate('Создание налоговой накладной из данного документа невозможно.'),
         @Continue = 0
       RETURN
     END
@@ -79,4 +79,5 @@ BEGIN
       @Continue = 1,
       @Msg = ''
 END
+
 GO

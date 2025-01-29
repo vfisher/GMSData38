@@ -40,7 +40,7 @@ AS
   SELECT
     m.ProdID, d.ProdID, 
     CAST(SUM(Qty) AS varchar(250)), CAST(SUM(Qty) AS varchar(250)),   
-    'Цена составляющей с НДС', 'CurrentDS.SubPriceCC_wt', 0, 0   
+    dbo.zf_Translate('Цена составляющей с НДС'), 'CurrentDS.SubPriceCC_wt', 0, 0   
   FROM #Spec m
   INNER JOIN t_SpecD d WITH (NOLOCK) ON m.ChID = d.ChID
   WHERE m.ProdID <> d.ProdID
@@ -51,4 +51,5 @@ AS
     UseSubItems = 1  
   FROM r_ProdMS ms WITH (NOLOCK)
   INNER JOIN #Spec m ON ms.SProdID = m.ProdID
+
 GO

@@ -10,8 +10,15 @@ BEGIN
   SELECT @EmpID = EmpID FROM r_Emps WHERE BarCode = @EmpBarCode
   IF @EmpID IS NULL
     BEGIN
-      RAISERROR ('Служащий не обнаружен в справочнике.', 16, 1)
+      BEGIN
+
+      DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Служащий не обнаружен в справочнике.')
+
+      RAISERROR (@Error_msg1, 16, 1)
+      END
+
       RETURN
     END
 END
+
 GO

@@ -2,7 +2,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
 CREATE PROCEDURE [dbo].[t_GetPermissionCRRepair](@ParamsIn varchar(max), @ParamsOut varchar(max) OUTPUT)
 /* Возвращает разрешение на паререгистрацию офлайн документов ПРРО без дополнительной проверки пароля пользователя */
 AS
@@ -19,20 +18,20 @@ BEGIN
   SET @ResponseMessage = JSON_VALUE(@ParamsIn, '$.ResponseMessage')
 
   SELECT 9 AS ResponseCode, 'DocumentValidationError' AS TypeError, 
-  'Повідомлення повинно бути засвідчене кваліфікованим електронним підписом: envelopeType: EtUnknown' AS ResponseMessage
+  dbo.zf_Translate('Повідомлення повинно бути засвідчене кваліфікованим електронним підписом: envelopeType: EtUnknown') AS ResponseMessage
   INTO #CRErrorMessage
 
   INSERT INTO #CRErrorMessage
   SELECT 9 AS ResponseCode, 'DocumentValidationError' AS TypeError, 
-  'Документ містить час %s%, що не відповідає поточному часу фіскального сервера' AS ResponseMessage
+  dbo.zf_Translate('Документ містить час %s%, що не відповідає поточному часу фіскального сервера') AS ResponseMessage
 
   INSERT INTO #CRErrorMessage
   SELECT 10 AS ResponseCode, 'DocumentValidationError' AS TypeError, 
-  'Дата і час операції, зафіксованої документом %s%, не може бути меншим часу попереднього документа' AS ResponseMessage
+  dbo.zf_Translate('Дата і час операції, зафіксованої документом %s%, не може бути меншим часу попереднього документа') AS ResponseMessage
 
   INSERT INTO #CRErrorMessage
   SELECT 9 AS ResponseCode, 'DocumentValidationError' AS TypeError, 
-  'Помилки валідації XML: Error:' AS ResponseMessage
+  dbo.zf_Translate('Помилки валідації XML: Error:') AS ResponseMessage
 
   SET @Permission = ISNULL((SELECT TOP 1 1 
   FROM #CRErrorMessage t
@@ -40,4 +39,5 @@ BEGIN
 
   SET @ParamsOut = (SELECT @Permission AS Permission FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END
+
 GO

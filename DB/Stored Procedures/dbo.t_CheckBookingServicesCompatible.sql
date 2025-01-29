@@ -9,9 +9,9 @@ BEGIN
   SET NOCOUNT ON
   DECLARE @Msg varchar(250)
   IF @ExcludeSrcPosID > 0
-    SELECT @Msg = 'Невозможно изменить параметры услуги, т.к. ее время пересекается с другими несовместимыми услугами.'
+    SELECT @Msg = dbo.zf_Translate('Невозможно изменить параметры услуги, т.к. ее время пересекается с другими несовместимыми услугами.')
   ELSE
-    SELECT @Msg = 'Невозможно добавить услугу, т.к. ее время пересекается с другими несовместимыми услугами.'
+    SELECT @Msg = dbo.zf_Translate('Невозможно добавить услугу, т.к. ее время пересекается с другими несовместимыми услугами.')
 
   IF EXISTS (
     SELECT TOP 1 1 FROM t_BookingD m
@@ -22,4 +22,5 @@ BEGIN
        NOT EXISTS (SELECT TOP 1 1 FROM r_ServiceCompatibility d WITH (NOLOCK) WHERE d.CompatibleServiceID = @SrvcID AND d.SrvcID = m.SrvcID))	
     ) RAISERROR (@Msg, 16, 1)    
 END
+
 GO

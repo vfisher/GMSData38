@@ -14,7 +14,7 @@ BEGIN
     CAST(@IsRet AS bit) = 1 AND ISNULL((SELECT SUM(SumCC_wt) FROM t_CRRetPays    WHERE ChID = @ChID AND PayFormCode = 1) , 0) < 0
     BEGIN
       SET @CanContinue = 0
-      SET @Msg = 'Сдача не может быть больше суммы наличными'
+      SET @Msg = dbo.zf_Translate('Сдача не может быть больше суммы наличными')
     END
 
   /* Проверка доступности суммы для оплаты возврата */
@@ -41,8 +41,9 @@ BEGIN
       IF (@SumCash + CASE WHEN @NoExpMode = 1 THEN @InitialBalance ELSE 0 END) < 0
         BEGIN
           SET @CanContinue = 0
-          SET @Msg = 'В кассе недостаточно средств для оплаты возврата'
+          SET @Msg = dbo.zf_Translate('В кассе недостаточно средств для оплаты возврата')
         END
     END
 END
+
 GO

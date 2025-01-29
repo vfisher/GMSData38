@@ -10,7 +10,7 @@ BEGIN
 
   IF NOT EXISTS (SELECT TOP 1 1 FROM r_Emps WITH(NOLOCK) WHERE EmpID = @EmpID) 
     BEGIN
-      SET @ErrorMessage = 'Служащий с кодом ' + CAST(@EmpID AS varchar(10)) + ' не существует'
+      SET @ErrorMessage = dbo.zf_Translate('Служащий с кодом ') + CAST(@EmpID AS varchar(10)) + dbo.zf_Translate(' не существует')
       GOTO Error
     END
 
@@ -34,4 +34,5 @@ Error:
   IF @@TranCount > 0 ROLLBACK TRANSACTION
   IF @ErrorMessage IS NOT NULL RAISERROR (@ErrorMessage, 18, 1)
 END
+
 GO

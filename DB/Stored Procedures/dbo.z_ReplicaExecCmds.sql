@@ -32,7 +32,13 @@ WHILE @@FETCH_STATUS = 0
     SELECT @Err = @@ERROR
     IF @Err <> 0
       BEGIN
-        RAISERROR( 'z_ReplicaExecCmds: ошибка в результате применения изменений', 16, 1)			 
+        BEGIN
+
+        DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('z_ReplicaExecCmds: ошибка в результате применения изменений')
+
+        RAISERROR( @Error_msg1, 16, 1)			 
+        END
+
         ROLLBACK TRANSACTION
         CLOSE ExecCmds
         DEALLOCATE ExecCmds
@@ -44,7 +50,13 @@ WHILE @@FETCH_STATUS = 0
         SELECT @Err = @@ERROR
         IF @Err <> 0
           BEGIN
-            RAISERROR( 'z_ReplicaExecCmds: ошибка при обновлении статуса транзакции', 16, 1)			 
+            BEGIN
+
+            DECLARE @Error_msg2 varchar(2000) = dbo.zf_Translate('z_ReplicaExecCmds: ошибка при обновлении статуса транзакции')
+
+            RAISERROR( @Error_msg2, 16, 1)			 
+            END
+
             ROLLBACK TRANSACTION
             CLOSE ExecCmds
             DEALLOCATE ExecCmds
@@ -57,4 +69,5 @@ WHILE @@FETCH_STATUS = 0
 CLOSE ExecCmds
 DEALLOCATE ExecCmds
 END
+
 GO

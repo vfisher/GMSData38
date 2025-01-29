@@ -41,7 +41,7 @@ BEGIN
   INNER JOIN t_PInP pp WITH (NOLOCK) ON d.DetProdID = pp.ProdID AND d.PPID = pp.PPID
   WHERE ChID = @ChID AND 
         d.NewQty - d.Qty > 0 AND  
-        pp.PPDesc = 'Излишек инвентаризации' AND 
+        pp.PPDesc = dbo.zf_Translate('Излишек инвентаризации') AND 
         pp.ProdDate = @DocDate AND
         d.DetProdID = @ProdID
 
@@ -231,4 +231,5 @@ BEGIN
       WHERE ChID = @ChID AND ProdID = @ProdID
 
 END
+
 GO

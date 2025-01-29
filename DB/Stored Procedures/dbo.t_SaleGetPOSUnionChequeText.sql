@@ -38,11 +38,11 @@ BEGIN
   SET @UnionChequeText = REPLACE(@UnionChequeText, CHAR(13) + CHAR(13),CHAR(13))
 
   /* Replace 'ЦИКЛ' на ' ЦИКЛ'*/
-  SET @String = 'ЦИКЛ'
+  SET @String = dbo.zf_Translate('ЦИКЛ')
   SET @UnionChequeText = REPLACE(@UnionChequeText, @String ,@mcr + @String)
 
   /* Replace ' ЧЕК ' на '  ЧЕК '*/
-  SET @String = ' ЧЕК '
+  SET @String = dbo.zf_Translate(' ЧЕК ')
   SET @UnionChequeText = REPLACE(@UnionChequeText, @String ,@mcr + @String)
 
   /* Перевод текста "дата и время" на следующую строку Substring(@Msg,PATINDEX('%[0-9][0-9]/[0-9][0-9]/[0-9][0-9][0-9][0-9]%',@Msg),10) */
@@ -120,13 +120,14 @@ BEGIN
   END
 
   IF @POSPayCommand = 5
-    SET @Msg = REPLACE(@Msg, 'КОРОТКИЙ ЗВІТ', '<GMSBoldTextBegin>' + 'КОРОТКИЙ ЗВІТ' + '<GMSBoldTextEnd>') 
+    SET @Msg = REPLACE(@Msg, dbo.zf_Translate('КОРОТКИЙ ЗВІТ'), '<GMSBoldTextBegin>' + dbo.zf_Translate('КОРОТКИЙ ЗВІТ') + '<GMSBoldTextEnd>') 
 
   IF (@POSPayCommand = 12) OR (@POSPayCommand = 13)
     BEGIN
-      SET @Msg = REPLACE(@Msg, 'ОПЛАТА', '<GMSBoldTextBegin>' + 'ОПЛАТА' + '<GMSBoldTextEnd>')
-      SET @Msg = REPLACE(@Msg, 'сума', '<GMSBoldTextBegin>' + 'сума' + '<GMSBoldTextEnd>')
+      SET @Msg = REPLACE(@Msg, dbo.zf_Translate('ОПЛАТА'), '<GMSBoldTextBegin>' + dbo.zf_Translate('ОПЛАТА') + '<GMSBoldTextEnd>')
+      SET @Msg = REPLACE(@Msg, dbo.zf_Translate('сума'), '<GMSBoldTextBegin>' + dbo.zf_Translate('сума') + '<GMSBoldTextEnd>')
     END   
   SELECT @Msg   
 END
+
 GO

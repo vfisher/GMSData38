@@ -18,12 +18,12 @@ Begin
       SELECT
     @DCardChID = c.ChID,
         @s =
-          'Тип карты: ' + DCTypeName + CHAR(10) + CHAR(13) + 
-          CASE WHEN p.PersonName IS NULL THEN '' ELSE 'Клиент: ' + p.PersonName + CHAR(10) + CHAR(13) END +
-          CASE WHEN p.BirthDay IS NULL THEN '' ELSE 'Дата рождения: ' + CONVERT(varchar(20), p.BirthDay, 104)+ CHAR(10) + CHAR(13) END +
-          CASE WHEN p.Phone IS NULL THEN '' ELSE 'Телефон: ' + p.Phone + CHAR(10) + CHAR(13) END +
+          dbo.zf_Translate('Тип карты: ') + DCTypeName + CHAR(10) + CHAR(13) + 
+          CASE WHEN p.PersonName IS NULL THEN '' ELSE dbo.zf_Translate('Клиент: ') + p.PersonName + CHAR(10) + CHAR(13) END +
+          CASE WHEN p.BirthDay IS NULL THEN '' ELSE dbo.zf_Translate('Дата рождения: ') + CONVERT(varchar(20), p.BirthDay, 104)+ CHAR(10) + CHAR(13) END +
+          CASE WHEN p.Phone IS NULL THEN '' ELSE dbo.zf_Translate('Телефон: ') + p.Phone + CHAR(10) + CHAR(13) END +
           CASE WHEN p.Email IS NULL THEN '' ELSE 'Email: ' + p.Email + CHAR(10) + CHAR(13) END +
-          CASE WHEN EDate IS NULL THEN '' ELSE 'Действительна до: ' + CONVERT(varchar(20), EDate, 104) END 
+          CASE WHEN EDate IS NULL THEN '' ELSE dbo.zf_Translate('Действительна до: ') + CONVERT(varchar(20), EDate, 104) END 
       FROM r_DCards c 
         JOIN r_DCTypes t ON c.DCTypeCode = t.DCTypeCode
         LEFT JOIN r_PersonDC pdc ON c.ChID = pdc.DCardChID
@@ -42,7 +42,7 @@ Begin
             @s = @s + CHAR(10) + CHAR(13) + CHAR(10) + CHAR(13) + CHAR(10) + CHAR(13) +
             REPLICATE(CHAR(10) + CHAR(13), 5 - (LEN(@s) - LEN(REPLACE(@s, CHAR(10) + CHAR(13), ''))) / 2) +
             '==============================' + CHAR(10) + CHAR(13) +
-            'Общая доступная сумма: ' + CAST(@SumBonus AS varchar(50)) + CHAR(10) + CHAR(13) +
+            dbo.zf_Translate('Общая доступная сумма: ') + CAST(@SumBonus AS varchar(50)) + CHAR(10) + CHAR(13) +
             '=============================='
         END
     END
@@ -74,28 +74,29 @@ Begin
         SELECT @InitialValue = @Value
 
       SELECT @s =
-        'Подарочный сертификат ' + @DCardID + CHAR(10) + CHAR(13) +
+        dbo.zf_Translate('Подарочный сертификат ') + @DCardID + CHAR(10) + CHAR(13) +
         CHAR(10) + CHAR(13) +
         CASE @InUse WHEN 1 THEN
-                           CASE WHEN @Now > @EDate THEN 'Просрочен'
-                           ELSE 'Действителен' END
-                    ELSE 'Недействителен' END + CHAR(10) + CHAR(13) +
+                           CASE WHEN @Now > @EDate THEN dbo.zf_Translate('Просрочен')
+                           ELSE dbo.zf_Translate('Действителен') END
+                    ELSE dbo.zf_Translate('Недействителен') END + CHAR(10) + CHAR(13) +
         CHAR(10) + CHAR(13) +
-        'Номинал: '  + CAST(ISNULL(@InitialValue, 0) AS VARCHAR(20)) + CHAR(10) + CHAR(13)
+        dbo.zf_Translate('Номинал: ')  + CAST(ISNULL(@InitialValue, 0) AS VARCHAR(20)) + CHAR(10) + CHAR(13)
 
       IF @InitialValue <> @Value  
-        SELECT @s = @s + 'Доступно: '  + CAST(ISNULL(@Value, 0) AS VARCHAR(20)) + CHAR(10) + CHAR(13)
+        SELECT @s = @s + dbo.zf_Translate('Доступно: ')  + CAST(ISNULL(@Value, 0) AS VARCHAR(20)) + CHAR(10) + CHAR(13)
 
 
       IF @BDate IS NOT NULL
-        SELECT @s = @s + 'Активирован: '  + CONVERT(varchar(20), @BDate, 104) + CHAR(10) + CHAR(13);
+        SELECT @s = @s + dbo.zf_Translate('Активирован: ')  + CONVERT(varchar(20), @BDate, 104) + CHAR(10) + CHAR(13);
 
       IF @EDate IS NULL    
-        SELECT @s = @s + 'Срок действия не установлен'
+        SELECT @s = @s + dbo.zf_Translate('Срок действия не установлен')
       ELSE  
-        SELECT @s = @s + 'Действителен до: '  + CONVERT(varchar(20), @EDate, 104)   
+        SELECT @s = @s + dbo.zf_Translate('Действителен до: ')  + CONVERT(varchar(20), @EDate, 104)   
     END
 
   RETURN @s
 END
+
 GO
