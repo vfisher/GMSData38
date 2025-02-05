@@ -6,3 +6,5 @@ CREATE TABLE [dbo].[z_Translations]
 [UK] [varchar] (max) NULL
 ) ON [PRIMARY]
 GO
+ALTER TABLE [dbo].[z_Translations] ADD CONSTRAINT [pk_z_Translations] PRIMARY KEY CLUSTERED ([MsgID], [TypeID]) ON [PRIMARY]
+GO

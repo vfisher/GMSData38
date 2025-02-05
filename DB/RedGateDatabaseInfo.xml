@@ -64,7 +64,7 @@
     <DataWriteAllFilesInOneDirectory>True</DataWriteAllFilesInOneDirectory>
   </WriteToFileOptions>
   <DataFileSet>
-    <Count>268</Count>
+    <Count>270</Count>
     <DataFile>dbo.r_AssetC_Data.sql</DataFile>
     <DataFile>dbo.r_AssetG1_Data.sql</DataFile>
     <DataFile>dbo.r_AssetGDeps_Data.sql</DataFile>
@@ -318,6 +318,8 @@
     <DataFile>dbo.z_ToolRep_Data.sql</DataFile>
     <DataFile>dbo.z_Tools_Data.sql</DataFile>
     <DataFile>dbo.z_ToolUserEvents_Data.sql</DataFile>
+    <DataFile>dbo.z_Translations_Data.sql</DataFile>
+    <DataFile>dbo.z_UserVars_Data.sql</DataFile>
     <DataFile>dbo.z_VarPages_Data.sql</DataFile>
     <DataFile>dbo.z_Vars_Data.sql</DataFile>
     <DataFile>dbo.z_WCopyDF_Data.sql</DataFile>
