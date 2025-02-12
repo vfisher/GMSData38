@@ -1,0 +1,1 @@
+﻿INSERT dbo.r_Mods(ModCode, ChID, ModName, MinValue, MaxValue, PProdFilter, PCatFilter, PGrFilter, Notes, Required, IsProd, ProdID, Color, Picture, PGr1Filter, PGr2Filter, PGr3Filter) VALUES (0, 0, 'Нет модификатора', 0.000000000, 0.000000000, '', '', '', NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL);

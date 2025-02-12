@@ -1,0 +1,8 @@
+﻿INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (0, '1900-01-01 00:00:00', 0.000000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10001, '1900-01-01 00:00:00', 2.000000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10002, '1900-01-01 00:00:00', 10.000000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10003, '1900-01-01 00:00:00', 6.000000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10004, '1900-01-01 00:00:00', 15.000000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10005, '1900-01-01 00:00:00', 1.250000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10006, '1900-01-01 00:00:00', 6.250000000);
+INSERT dbo.r_AssetGDeps(AGrID, DocDate, APercent) VALUES (10007, '1900-01-01 00:00:00', 3.750000000);

@@ -1,0 +1,17 @@
+﻿INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (0, 100000001, 'Нет группы ОС', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (1, 100000002, 'Земельные участки', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (2, 100000003, 'Капитальные затраты на улучшение земель, не связанные со строительством', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (3, 100000004, 'Здания, сооружения, передаточные устройства', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (4, 100000005, 'Машины и оборудование', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (5, 100000006, 'Транспортные средства', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (6, 100000007, 'Инструменты, приборы, инвентарь (мебель)', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (7, 100000008, 'Животные', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (8, 100000009, 'Многолетние насаждения', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (9, 100000010, 'Прочие основные средства', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (10, 100000011, 'Библиотечные фонды', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (11, 100000012, 'Малоценные необоротные материальные активы', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (12, 100000013, 'Временные (нетитульные) сооружения', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (13, 100000014, 'Природные ресурсы', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (14, 100000015, 'Инвентарная тара', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (15, 100000016, 'Предметы проката', NULL);
+INSERT dbo.r_AssetG1(AGrID1, ChID, AGrName1, Notes) VALUES (16, 100000017, 'Долгосрочные биологические активы', NULL);

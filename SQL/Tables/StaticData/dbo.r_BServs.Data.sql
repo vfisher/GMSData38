@@ -1,0 +1,4 @@
+﻿INSERT dbo.r_BServs(BServID, ChID, BServName, BankGrID, BDate, EDate, PayFormCode, POSBServID, Notes) VALUES (0, 0, 'Нет банковской услуги', 0, '1900-01-01 00:00:00', '2079-01-01 00:00:00', 0, 0, NULL);
+INSERT dbo.r_BServs(BServID, ChID, BServName, BankGrID, BDate, EDate, PayFormCode, POSBServID, Notes) VALUES (1, 1, 'Оплата частями: в периоде', 0, '1900-01-01 00:00:00', '2079-01-01 00:00:00', 6, 0, NULL);
+INSERT dbo.r_BServs(BServID, ChID, BServName, BankGrID, BDate, EDate, PayFormCode, POSBServID, Notes) VALUES (2, 2, 'Оплата частями: стандартная', 0, '1900-01-01 00:00:00', '2079-01-01 00:00:00', 7, 1, NULL);
+INSERT dbo.r_BServs(BServID, ChID, BServName, BankGrID, BDate, EDate, PayFormCode, POSBServID, Notes) VALUES (3, 3, 'Оплата частями: мгновенная рассрочка', 0, '1900-01-01 00:00:00', '2079-01-01 00:00:00', 8, 2, NULL);

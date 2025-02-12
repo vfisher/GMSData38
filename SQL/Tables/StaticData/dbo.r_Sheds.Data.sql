@@ -1,0 +1,2 @@
+﻿INSERT dbo.r_Sheds(ShedID, ChID, ShedName, ShedDaysQty, WWeekTypeID, ShedBDate, Notes, ConHolDays, SlidingShed, IsIrregShed) VALUES (0, 0, 'График работы не определен', 0, 0, '2000-01-01 00:00:00', '', 0, 0, 0);
+INSERT dbo.r_Sheds(ShedID, ChID, ShedName, ShedDaysQty, WWeekTypeID, ShedBDate, Notes, ConHolDays, SlidingShed, IsIrregShed) VALUES (1, 1, 'Пятидневка', 7, 6, '2002-12-30 00:00:00', '', 0, 0, 0);

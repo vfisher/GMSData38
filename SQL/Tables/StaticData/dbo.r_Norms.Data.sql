@@ -1,0 +1,17 @@
+﻿INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2008, 4, 'Нормы рабочего времени на 2008 год', NULL);
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2009, 5, 'Нормы рабочего времени на 2009 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2010, 6, 'Нормы рабочего времени на 2010 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2011, 7, 'Нормы рабочего времени на 2011 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2012, 8, 'Нормы рабочего времени на 2012 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2013, 9, 'Нормы рабочего времени на 2013 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2014, 10, 'Нормы рабочего времени на 2014 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2015, 11, 'Нормы рабочего времени на 2015 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2016, 12, 'Нормы рабочего времени на 2016 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2017, 13, 'Нормы рабочего времени на 2017 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2018, 14, 'Нормы рабочего времени на 2018 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2019, 15, 'Нормы рабочего времени на 2019 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2020, 16, 'Нормы рабочего времени на 2020 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2021, 17, 'Нормы рабочего времени на 2021 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2022, 18, 'Нормы рабочего времени на 2022 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2023, 19, 'Нормы рабочего времени на 2023 год', '');
+INSERT dbo.r_Norms(YearID, ChID, YearName, Notes) VALUES (2024, 20, 'Нормы рабочего времени на 2024 год', '');

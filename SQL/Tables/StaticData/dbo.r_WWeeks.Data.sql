@@ -1,0 +1,10 @@
+﻿INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (0, 0, '18-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (1, 1, '24-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (2, 2, '30-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (3, 3, '33-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (4, 4, '36-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (5, 5, '38.5-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (6, 6, '40-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (7, 7, '39-часовая рабочая неделя', '', 0);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (8, 8, '20-часовая рабочая неделя', '', 1);
+INSERT dbo.r_WWeeks(WWeekTypeID, ChID, WWeekName, Notes, IsInt) VALUES (9, 9, '25-часовая рабочая неделя', '', 1);

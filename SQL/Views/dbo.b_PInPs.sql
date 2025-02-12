@@ -1,0 +1,10 @@
+﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE VIEW [dbo].[b_PInPs] WITH VIEW_METADATA AS
+SELECT * FROM ( 
+SELECT 
+  ProdID, PPID, PriceCC_In AS PriceAC, PriceCC_In AS PriceCC, PriceCC_In AS PriceMC, PriceCC_In,
+  PriceCC_In AS PriceMC_In, CostAC, CostCC, CompID
+FROM b_PInP
+) GMSView
+GO

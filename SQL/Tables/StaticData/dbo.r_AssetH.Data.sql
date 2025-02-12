@@ -1,0 +1,1 @@
+﻿INSERT dbo.r_AssetH(AssID, BDate, AGrID, ACatID, Age, PriceCC_nt, SupPriceCC_nt, WerSumCC_nt, DepSumCC_nt, RepSumCC_nt, ChargeType, ChargeTypeDep, LiqPriceCC_nt, GenQty, EmpID, GAccID, IsProdAss, DepID, Notes) VALUES (0, '1990-01-03 00:00:00', 0, 0, NULL, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0, 5, 0.000000000, 0.000000000, 0, 0, 0, 1, NULL);

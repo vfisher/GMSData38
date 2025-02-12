@@ -1,0 +1,4 @@
+﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[z_DocLinks_Save](@Continue bit OUTPUT, @Msg varchar(200) OUTPUT)AS /* Связь документов: Сохранение */BEGIN    EXEC z_DocLinks_Validate @Continue OUTPUT, @Msg OUTPUT  IF @Continue = 0 RETURN  INSERT INTO z_DocLinks (LinkDocDate, ParentDocCode, ParentChID, ParentDocDate, ParentDocID, ChildDocCode, ChildChID, ChildDocDate, ChildDocID, LinkSumCC, DocLinkTypeID)  SELECT dbo.zf_GetDate(GetDate()), ParentDocCode, ParentChID, ParentDocDate, ParentDocID, ChildDocCode, ChildChID, ChildDocDate, ChildDocID, LinkSumCC, DocLinkTypeID FROM #_DocLinks WHERE LinkID IS NULL  UPDATE d  SET     d.LinkSumCC = t.LinkSumCC, d.DocLinkTypeID = t.DocLinkTypeID  FROM z_DocLinks d, #_DocLinks t  WHERE d.LinkID = t.LinkID  SELECT     @Continue = 1,    @Msg = ''END 
+GO

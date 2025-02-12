@@ -1,0 +1,11 @@
+﻿INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (0, 0, 'Забалансовые счета', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (1, 1, 'Необоротные активы', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (2, 2, 'Запасы', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (3, 3, 'Денежные средства, расчеты и иные активы', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (4, 4, 'Собственный капитал и обеспечение обязательств', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (5, 5, 'Долгосрочные обязательства', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (6, 6, 'Текущие обязательства', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (7, 7, 'Доходы и результаты деятельности', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (8, 8, 'Расходы по элементам', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (9, 9, 'Расходы деятельности', '');
+INSERT dbo.r_GAccs1(GAccID1, ChID, GAccName1, Notes) VALUES (10, 10, 'Служебные забалансовые счета', '');
