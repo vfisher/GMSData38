@@ -15,6 +15,7 @@
   [AutoCalcSum] [int] NOT NULL DEFAULT (0),
   [DCTypeGCode] [int] NOT NULL DEFAULT (0),
   [GroupPays] [int] NOT NULL,
+  [CRPayTypeCode] [tinyint] NULL,
   CONSTRAINT [pk_r_PayForms] PRIMARY KEY CLUSTERED ([PayFormCode])
 )
 ON [PRIMARY]
@@ -22,33 +23,68 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_PayForms] ON [r_PayForms]
-FOR INSERT AS
-/* r_PayForms - Справочник форм оплаты - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_PayForms] ON [r_PayForms]
+FOR DELETE AS
+/* r_PayForms - Справочник форм оплаты - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_PayForms ^ r_DCTypeG - Проверка в PARENT */
-/* Справочник форм оплаты ^ Справочник дисконтных карт: группы типов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.DCTypeGCode NOT IN (SELECT DCTypeGCode FROM r_DCTypeG))
+/* r_PayForms ^ r_BServs - Проверка в CHILD */
+/* Справочник форм оплаты ^ Справочник банковских услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_BServs a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
     BEGIN
-      EXEC z_RelationError 'r_DCTypeG', 'r_PayForms', 0
+      EXEC z_RelationError 'r_PayForms', 'r_BServs', 3
       RETURN
     END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10440001, ChID, 
+/* r_PayForms ^ t_CRRetPays - Проверка в CHILD */
+/* Справочник форм оплаты ^ Возврат товара по чеку: Оплата - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRRetPays a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
+    BEGIN
+      EXEC z_RelationError 'r_PayForms', 't_CRRetPays', 3
+      RETURN
+    END
+
+/* r_PayForms ^ t_SalePays - Проверка в CHILD */
+/* Справочник форм оплаты ^ Продажа товара оператором: Оплата - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SalePays a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
+    BEGIN
+      EXEC z_RelationError 'r_PayForms', 't_SalePays', 3
+      RETURN
+    END
+
+/* r_PayForms ^ t_SaleTempPays - Проверка в CHILD */
+/* Справочник форм оплаты ^ Временные данные продаж: Оплата - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SaleTempPays a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
+    BEGIN
+      EXEC z_RelationError 'r_PayForms', 't_SaleTempPays', 3
+      RETURN
+    END
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10440001 AND m.PKValue = 
     '[' + cast(i.PayFormCode as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10440001 AND m.PKValue = 
+    '[' + cast(i.PayFormCode as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10440001, -ChID, 
+    '[' + cast(d.PayFormCode as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10440 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_PayForms', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_PayForms', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -228,66 +264,46 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_PayForms] ON [r_PayForms]
-FOR DELETE AS
-/* r_PayForms - Справочник форм оплаты - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_PayForms] ON [r_PayForms]
+FOR INSERT AS
+/* r_PayForms - Справочник форм оплаты - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_PayForms ^ r_BServs - Проверка в CHILD */
-/* Справочник форм оплаты ^ Справочник банковских услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_BServs a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
+/* r_PayForms ^ r_DCTypeG - Проверка в PARENT */
+/* Справочник форм оплаты ^ Справочник дисконтных карт: группы типов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DCTypeGCode NOT IN (SELECT DCTypeGCode FROM r_DCTypeG))
     BEGIN
-      EXEC z_RelationError 'r_PayForms', 'r_BServs', 3
+      EXEC z_RelationError 'r_DCTypeG', 'r_PayForms', 0
       RETURN
     END
 
-/* r_PayForms ^ t_CRRetPays - Проверка в CHILD */
-/* Справочник форм оплаты ^ Возврат товара по чеку: Оплата - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRRetPays a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
-    BEGIN
-      EXEC z_RelationError 'r_PayForms', 't_CRRetPays', 3
-      RETURN
-    END
-
-/* r_PayForms ^ t_SalePays - Проверка в CHILD */
-/* Справочник форм оплаты ^ Продажа товара оператором: Оплата - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SalePays a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
-    BEGIN
-      EXEC z_RelationError 'r_PayForms', 't_SalePays', 3
-      RETURN
-    END
-
-/* r_PayForms ^ t_SaleTempPays - Проверка в CHILD */
-/* Справочник форм оплаты ^ Временные данные продаж: Оплата - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SaleTempPays a WITH(NOLOCK), deleted d WHERE a.PayFormCode = d.PayFormCode)
-    BEGIN
-      EXEC z_RelationError 'r_PayForms', 't_SaleTempPays', 3
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10440001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10440001, ChID, 
     '[' + cast(i.PayFormCode as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10440001 AND m.PKValue = 
-    '[' + cast(i.PayFormCode as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10440001, -ChID, 
-    '[' + cast(d.PayFormCode as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10440 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_PayForms', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_PayForms', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

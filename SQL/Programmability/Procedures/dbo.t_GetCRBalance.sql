@@ -6,7 +6,7 @@ AS
 BEGIN
   DECLARE @CRID int
   DECLARE @LastZRep datetime, @Time datetime
-  DECLARE @CashType INT, @PayFormCodeCustom1 INT, @PayFormCodeCustom2 INT, @PayFormCodeCustom3 INT
+  DECLARE @CashType INT, @PayFormCodeCustom1 INT, @PayFormCodeCustom2 INT, @PayFormCodeCustom3 INT, @PayFormCodeCustom4 INT, @PayFormCodeCustom5 INT
   DECLARE @RoundTaxSum NUMERIC(21,9), @CountSymbolRoundTax INT
   DECLARE @TaxPayer BIT, @TaxIDNotVAT INT, @PayFormCodeCashBack INT
 
@@ -19,10 +19,13 @@ BEGIN
   DECLARE @RetTaxSum_0 numeric(21, 9), @RetTaxSum_1 numeric(21, 9), @RetTaxSum_2 numeric(21, 9), @RetTaxSum_3 numeric(21, 9), @RetTaxSum_4 numeric(21, 9), @RetTaxSum_5 numeric(21, 9)
   DECLARE @SaleSum_0 numeric(21, 9), @SaleSum_1 numeric(21, 9), @SaleSum_2 numeric(21, 9), @SaleSum_3 numeric(21, 9), @SaleSum_4 numeric(21, 9), @SaleSum_5 numeric(21, 9)
   DECLARE @RetSum_0 numeric(21, 9), @RetSum_1 numeric(21, 9), @RetSum_2 numeric(21, 9), @RetSum_3 numeric(21, 9), @RetSum_4 numeric(21, 9), @RetSum_5 numeric(21, 9)
-  DECLARE @SaleSumCashFact numeric(21, 9), @SaleSumCCardFact numeric(21, 9), @SaleSumCreditFact numeric(21, 9), @SaleSumChequeFact numeric(21, 9), @SaleSumOtherFact numeric(21, 9), @SaleSumCustom1Fact numeric(21, 9), @SaleSumCustom2Fact numeric(21, 9), @SaleSumCustom3Fact numeric(21, 9)
-  DECLARE @SaleSumCustom1 numeric(21, 9), @SaleSumCustom2 numeric(21, 9), @SaleSumCustom3 numeric(21, 9)
-  DECLARE @SumRetCustom1 numeric(21, 9), @SumRetCustom2 numeric(21, 9), @SumRetCustom3 numeric(21, 9)
+  DECLARE @SaleSumCashFact numeric(21, 9), @SaleSumCCardFact numeric(21, 9), @SaleSumCreditFact numeric(21, 9), @SaleSumChequeFact numeric(21, 9), @SaleSumOtherFact numeric(21, 9), @SaleSumCustom1Fact numeric(21, 9), @SaleSumCustom2Fact numeric(21, 9), @SaleSumCustom3Fact numeric(21, 9), @SaleSumCustom4Fact numeric(21, 9), @SaleSumCustom5Fact numeric(21, 9)
+  DECLARE @SaleSumCustom1 numeric(21, 9), @SaleSumCustom2 numeric(21, 9), @SaleSumCustom3 numeric(21, 9), @SaleSumCustom4 numeric(21, 9), @SaleSumCustom5 numeric(21, 9)
+  DECLARE @SumRetCustom1 numeric(21, 9), @SumRetCustom2 numeric(21, 9), @SumRetCustom3 numeric(21, 9), @SumRetCustom4 numeric(21, 9),
+  @SumRetCustom5 numeric(21, 9)
   DECLARE @CashBack numeric(21, 9), @SaleSumCCardOnlyCashBack numeric(21, 9)
+  DECLARE @SaleSumType0 numeric(21, 9), @SaleSumType1 numeric(21, 9), @SaleSumType2 numeric(21, 9)
+  DECLARE @RetSumType0 numeric(21, 9), @RetSumType1 numeric(21, 9), @RetSumType2 numeric(21, 9)
 
   /* SET @ParamsIn = '{"CRID":2}' */
   SET @ParamsOut = '{}'
@@ -40,9 +43,11 @@ BEGIN
   FROM r_CRs c WITH(NOLOCK), r_CRSrvs s WITH(NOLOCK), r_Ours o WITH(NOLOCK) 
   WHERE c.CRID = @CRID AND c.SrvID = s.SrvID AND s.OurID = o.OurID
 
-  SET @PayFormCodeCustom1 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 4 AND CashType = @CashType),0)
-  SET @PayFormCodeCustom2 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 5 AND CashType = @CashType),0)
-  SET @PayFormCodeCustom3 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 6 AND CashType = @CashType),0)
+  SET @PayFormCodeCustom1 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 4 AND CashType = @CashType),-1)
+  SET @PayFormCodeCustom2 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 5 AND CashType = @CashType),-1)
+  SET @PayFormCodeCustom3 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 6 AND CashType = @CashType),-1)
+  SET @PayFormCodeCustom4 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 7 AND CashType = @CashType),-1)
+  SET @PayFormCodeCustom5 = ISNULL((SELECT PayFormCode from r_PayFormCR WITH(NOLOCK) WHERE CRPayFormCode = 8 AND CashType = @CashType),-1)
   SET @PayFormCodeCashBack = 11
 
   DROP TABLE IF EXISTS #StateCode
@@ -63,6 +68,8 @@ BEGIN
 
   DROP TABLE IF EXISTS #r_Taxes
   DROP TABLE IF EXISTS #r_LevyCR
+
+  DROP TABLE IF EXISTS #r_PayForms
 
   SELECT AValue AS StateCode
   INTO #StateCode
@@ -151,6 +158,10 @@ BEGIN
   INNER JOIN t_CRRetD d WITH(NOLOCK) ON m.ChID = d.ChID
   INNER JOIN t_CRRetDLV dlv WITH(NOLOCK) ON d.ChID = dlv.ChID AND d.SrcPosID = dlv.SrcPosID
 
+  SELECT m.*
+  INTO #r_PayForms
+  FROM r_PayForms m WITH(NOLOCK)
+
   /* Неплательщик НДС */ 
   SET @TaxIDNotVAT = ISNULL((SELECT ISNULL(TaxID,1) FROM #r_Taxes WITH(NOLOCK) WHERE TaxTypeID = 1),1) 
 
@@ -170,6 +181,12 @@ BEGIN
   SELECT @SaleSumCustom1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom1
   SELECT @SaleSumCustom2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom2
   SELECT @SaleSumCustom3 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom3
+  SELECT @SaleSumCustom4 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom4
+  SELECT @SaleSumCustom5 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom5
+
+  SELECT @SaleSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
+  SELECT @SaleSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
+  SELECT @SaleSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
 
   SELECT @SumRetCash = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = 1
   SELECT @SumRetCCard = ROUND(ISNULL(Sum(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode IN (2, 11)
@@ -179,6 +196,12 @@ BEGIN
   SELECT @SumRetCustom1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom1
   SELECT @SumRetCustom2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom2
   SELECT @SumRetCustom3 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom3
+  SELECT @SumRetCustom4 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom4
+  SELECT @SumRetCustom5 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom5
+
+  SELECT @RetSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
+  SELECT @RetSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
+  SELECT @RetSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
 
   SELECT @SaleSumCashFact = @SaleSumCash
   SELECT @SaleSumCCardFact = @SaleSumCCard
@@ -188,6 +211,8 @@ BEGIN
   SELECT @SaleSumCustom1Fact = @SaleSumCustom1
   SELECT @SaleSumCustom2Fact = @SaleSumCustom2
   SELECT @SaleSumCustom3Fact = @SaleSumCustom3
+  SELECT @SaleSumCustom4Fact = @SaleSumCustom4
+  SELECT @SaleSumCustom5Fact = @SaleSumCustom5
 
   SELECT @SaleSumCash = @SaleSumCash - @SumRetCash
   SELECT @SaleSumCCard = @SaleSumCCard - @SumRetCCard
@@ -197,6 +222,8 @@ BEGIN
   SELECT @SaleSumCustom1 = @SaleSumCustom1 - @SumRetCustom1
   SELECT @SaleSumCustom2 = @SaleSumCustom2 - @SumRetCustom2
   SELECT @SaleSumCustom3 = @SaleSumCustom3 - @SumRetCustom3
+  SELECT @SaleSumCustom4 = @SaleSumCustom4 - @SumRetCustom4
+  SELECT @SaleSumCustom5 = @SaleSumCustom5 - @SumRetCustom5
 
   SELECT @MRec = ISNULL(SUM(SumCC), 0) FROM #t_MonIntRec
   SELECT @MExp = ISNULL(SUM(SumCC), 0) FROM #t_MonIntExp
@@ -504,11 +531,23 @@ BEGIN
       @SumRetCustom1 AS SumRetCustom1,
       @SumRetCustom2 AS SumRetCustom2,
       @SumRetCustom3 AS SumRetCustom3,
-	     @SaleOrdersCount AS SaleOrdersCount,
-	     @RetOrdersCount AS RetOrdersCount,
-	     @CashBackOrdersCount AS CashBackOrdersCount,
+	  @SaleOrdersCount AS SaleOrdersCount,
+	  @RetOrdersCount AS RetOrdersCount,
+	  @CashBackOrdersCount AS CashBackOrdersCount,
       @CashBack AS CashBack,
-      @SaleSumCCardOnlyCashBack AS SaleSumCCardOnlyCashBack
+      @SaleSumCCardOnlyCashBack AS SaleSumCCardOnlyCashBack,
+      @SaleSumCustom4Fact AS SaleSumCustom4Fact,
+      @SaleSumCustom5Fact AS SaleSumCustom5Fact,
+      @SaleSumCustom4 AS SaleSumCustom4,
+      @SaleSumCustom5 AS SaleSumCustom5,
+	  @SumRetCustom4 AS SumRetCustom4,
+      @SumRetCustom5 AS SumRetCustom5,
+      @SaleSumType0 AS SaleSumType0,
+	  @SaleSumType1 AS SaleSumType1,
+	  @SaleSumType2 AS SaleSumType2,
+	  @RetSumType0 AS RetSumType0,
+	  @RetSumType1 AS RetSumType1,
+	  @RetSumType2 AS RetSumType2
    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END
 GO
