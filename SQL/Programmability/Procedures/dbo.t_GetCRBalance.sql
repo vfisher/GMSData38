@@ -184,10 +184,11 @@ BEGIN
   SELECT @SaleSumCustom4 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom4
   SELECT @SaleSumCustom5 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = @PayFormCodeCustom5
 
-  SELECT @SaleSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
-  SELECT @SaleSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
+  SELECT @SaleSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode IN (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
+  SET @SaleSumType0 = @SaleSumType0 + @CashBack
+  SELECT @SaleSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode IN (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
   SET @SaleSumType1 = @SaleSumType1 - @CashBack
-  SELECT @SaleSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
+  SELECT @SaleSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode IN (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
 
   SELECT @SumRetCash = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = 1
   SELECT @SumRetCCard = ROUND(ISNULL(Sum(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode IN (2, 11)
@@ -200,9 +201,9 @@ BEGIN
   SELECT @SumRetCustom4 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom4
   SELECT @SumRetCustom5 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = @PayFormCodeCustom5
 
-  SELECT @RetSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
-  SELECT @RetSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
-  SELECT @RetSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
+  SELECT @RetSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode IN (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
+  SELECT @RetSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode IN (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
+  SELECT @RetSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode IN (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
 
   SELECT @SaleSumCashFact = @SaleSumCash
   SELECT @SaleSumCCardFact = @SaleSumCCard
