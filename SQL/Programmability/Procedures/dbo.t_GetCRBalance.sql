@@ -186,6 +186,7 @@ BEGIN
 
   SELECT @SaleSumType0 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 0)
   SELECT @SaleSumType1 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 1)
+  SET @SaleSumType1 = @SaleSumType1 - @CashBack
   SELECT @SaleSumType2 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SalePays WHERE PayFormCode = (SELECT PayFormCode FROM #r_PayForms WHERE CRPayTypeCode = 2)
 
   SELECT @SumRetCash = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_CRRetPays WHERE PayFormCode = 1
@@ -525,23 +526,23 @@ BEGIN
       @SaleSumCustom1Fact AS SaleSumCustom1Fact,
       @SaleSumCustom2Fact AS SaleSumCustom2Fact,
       @SaleSumCustom3Fact AS SaleSumCustom3Fact,
+	  @SaleSumCustom4Fact AS SaleSumCustom4Fact,
+	  @SaleSumCustom5Fact AS SaleSumCustom5Fact,
       @SaleSumCustom1 AS SaleSumCustom1,
       @SaleSumCustom2 AS SaleSumCustom2,
       @SaleSumCustom3 AS SaleSumCustom3,
+	  @SaleSumCustom4 AS SaleSumCustom4,
+      @SaleSumCustom5 AS SaleSumCustom5,
       @SumRetCustom1 AS SumRetCustom1,
       @SumRetCustom2 AS SumRetCustom2,
       @SumRetCustom3 AS SumRetCustom3,
+	  @SumRetCustom4 AS SumRetCustom4,
+      @SumRetCustom5 AS SumRetCustom5,
 	  @SaleOrdersCount AS SaleOrdersCount,
 	  @RetOrdersCount AS RetOrdersCount,
 	  @CashBackOrdersCount AS CashBackOrdersCount,
       @CashBack AS CashBack,
-      @SaleSumCCardOnlyCashBack AS SaleSumCCardOnlyCashBack,
-      @SaleSumCustom4Fact AS SaleSumCustom4Fact,
-      @SaleSumCustom5Fact AS SaleSumCustom5Fact,
-      @SaleSumCustom4 AS SaleSumCustom4,
-      @SaleSumCustom5 AS SaleSumCustom5,
-	  @SumRetCustom4 AS SumRetCustom4,
-      @SumRetCustom5 AS SumRetCustom5,
+      @SaleSumCCardOnlyCashBack AS SaleSumCCardOnlyCashBack,  
       @SaleSumType0 AS SaleSumType0,
 	  @SaleSumType1 AS SaleSumType1,
 	  @SaleSumType2 AS SaleSumType2,
