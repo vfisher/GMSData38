@@ -23,6 +23,8 @@ BEGIN
   DECLARE @SaleSumCustom1 numeric(21, 9), @SaleSumCustom2 numeric(21, 9), @SaleSumCustom3 numeric(21, 9)
   DECLARE @SumRetCustom1 numeric(21, 9), @SumRetCustom2 numeric(21, 9), @SumRetCustom3 numeric(21, 9)
   DECLARE @CashBack numeric(21, 9), @SaleSumCCardOnlyCashBack numeric(21, 9)
+  DECLARE @SaleRndSum numeric(21, 9), @SaleNoRndSum numeric(21, 9), @RetRndSum numeric(21, 9), @RetNoRndSum numeric(21, 9)
+  DECLARE @SaleRoundDiscCode int
 
   /* SET @ParamsIn = '{"CRID":2}' */
   SET @ParamsOut = '{}'
@@ -79,6 +81,14 @@ BEGIN
   SET @LastZRep = ISNULL(@LastZRep,'1900-01-01 00:00:00')
   SET @InitialBalance = ISNULL(@InitialBalance,0)
 
+  DECLARE @UseHardwareDisc BIT  
+  SELECT @UseHardwareDisc = CASE WHEN pw.DiscountMode = 1 THEN 1 ELSE 0 END FROM r_WPRoles AS pw  
+  JOIN r_WPs AS rw ON pw.WPRoleID = rw.WPRoleID
+  JOIN r_CRs AS cr ON rw.CRID = cr.CRID
+  WHERE cr.CRID = @CRID
+  
+  SET @SaleRoundDiscCode = ISNULL(dbo.zf_Var('t_SaleRoundDiscCode'),-1)
+
   /* Данные за период последней открытой смены */
   /* Все документы по продажам кассы @CRID */ 
   SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate  
@@ -92,7 +102,9 @@ BEGIN
   FROM t_CashBack m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID 
 
-  SELECT d.ChID, d.SrcPosID, d.TaxTypeID, d.TaxSum, d.SumCC_wt
+  SELECT d.ChID, d.SrcPosID, d.TaxTypeID, 
+  CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurTax),2) ELSE d.TaxSum END TaxSum,
+  CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurPriceCC_wt),2) ELSE d.SumCC_wt END SumCC_wt 
   INTO #t_SaleD
   FROM #t_Sale m WITH(NOLOCK)
   INNER JOIN t_SaleD d WITH(NOLOCK) ON m.ChID = d.ChID 
@@ -450,6 +462,26 @@ BEGIN
 	  GROUP BY m.ChID) t),0)
   END
 
+  SET @SaleRndSum = 0
+  SET @SaleNoRndSum = 0
+  SET @RetRndSum = 0
+  SET @RetNoRndSum = 0
+
+  IF (@UseHardwareDisc = 1) AND (@CashType = 39)
+    BEGIN
+	  SELECT @SaleRndSum = ISNULL(SUM(ROUND(ISNULL(lrnd.SumBonus,0),2)),0)
+	  FROM #t_SaleD d WITH(NOLOCK)
+      LEFT JOIN z_LogDiscExpP lrnd WITH(NOLOCK) ON d.ChID = lrnd.ChID AND lrnd.DocCode = 11035 AND d.SrcPosID = lrnd.SrcPosID AND lrnd.DiscCode = @SaleRoundDiscCode
+	  print @SaleRndSum
+
+      SELECT @RetRndSum = ISNULL(SUM(ROUND(ISNULL(lrnd.SumBonus,0),2)),0)
+	  FROM #t_CRRetD d WITH(NOLOCK)
+      LEFT JOIN z_LogDiscExpP lrnd WITH(NOLOCK) ON d.ChID = lrnd.ChID AND lrnd.DocCode = 11004 AND d.SrcPosID = lrnd.SrcPosID AND lrnd.DiscCode = @SaleRoundDiscCode
+	
+	  SET @SaleNoRndSum = @SaleSumCashFact + @SaleRndSum
+      SET @RetNoRndSum = @SumRetCash + @RetRndSum
+	END
+
   SET @ParamsOut = (
     SELECT
       @SaleSumCash AS SaleSumCash,
@@ -504,11 +536,15 @@ BEGIN
       @SumRetCustom1 AS SumRetCustom1,
       @SumRetCustom2 AS SumRetCustom2,
       @SumRetCustom3 AS SumRetCustom3,
-	     @SaleOrdersCount AS SaleOrdersCount,
-	     @RetOrdersCount AS RetOrdersCount,
-	     @CashBackOrdersCount AS CashBackOrdersCount,
+	  @SaleOrdersCount AS SaleOrdersCount,
+	  @RetOrdersCount AS RetOrdersCount,
+	  @CashBackOrdersCount AS CashBackOrdersCount,
       @CashBack AS CashBack,
-      @SaleSumCCardOnlyCashBack AS SaleSumCCardOnlyCashBack
+      @SaleSumCCardOnlyCashBack AS SaleSumCCardOnlyCashBack,
+      @SaleRndSum AS SaleRndSum,
+      @SaleNoRndSum AS SaleNoRndSum,
+      @RetRndSum AS RetRndSum, 
+      @RetNoRndSum AS RetNoRndSum
    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END
 GO
