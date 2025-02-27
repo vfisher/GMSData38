@@ -64,6 +64,10 @@
   [SumRetCustom4] [numeric](21, 9) NOT NULL DEFAULT (0),
   [SumRetCustom5] [numeric](21, 9) NOT NULL DEFAULT (0),
   [GUID] [uniqueidentifier] NOT NULL DEFAULT (newid()),
+  [SaleRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleRndSum] DEFAULT (0),
+  [SaleNoRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleNoRndSum] DEFAULT (0),
+  [RetRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetRndSum] DEFAULT (0),
+  [RetNoRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetNoRndSum] DEFAULT (0),
   [SaleSumType0] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleSumType0] DEFAULT (0),
   [SaleSumType1] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleSumType1] DEFAULT (0),
   [SaleSumType2] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleSumType2] DEFAULT (0),
@@ -82,7 +86,7 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_zRep] ON [t_zRep]
+CREATE TRIGGER [dbo].[TRel3_Del_t_zRep] ON [dbo].[t_zRep]
 FOR DELETE AS
 /* t_zRep - Z-отчеты - DELETE TRIGGER */
 BEGIN
@@ -105,7 +109,7 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel2_Upd_t_zRep] ON [t_zRep]
+CREATE TRIGGER [dbo].[TRel2_Upd_t_zRep] ON [dbo].[t_zRep]
 FOR UPDATE AS
 /* t_zRep - Z-отчеты - UPDATE TRIGGER */
 BEGIN
@@ -169,7 +173,7 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_zRep] ON [t_zRep]
+CREATE TRIGGER [dbo].[TRel1_Ins_t_zRep] ON [dbo].[t_zRep]
 FOR INSERT AS
 /* t_zRep - Z-отчеты - INSERT TRIGGER */
 BEGIN
