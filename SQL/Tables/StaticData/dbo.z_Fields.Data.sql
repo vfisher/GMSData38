@@ -12642,3 +12642,11 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'RetRndSum', 68, NULL, 1, 13, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleNoRndSum', 67, NULL, 1, 13, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleRndSum', 66, NULL, 1, 13, '((0))');
+
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10440001, 'CRPayTypeCode', 17, NULL, 0, 1, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'RetSumType0', 73, NULL, 1, 13, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'RetSumType1', 74, NULL, 1, 13, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'RetSumType2', 75, NULL, 1, 13, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType0', 70, NULL, 1, 13, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType1', 71, NULL, 1, 13, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType2', 72, NULL, 1, 13, '((0))');

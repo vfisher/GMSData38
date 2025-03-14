@@ -24,6 +24,8 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(8000), @ParamsOut va
    @ADocDateTime datetime, @ChequesCountSale int, @ChequesCountRet int, 
    @ChequesCountCashBack int, @SumCashBack numeric(21,9), @SaleSumCCardCashBack numeric(21,9), @GUID uniqueidentifier,
    @SaleRndSum numeric(21,9), @SaleNoRndSum numeric(21,9), @RetRndSum numeric(21,9), @RetNoRndSum numeric(21,9), 
+   @SaleSumType0 numeric(21,9), @SaleSumType1 numeric(21,9), @SaleSumType2 numeric(21,9),
+   @RetSumType0 numeric(21,9), @RetSumType1 numeric(21,9), @RetSumType2 numeric(21,9),
    @Continue int, @Msg varchar(200)
 
    SET @Continue = 2
@@ -92,7 +94,13 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(8000), @ParamsOut va
 	@SaleRndSum = JSON_VALUE(@ParamsIn, '$.SaleRndSum'),
     @SaleNoRndSum = JSON_VALUE(@ParamsIn, '$.SaleNoRndSum'),
 	@RetRndSum = JSON_VALUE(@ParamsIn, '$.RetRndSum'),
-    @RetNoRndSum = JSON_VALUE(@ParamsIn, '$.RetNoRndSum')
+    @RetNoRndSum = JSON_VALUE(@ParamsIn, '$.RetNoRndSum'),
+    @SaleSumType0 = JSON_VALUE(@ParamsIn, '$.SaleSumType0'),
+	@SaleSumType1 = JSON_VALUE(@ParamsIn, '$.SaleSumType1'),
+	@SaleSumType2 = JSON_VALUE(@ParamsIn, '$.SaleSumType2'),
+	@RetSumType0 = JSON_VALUE(@ParamsIn, '$.RetSumType0'),
+    @RetSumType1 = JSON_VALUE(@ParamsIn, '$.RetSumType1'),
+	@RetSumType2 = JSON_VALUE(@ParamsIn, '$.RetSumType2')
 
    BEGIN TRANSACTION
    DECLARE @AChID bigint, @ADocID bigint, @AOurID int
@@ -122,13 +130,15 @@ CREATE PROCEDURE [dbo].[t_SaleInsertZRep](@ParamsIn varchar(8000), @ParamsOut va
      SumCash, SumCard, SumCredit, SumCheque, SumOther, RetSumCash, RetSumCard, RetSumCredit, RetSumCheque, RetSumOther,
      SumMonRec, SumMonExp, SumRem, Notes, SaleSumCustom1, SaleSumCustom2, SaleSumCustom3, SaleSumCustom4, SaleSumCustom5,
      SumRetCustom1, SumRetCustom2, SumRetCustom3, SumRetCustom4, SumRetCustom5, ChequesCountSale, ChequesCountRet, ChequesCountCashBack,
-     SumCashBack, SaleSumCCardCashBack, GUID, SaleRndSum, SaleNoRndSum, RetRndSum, RetNoRndSum)
+     SumCashBack, SaleSumCCardCashBack, GUID, SaleRndSum, SaleNoRndSum, RetRndSum, RetNoRndSum,
+     SaleSumType0, SaleSumType1, SaleSumType2, RetSumType0, RetSumType1, RetSumType2)
    SELECT @AChID, @AOurID, @ADocID, dbo.zf_GetDate(@ADocDateTime), @ADocDateTime, @ACRID, @AOperID, FacID, FinID, @AZRepNum,
      @ASumCC_wt, @ASum_A, @ASum_B, @ASum_C, @ASum_D, @ASum_E, @ASum_F, @ARetSum_A, @ARetSum_B, @ARetSum_C, @ARetSum_D, @ARetSum_E, @ARetSum_F,
      @ATax_A, @ATax_B, @ATax_C, @ATax_D, @ATax_E, @ATax_F, @ARetTax_A, @ARetTax_B, @ARetTax_C, @ARetTax_D, @ARetTax_E, @ARetTax_F, 
      @ASumCash, @ASumCard, @ASumCredit, @ASumCheque, @ASumOther, @ARetSumCash, @ARetSumCard, @ARetSumCredit, @ARetSumCheque, @ARetSumOther,
-     @ASumMonRec, @ASumMonExp, @ASumRem, @Notes, @SaleSumCustom1, @SaleSumCustom2, @SaleSumCustom3, @SaleSumCustom4, @SaleSumCustom5, @SumRetCustom1, @SumRetCustom2, @SumRetCustom3, @SumRetCustom4, @SumRetCustom5, 
-	 @ChequesCountSale, @ChequesCountRet, @ChequesCountCashBack, @SumCashBack, @SaleSumCCardCashBack, @GUID, @SaleRndSum, @SaleNoRndSum, @RetRndSum, @RetNoRndSum
+     @ASumMonRec, @ASumMonExp, @ASumRem, @Notes, @SaleSumCustom1, @SaleSumCustom2, @SaleSumCustom3, @SaleSumCustom4, @SaleSumCustom5, @SumRetCustom1, @SumRetCustom2, @SumRetCustom3, @SumRetCustom4, @SumRetCustom5,
+	 @ChequesCountSale, @ChequesCountRet, @ChequesCountCashBack, @SumCashBack, @SaleSumCCardCashBack, @GUID, @SaleRndSum, @SaleNoRndSum, @RetRndSum, @RetNoRndSum,
+     @SaleSumType0, @SaleSumType1, @SaleSumType2, @RetSumType0, @RetSumType1, @RetSumType2
    FROM r_CRs
    WHERE CRID = @ACRID
    COMMIT TRANSACTION

@@ -68,6 +68,12 @@
   [SaleNoRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleNoRndSum] DEFAULT (0),
   [RetRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetRndSum] DEFAULT (0),
   [RetNoRndSum] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetNoRndSum] DEFAULT (0),
+  [SaleSumType0] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleSumType0] DEFAULT (0),
+  [SaleSumType1] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleSumType1] DEFAULT (0),
+  [SaleSumType2] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_SaleSumType2] DEFAULT (0),
+  [RetSumType0] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetSumType0] DEFAULT (0),
+  [RetSumType1] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetSumType1] DEFAULT (0),
+  [RetSumType2] [numeric](21, 9) NOT NULL CONSTRAINT [DF_t_zRep_RetSumType2] DEFAULT (0),
   CONSTRAINT [pk_t_zRep] PRIMARY KEY CLUSTERED ([ChID])
 )
 ON [PRIMARY]
