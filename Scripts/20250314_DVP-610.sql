@@ -890,10 +890,42 @@ GO
 IF @@ERROR<>0 OR @@TRANCOUNT=0 BEGIN IF @@TRANCOUNT>0 ROLLBACK SET NOEXEC ON END
 
 
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2745) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2745,1,'Тип оплаты','Тип оплати'
+GO
 
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2746) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2746,1,'Сумма оплат (0-наличные)','Сума оплат (0-готівка)'
+GO
 
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2747) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2747,1,'Сумма оплат (1-безналичная)','Сума оплат (1-безготівкова)'
+GO
 
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2748) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2748,1,'Сумма оплат (2-другое)','Сума оплат (2-інше)'
+GO
 
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2749) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2749,1,'Сумма возвратов (0-наличные)','Сума повернень (0-готівка)'
+GO
+
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2750) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2750,1,'Сумма возвратов (1-безналичная)','Сума повернень (1-безготівкова)'
+GO
+
+IF NOT EXISTS (SELECT TOP 1 1 FROM z_Translations WHERE TypeID = 1 AND MsgID = 2751) 
+INSERT INTO z_Translations (MsgID, TypeID, RU, UK)
+SELECT 2751,1,'Сумма возвратов (2-другое)','Сума повернень (2-інше)'
+GO
+
+IF @@ERROR<>0 OR @@TRANCOUNT=0 BEGIN IF @@TRANCOUNT>0 ROLLBACK SET NOEXEC ON END
 
 --
 -- Commit Transaction
