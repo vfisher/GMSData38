@@ -35,7 +35,12 @@ BEGIN
 		                      CASE WHEN @TaxPayer = 1 THEN m.TaxTypeID ELSE 1 END TaxTypeIDWithCheckTax
 		                    FROM t_SaleTempD m WITH(NOLOCK), r_Prods p WITH(NOLOCK) WHERE m.ProdID = p.ProdID AND m.CHID = @ChID FOR JSON PATH),'{}'),
             /* Если форма оплаты: Картой с выдачей наличных, то нам нужно получить запись только по 2 форме оплаты */
-		     DocPays = ISNULL((SELECT m.* FROM t_SaleTempPays m WITH(NOLOCK) WHERE m.CHID = @ChID AND m.Notes <> 'Видача готівки' FOR JSON PATH),'{}'),
+		     DocPays = ISNULL((SELECT m.*, p.CRPayTypeCode, 
+			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE p.CRPayTypeCode END CRPRROPayTypeCode
+			 FROM t_SaleTempPays m WITH(NOLOCK)
+             INNER JOIN r_Payforms p WITH(NOLOCK) ON m.PayFormCode = p.PayFormCode
+             INNER JOIN r_PayFormCR c WITH(NOLOCK) ON p.PayFormCode = c.PayFormCode AND c.CashType = @CashType
+			 WHERE m.CHID = @ChID AND m.Notes <> 'Видача готівки' FOR JSON PATH),'{}'),
 		     DocDLV = '{}'
 	     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
     END
@@ -69,7 +74,13 @@ BEGIN
 		 WHERE m.CHID = @ChID FOR JSON PATH),'{}'),
 
             /* Если форма оплаты: Картой с выдачей наличных, то нам нужно получить запись только по 2 форме оплаты */
-		     DocPays = ISNULL((SELECT m.* FROM t_SalePays m WITH(NOLOCK) WHERE m.CHID = @ChID AND m.Notes <> 'Видача готівки' FOR JSON PATH),'{}'),
+		     DocPays = ISNULL((SELECT m.*, p.CRPayTypeCode, 
+			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE p.CRPayTypeCode END CRPRROPayTypeCode
+			 FROM t_SalePays m WITH(NOLOCK)
+             INNER JOIN r_Payforms p WITH(NOLOCK) ON m.PayFormCode = p.PayFormCode
+             INNER JOIN r_PayFormCR c WITH(NOLOCK) ON p.PayFormCode = c.PayFormCode AND c.CashType = @CashType
+             WHERE m.CHID = @ChID AND m.Notes <> 'Видача готівки' 
+			 FOR JSON PATH),'{}'),
 		     DocDLV = ISNULL((SELECT * FROM t_SaleDLV WHERE CHID = @ChID FOR JSON PATH),'{}')
 	     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
     END
@@ -91,7 +102,13 @@ BEGIN
 		     DocD = ISNULL((SELECT m.*, p.ProdName, p.CstProdCode,
 		                      CASE WHEN @TaxPayer = 1 THEN m.TaxTypeID ELSE 1 END TaxTypeIDWithCheckTax
 						    FROM t_CRRetD m WITH(NOLOCK), r_Prods p WITH(NOLOCK) WHERE m.ProdID = p.ProdID AND m.CHID = @ChID FOR JSON PATH),'{}'),
-		     DocPays = ISNULL((SELECT m.* FROM t_CRRetPays m WITH(NOLOCK) WHERE m.CHID = @ChID FOR JSON PATH),'{}'),
+		     DocPays = ISNULL((SELECT m.*, p.CRPayTypeCode, 
+			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE p.CRPayTypeCode END CRPRROPayTypeCode
+			 FROM t_CRRetPays m WITH(NOLOCK)
+             INNER JOIN r_Payforms p WITH(NOLOCK) ON m.PayFormCode = p.PayFormCode
+             INNER JOIN r_PayFormCR c WITH(NOLOCK) ON p.PayFormCode = c.PayFormCode AND c.CashType = @CashType
+             WHERE m.CHID = @ChID
+			 FOR JSON PATH),'{}'),
 		     DocDLV = ISNULL((SELECT * FROM t_CRRetDLV WHERE CHID = @ChID FOR JSON PATH),'{}')
 	     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
     END
