@@ -1,1 +1,0 @@
-INSERT INTO [dbo].[r_Subs] ([SubID], [ChID], [SubName], [FormDate], [DisbDate], [ShedID], [Notes], [TaxRegionID]) VALUES (0, 0, N'Нет подразделения', '1901-01-01 00:00:00.000', '1901-01-01 00:00:00.000', 0, N'', 0)

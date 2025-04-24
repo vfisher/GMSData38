@@ -1,8 +1,0 @@
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (1, N'', 0, 21, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (2, N'', 21, 0, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (3, N'', 0, 22, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (4, N'', 22, 0, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (5, NULL, 22, 21, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (6, NULL, 23, 0, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (7, NULL, 22, 23, 0)
-INSERT INTO [dbo].[r_StateRules] ([StateRuleCode], [Notes], [StateCodeFrom], [StateCodeTo], [DenyUsers]) VALUES (8, NULL, 0, 23, 0)

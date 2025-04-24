@@ -2567,8 +2567,8 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2711, 'z_InsertLogTools', 'Сохраняет данные в таблицу z_LogTools', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2712, 'z_SaleSaveTelemetry', 'Сохраняет данные телеметрии ТК', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2713, 't_GetPermissionCRRepair', 'Возвращает разрешение на паререгистрацию офлайн документов ПРРО без дополнительной проверки пароля пользователя', NULL, 'P', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2714, 't_SaleGetRetContractID', 'Get bank contract id for sending to terminal', NULL, 'P', 1);
-
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2715, 'zf_Translate', 'Возвращает перевод для фразы', NULL, 'FN', 1);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2716, 'zf_TranslateMetadata', 'Возвращает перевод для метаданных', NULL, 'FN', 1);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2714, 't_SaleGetRetContractID', 'Get bank contract id for sending to terminal', NULL, 'P', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2715, 'zf_Translate', 'Возвращает перевод для фразы', NULL, 'FN', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2716, 'zf_TranslateMetadata', 'Возвращает перевод для метаданных', NULL, 'FN', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2717, 't_SaleGetProdImage', 'Возвращает изображение товара для дополнительной панели ТК', NULL, 'P', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2718, 't_ShowFullCRBalance', 'Возвращает полный баланс по кассе (для отображения пользователю)', NULL, 'P', 0);

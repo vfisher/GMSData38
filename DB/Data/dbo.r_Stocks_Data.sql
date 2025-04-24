@@ -1,2 +1,0 @@
-INSERT INTO [dbo].[r_Stocks] ([StockID], [ChID], [StockName], [StockGID], [Notes], [PLID], [EmpID], [IsWholesale], [Address], [StockTaxID], [CRStockName]) VALUES (0, 0, N'Нет склада', 0, NULL, 0, 0, 0, NULL, NULL, NULL)
-INSERT INTO [dbo].[r_Stocks] ([StockID], [ChID], [StockName], [StockGID], [Notes], [PLID], [EmpID], [IsWholesale], [Address], [StockTaxID], [CRStockName]) VALUES (1, 1, N'Основной склад', 0, N'', 0, 0, 0, NULL, NULL, NULL)

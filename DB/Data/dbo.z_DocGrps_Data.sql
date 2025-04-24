@@ -1,6 +1,0 @@
-INSERT INTO [dbo].[z_DocGrps] ([DocGrpCode], [DocGrpName], [DocGrpInfo]) VALUES (0, N'Общие документы', NULL)
-INSERT INTO [dbo].[z_DocGrps] ([DocGrpCode], [DocGrpName], [DocGrpInfo]) VALUES (1, N'Признаки', NULL)
-INSERT INTO [dbo].[z_DocGrps] ([DocGrpCode], [DocGrpName], [DocGrpInfo]) VALUES (2, N'Компании', NULL)
-INSERT INTO [dbo].[z_DocGrps] ([DocGrpCode], [DocGrpName], [DocGrpInfo]) VALUES (3, N'Товары', NULL)
-INSERT INTO [dbo].[z_DocGrps] ([DocGrpCode], [DocGrpName], [DocGrpInfo]) VALUES (4, N'Основные средства', NULL)
-INSERT INTO [dbo].[z_DocGrps] ([DocGrpCode], [DocGrpName], [DocGrpInfo]) VALUES (5, N'Производство', NULL)
