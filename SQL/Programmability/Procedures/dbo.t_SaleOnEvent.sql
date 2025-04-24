@@ -177,6 +177,31 @@ IF @AXml IS NOT NULL
   SELECT '\Внедрение\Инструменты\Инструмент - Переоценки за сегодня.fr3' Msg, @EVENT_ACTION_SHOWPRINTFORM [Action], 0 as Preview
 */
 
+/*
+  Приклад автоматичного повного службового винесення перед виконанням зет-звіту
+  Налаштування:
+  Для того, щоб не відображалось діалогове вікно з вказанною сумою повного винесення необхідно налаштувати в довіднику (r_WPRoles) RequireExp = 0 "Вынос денег перед окончанием смены обязателен". 
+  Розрахувати суму службового винесення @Sum.
+*/
+/*
+DECLARE @SumCash numeric(21,9) 
+DECLARE @ParamsIn varchar(max) 
+DECLARE @ParamsOut varchar(max)
+
+SET @SumCash = 0
+SET @ParamsIn = (SELECT @CRID AS CRID FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+EXEC t_GetCRBalance @ParamsIn, @ParamsOut OUTPUT  
+SET @SumCash = JSON_VALUE(@ParamsOut, '$.SumCash')
+
+IF (@EventID = @SALE_EVENT_BEFORE_ZREP) AND (@SumCash <> 0) 
+  BEGIN
+    IF @result IS NULL
+      SELECT @EVENT_ACTION_AUTOCLOSE_DOC [Action], 11052 v1,'<xml><doc doccode="11052"><sum>' + CAST(FORMAT(@SumCash, 'N2', 'ru-UA') as VARCHAR(20)) + '</sum><CodeID5>0</CodeID1></doc></xml>' v2
+    ELSE IF @result <> 1
+      RAISERROR ('Помилка виконання службового винесення. Зверніться до адміністратора.', 18, 0)
+  END
+*/
+
 IF (@EventID = @SALE_EVENT_BEFORE_CLOSE) OR (@EventID = @EVENT_ACTION_AUTOCLOSE_DOC) 
   OR (@EventID = @SALE_EVENT_ON_RECEXP) OR (@EventID = @SALE_EVENT_BEFORE_ZREP) 
   BEGIN  
