@@ -1,8 +1,0 @@
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (0, 0, N'Нет расширения', N'Нет описания', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (1, 100000001, N'.doc', N'Документ Microsoft Word', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (2, 100000002, N'.docx', N'Документ Open XML Microsoft Word', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (3, 100000003, N'.xls', N'Лист Microsoft Excel', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (4, 100000004, N'.xlsx', N'Документ Open XML Microsoft Excel', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (5, 100000005, N'.pdf', N'Документ PDF', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (6, 100000006, N'.jpg', N'JPEG Image File', NULL)
-INSERT INTO [dbo].[r_ExtFiles] ([ExtFileID], [ChID], [ExtFileName], [Description], [Notes]) VALUES (7, 100000007, N'.jpeg', N'JPEG Image File', NULL)

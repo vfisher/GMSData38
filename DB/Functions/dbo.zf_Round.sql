@@ -1,6 +1,0 @@
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE FUNCTION [dbo].[zf_Round](@Num numeric(21, 9), @Precision numeric(21, 9))/* Округляет число с указанной точностью */RETURNS numeric(21, 9)BEGIN  IF (@Precision = 0) RETURN @Num  DECLARE @n numeric(38, 9), @n1 numeric(38, 9), @n2 numeric(38, 9)  SET @n = @Num / @Precision  SET @n1 = CAST((@n * 10) AS bigint)  SET @n2 = CAST(@n AS bigint) * 10  IF (ROUND(ABS(@n1 - @n2), 0) >= 5)  BEGIN    IF (@n > 0) SET @n2 = (@n2 + 10) / 10 ELSE SET @n2 = (@n2 - 10) / 10  END  ELSE    SET @n2 = @n2 / 10  RETURN CAST(@n2 AS bigint) * CAST(@Precision AS numeric(18,9))END
-GO

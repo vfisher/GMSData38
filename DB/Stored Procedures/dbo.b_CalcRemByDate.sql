@@ -1,6 +1,0 @@
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE PROCEDURE [dbo].[b_CalcRemByDate](@BDate smalldatetime, @EDate smalldatetime)AS  BEGIN TRAN  if exists (select * from dbo.sysobjects where id = object_id(CURRENT_USER + '.b_RemD') and xtype in (N'U'))  DROP TABLE b_RemD  SELECT * INTO b_RemD FROM dbo.zf_b_CalcRemByDateDate(@BDate, @EDate)  IF @@ERROR <> 0 GOTO ErrorHandler  CREATE NONCLUSTERED INDEX OurID_StockID_ProdID_PPID ON b_RemD(OurID, StockID, ProdID, PPID)  IF @@ERROR <> 0 GOTO ErrorHandler  /* Логирование расчета */  INSERT z_LogAU (AUGroupCode, UserCode, BDate, EDate)  VALUES  (3, dbo.zf_GetUserCode(), @BDate, @EDate)  COMMIT TRAN  RETURN  ErrorHandler:  ROLLBACK TRAN
-GO

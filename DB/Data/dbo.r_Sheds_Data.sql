@@ -1,2 +1,0 @@
-INSERT INTO [dbo].[r_Sheds] ([ShedID], [ChID], [ShedName], [ShedDaysQty], [WWeekTypeID], [ShedBDate], [Notes], [ConHolDays], [SlidingShed], [IsIrregShed]) VALUES (0, 0, N'График работы не определен', 0, 0, '2000-01-01 00:00:00.000', N'', 0, 0, 0)
-INSERT INTO [dbo].[r_Sheds] ([ShedID], [ChID], [ShedName], [ShedDaysQty], [WWeekTypeID], [ShedBDate], [Notes], [ConHolDays], [SlidingShed], [IsIrregShed]) VALUES (1, 1, N'Пятидневка', 7, 6, '2002-12-30 00:00:00.000', N'', 0, 0, 0)

@@ -1,1 +1,0 @@
-INSERT INTO [dbo].[r_Scales] ([ScaleID], [ChID], [SrvID], [ScaleGrID], [ScaleName], [ScaleInfo], [ScaleType], [ScaleSerial], [IP], [NetPort], [ComPort], [BaudRate], [MaxProdQty], [MaxProdID], [ScaleDefID], [StockID]) VALUES (0, 0, 0, 0, N'Нет весов', NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0)

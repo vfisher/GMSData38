@@ -1,1 +1,0 @@
-INSERT INTO [dbo].[r_Candidates] ([CandidateID], [ChID], [CandidateName], [UACandidateName], [PostName], [LocationName], [Phone], [EMail], [InterviewDate], [CheckAO], [ResultCheckAO], [SubName], [Notes], [TagCName], [TagName], [SkillName], [CandidateStateCode]) VALUES (0, 0, N'System Administrator', NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, 0)

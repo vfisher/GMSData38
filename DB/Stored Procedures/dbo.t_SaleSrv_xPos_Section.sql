@@ -1,6 +1,0 @@
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE PROCEDURE [dbo].[t_SaleSrv_xPos_Section](@CRID int)/* xPOS: Выгружает отделы */ASBEGIN  CREATE TABLE #SaleSrv_xPOSSectionTempPR(    CODE varchar(20),    WGCODE int,    SCTCODE int,      NAME varchar(200),    SHORTNAME varchar(200),    AVAIL bit,    Note varchar(200),    BarCode varchar(42),    FType char(1)  )  INSERT INTO #SaleSrv_xPOSSectionTempPR EXEC ('t_SaleSrv_xPos_Wares ' + @CRID)  SELECT DISTINCT g.PGrID3 AS CODE, g.PGrName3 AS NAME, g.PGrName3 AS SHORTNAME FROM #SaleSrv_xPOSSectionTempPR r, r_ProdG3 g  WHERE r.SCTCODE = g.PGrID3  DROP TABLE #SaleSrv_xPOSSectionTempPREND
-GO

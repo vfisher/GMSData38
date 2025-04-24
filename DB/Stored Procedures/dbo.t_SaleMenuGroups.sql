@@ -1,6 +1,0 @@
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_NULLS ON
-GO
-CREATE PROCEDURE [dbo].[t_SaleMenuGroups](@AppCode int, @CRID int, @PCatID int)/* Формирует список групп товаров для приложения GMS Ресторан */ASBEGIN  DECLARE @Delim varchar(250)  DECLARE @GroupFilter varchar(250)  DECLARE @PLID int  DECLARE @UseStockPL bit  SELECT @Delim = dbo.zf_Var('z_FilterListSeparator')  SELECT @GroupFilter = dbo.zf_Var('Rest_GroupFilter')  SELECT @PLID = s.PLID, @UseStockPL = cr.UseStockPL FROM r_CRs cr INNER JOIN r_Stocks s ON cr.StockID = s.StockID AND cr.CRID = @CRID  SELECT g.PGrID, g.PGrName, g.Notes  FROM r_Prods p WITH(NOLOCK)    INNER JOIN r_ProdG g WITH(NOLOCK) ON p.PgrID = g.PgrID    INNER JOIN r_ProdMP mp WITH(NOLOCK) ON p.ProdID = mp.ProdID     INNER JOIN r_ProdMQ mq WITH(NOLOCK) ON p.ProdID = mq.ProdID  WHERE p.PCatID = @PCatID AND dbo.zf_MatchFilterInt(p.PGrID, @GroupFilter, @Delim) = 1 AND mp.PriceMC > 0 AND    ((@UseStockPL = 1 AND mp.PLID = @PLID) OR (@UseStockPL = 0 AND mp.PLID = mq.PLID))  GROUP BY g.PGrID, g.PGrName, g.Notes  ORDER BY g.PGrNameEND
-GO

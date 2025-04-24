@@ -1,1 +1,0 @@
-INSERT INTO [dbo].[r_ProdMQ] ([ProdID], [UM], [Qty], [Weight], [Notes], [BarCode], [ProdBarCode], [PLID], [TareWeight]) VALUES (0, N'Нет', 1.000000000, 0.000000000, NULL, N'0_Нет', NULL, 0, 0.000000000)
