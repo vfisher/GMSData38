@@ -12650,3 +12650,5 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType0', 70, NULL, 1, 13, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType1', 71, NULL, 1, 13, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType2', 72, NULL, 1, 13, '((0))');
+
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001007, 'FieldID', 44, NULL, 1, 4, NULL);

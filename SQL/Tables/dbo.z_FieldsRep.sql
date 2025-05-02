@@ -69,6 +69,33 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
+CREATE TRIGGER [dbo].[TRel3_Del_z_FieldsRep] ON [z_FieldsRep]
+FOR DELETE AS
+/* z_FieldsRep - Репозиторий полей - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* z_FieldsRep ^ z_ReplicaFields - Проверка в CHILD */
+/* Репозиторий полей ^ Объекты репликации: Поля - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_ReplicaFields a WITH(NOLOCK), deleted d WHERE a.FieldName = d.FieldName)
+    BEGIN
+      EXEC z_RelationError 'z_FieldsRep', 'z_ReplicaFields', 3
+      RETURN
+    END
+
+/* z_FieldsRep ^ z_Translations - Удаление в CHILD */
+/* Репозиторий полей ^ Перевод - Удаление в CHILD */
+  DELETE z_Translations FROM z_Translations a, deleted d WHERE a.TypeID = 1 AND a.MsgID = d.FieldID
+  IF @@ERROR > 0 RETURN
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel3_Del_z_FieldsRep', N'Last', N'DELETE'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
 CREATE TRIGGER [dbo].[TRel2_Upd_z_FieldsRep] ON [z_FieldsRep]
 FOR UPDATE AS
 /* z_FieldsRep - Репозиторий полей - UPDATE TRIGGER */
@@ -97,32 +124,29 @@ BEGIN
         END
     END
 
-END
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel2_Upd_z_FieldsRep', N'Last', N'UPDATE'
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel3_Del_z_FieldsRep] ON [z_FieldsRep]
-FOR DELETE AS
-/* z_FieldsRep - Репозиторий полей - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-/* z_FieldsRep ^ z_ReplicaFields - Проверка в CHILD */
-/* Репозиторий полей ^ Объекты репликации: Поля - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_ReplicaFields a WITH(NOLOCK), deleted d WHERE a.FieldName = d.FieldName)
+/* z_FieldsRep ^ z_Translations - Обновление CHILD */
+/* Репозиторий полей ^ Перевод - Обновление CHILD */
+  IF UPDATE(FieldID)
     BEGIN
-      EXEC z_RelationError 'z_FieldsRep', 'z_ReplicaFields', 3
-      RETURN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.TypeID = 1, a.MsgID = i.FieldID
+          FROM z_Translations a, inserted i, deleted d WHERE a.TypeID = 1 AND a.MsgID = d.FieldID
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_Translations a, deleted d WHERE a.TypeID = 1 AND a.MsgID = d.FieldID)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Репозиторий полей'' => ''Перевод''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_z_FieldsRep', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel2_Upd_z_FieldsRep', N'Last', N'UPDATE'
 GO
 
 ALTER TABLE [dbo].[z_FieldsRep]

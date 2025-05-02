@@ -58,6 +58,79 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
+CREATE TRIGGER [dbo].[TRel3_Del_z_Docs] ON [z_Docs]
+FOR DELETE AS
+/* z_Docs - Документы - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* z_Docs ^ b_DStack - Проверка в CHILD */
+/* Документы ^ ТМЦ: Суммовой учет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.DocCode = d.DocCode)
+    BEGIN
+      EXEC z_RelationError 'z_Docs', 'b_DStack', 3
+      RETURN
+    END
+
+/* z_Docs ^ b_GTran - Проверка в CHILD */
+/* Документы ^ Таблица проводок (Общие данные) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTran a WITH(NOLOCK), deleted d WHERE a.DocCode = d.DocCode)
+    BEGIN
+      EXEC z_RelationError 'z_Docs', 'b_GTran', 3
+      RETURN
+    END
+
+/* z_Docs ^ r_ProdMPCh - Проверка в CHILD */
+/* Документы ^ Изменение цен продажи (Таблица) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdMPCh a WITH(NOLOCK), deleted d WHERE a.DocCode = d.DocCode)
+    BEGIN
+      EXEC z_RelationError 'z_Docs', 'r_ProdMPCh', 3
+      RETURN
+    END
+
+/* z_Docs ^ z_DataSets - Удаление в CHILD */
+/* Документы ^ Источники данных - Удаление в CHILD */
+  DELETE z_DataSets FROM z_DataSets a, deleted d WHERE a.DocCode = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Docs ^ z_DocLinks - Удаление в CHILD */
+/* Документы ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Docs ^ z_DocLinks - Удаление в CHILD */
+/* Документы ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ParentDocCode = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Docs ^ z_Tools - Удаление в CHILD */
+/* Документы ^ Инструменты - Удаление в CHILD */
+  DELETE z_Tools FROM z_Tools a, deleted d WHERE a.DocCode = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Docs ^ z_Translations - Удаление в CHILD */
+/* Документы ^ Перевод - Удаление в CHILD */
+  DELETE z_Translations FROM z_Translations a, deleted d WHERE a.TypeID = 2 AND a.MsgID = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Docs ^ z_WCopy - Удаление в CHILD */
+/* Документы ^ Мастер Копирования - Удаление в CHILD */
+  DELETE z_WCopy FROM z_WCopy a, deleted d WHERE a.DstDocType = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Docs ^ z_WCopy - Удаление в CHILD */
+/* Документы ^ Мастер Копирования - Удаление в CHILD */
+  DELETE z_WCopy FROM z_WCopy a, deleted d WHERE a.SrcDocType = d.DocCode
+  IF @@ERROR > 0 RETURN
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel3_Del_z_Docs', N'Last', N'DELETE'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
 CREATE TRIGGER [dbo].[TRel2_Upd_z_Docs] ON [z_Docs]
 FOR UPDATE AS
 /* z_Docs - Документы - UPDATE TRIGGER */
@@ -200,6 +273,25 @@ BEGIN
         END
     END
 
+/* z_Docs ^ z_Translations - Обновление CHILD */
+/* Документы ^ Перевод - Обновление CHILD */
+  IF UPDATE(DocCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.TypeID = 2, a.MsgID = i.DocCode
+          FROM z_Translations a, inserted i, deleted d WHERE a.TypeID = 2 AND a.MsgID = d.DocCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_Translations a, deleted d WHERE a.TypeID = 2 AND a.MsgID = d.DocCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Документы'' => ''Перевод''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
 /* z_Docs ^ z_WCopy - Обновление CHILD */
 /* Документы ^ Мастер Копирования - Обновление CHILD */
   IF UPDATE(DocCode)
@@ -242,74 +334,6 @@ END
 GO
 
 EXEC sp_settriggerorder N'dbo.TRel2_Upd_z_Docs', N'Last', N'UPDATE'
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel3_Del_z_Docs] ON [z_Docs]
-FOR DELETE AS
-/* z_Docs - Документы - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-/* z_Docs ^ b_DStack - Проверка в CHILD */
-/* Документы ^ ТМЦ: Суммовой учет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.DocCode = d.DocCode)
-    BEGIN
-      EXEC z_RelationError 'z_Docs', 'b_DStack', 3
-      RETURN
-    END
-
-/* z_Docs ^ b_GTran - Проверка в CHILD */
-/* Документы ^ Таблица проводок (Общие данные) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTran a WITH(NOLOCK), deleted d WHERE a.DocCode = d.DocCode)
-    BEGIN
-      EXEC z_RelationError 'z_Docs', 'b_GTran', 3
-      RETURN
-    END
-
-/* z_Docs ^ r_ProdMPCh - Проверка в CHILD */
-/* Документы ^ Изменение цен продажи (Таблица) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdMPCh a WITH(NOLOCK), deleted d WHERE a.DocCode = d.DocCode)
-    BEGIN
-      EXEC z_RelationError 'z_Docs', 'r_ProdMPCh', 3
-      RETURN
-    END
-
-/* z_Docs ^ z_DataSets - Удаление в CHILD */
-/* Документы ^ Источники данных - Удаление в CHILD */
-  DELETE z_DataSets FROM z_DataSets a, deleted d WHERE a.DocCode = d.DocCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Docs ^ z_DocLinks - Удаление в CHILD */
-/* Документы ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = d.DocCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Docs ^ z_DocLinks - Удаление в CHILD */
-/* Документы ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ParentDocCode = d.DocCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Docs ^ z_Tools - Удаление в CHILD */
-/* Документы ^ Инструменты - Удаление в CHILD */
-  DELETE z_Tools FROM z_Tools a, deleted d WHERE a.DocCode = d.DocCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Docs ^ z_WCopy - Удаление в CHILD */
-/* Документы ^ Мастер Копирования - Удаление в CHILD */
-  DELETE z_WCopy FROM z_WCopy a, deleted d WHERE a.DstDocType = d.DocCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Docs ^ z_WCopy - Удаление в CHILD */
-/* Документы ^ Мастер Копирования - Удаление в CHILD */
-  DELETE z_WCopy FROM z_WCopy a, deleted d WHERE a.SrcDocType = d.DocCode
-  IF @@ERROR > 0 RETURN
-
-END
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel3_Del_z_Docs', N'Last', N'DELETE'
 GO
 
 ALTER TABLE [dbo].[z_Docs]

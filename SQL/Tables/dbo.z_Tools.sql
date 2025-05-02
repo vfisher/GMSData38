@@ -21,27 +21,29 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_z_Tools] ON [z_Tools]
-FOR INSERT AS
-/* z_Tools - Инструменты - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_z_Tools] ON [z_Tools]
+FOR DELETE AS
+/* z_Tools - Инструменты - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* z_Tools ^ z_Docs - Проверка в PARENT */
-/* Инструменты ^ Документы - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.DocCode NOT IN (SELECT DocCode FROM z_Docs))
+/* z_Tools ^ r_DocShed - Проверка в CHILD */
+/* Инструменты ^ Шаблоны процессов: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DocShed a WITH(NOLOCK), deleted d WHERE a.ToolCode = d.ToolCode)
     BEGIN
-      EXEC z_RelationError 'z_Docs', 'z_Tools', 0
+      EXEC z_RelationError 'z_Tools', 'r_DocShed', 3
       RETURN
     END
+
+/* z_Tools ^ z_Translations - Удаление в CHILD */
+/* Инструменты ^ Перевод - Удаление в CHILD */
+  DELETE z_Translations FROM z_Translations a, deleted d WHERE a.TypeID = 5 AND a.MsgID = d.ToolCode
+  IF @@ERROR > 0 RETURN
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_z_Tools', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_z_Tools', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -83,6 +85,25 @@ BEGIN
         END
     END
 
+/* z_Tools ^ z_Translations - Обновление CHILD */
+/* Инструменты ^ Перевод - Обновление CHILD */
+  IF UPDATE(ToolCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.TypeID = 5, a.MsgID = i.ToolCode
+          FROM z_Translations a, inserted i, deleted d WHERE a.TypeID = 5 AND a.MsgID = d.ToolCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_Translations a, deleted d WHERE a.TypeID = 5 AND a.MsgID = d.ToolCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Инструменты'' => ''Перевод''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
 END
 GO
 
@@ -91,24 +112,27 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_z_Tools] ON [z_Tools]
-FOR DELETE AS
-/* z_Tools - Инструменты - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_z_Tools] ON [z_Tools]
+FOR INSERT AS
+/* z_Tools - Инструменты - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* z_Tools ^ r_DocShed - Проверка в CHILD */
-/* Инструменты ^ Шаблоны процессов: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DocShed a WITH(NOLOCK), deleted d WHERE a.ToolCode = d.ToolCode)
+/* z_Tools ^ z_Docs - Проверка в PARENT */
+/* Инструменты ^ Документы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DocCode NOT IN (SELECT DocCode FROM z_Docs))
     BEGIN
-      EXEC z_RelationError 'z_Tools', 'r_DocShed', 3
+      EXEC z_RelationError 'z_Docs', 'z_Tools', 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_z_Tools', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_z_Tools', N'Last', N'INSERT'
 GO
 
 ALTER TABLE [dbo].[z_Tools]

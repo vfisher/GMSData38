@@ -49,27 +49,49 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_z_DataSets] ON [z_DataSets]
-FOR INSERT AS
-/* z_DataSets - Источники данных - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_z_DataSets] ON [z_DataSets]
+FOR DELETE AS
+/* z_DataSets - Источники данных - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* z_DataSets ^ z_Docs - Проверка в PARENT */
-/* Источники данных ^ Документы - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.DocCode NOT IN (SELECT DocCode FROM z_Docs))
+/* z_DataSets ^ b_GOperDocs - Проверка в CHILD */
+/* Источники данных ^ Проводки для документов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GOperDocs a WITH(NOLOCK), deleted d WHERE a.DSCode = d.DSCode)
     BEGIN
-      EXEC z_RelationError 'z_Docs', 'z_DataSets', 0
+      EXEC z_RelationError 'z_DataSets', 'b_GOperDocs', 3
       RETURN
     END
+
+/* z_DataSets ^ z_DataSetFields - Удаление в CHILD */
+/* Источники данных ^ Источники данных - Поля - Удаление в CHILD */
+  DELETE z_DataSetFields FROM z_DataSetFields a, deleted d WHERE a.DSCode = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+/* z_DataSets ^ z_DatasetLinks - Удаление в CHILD */
+/* Источники данных ^ Источники данных - Связи - Удаление в CHILD */
+  DELETE z_DatasetLinks FROM z_DatasetLinks a, deleted d WHERE a.DSCode = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+/* z_DataSets ^ z_DatasetLinks - Удаление в CHILD */
+/* Источники данных ^ Источники данных - Связи - Удаление в CHILD */
+  DELETE z_DatasetLinks FROM z_DatasetLinks a, deleted d WHERE a.LinkDSCode = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+/* z_DataSets ^ z_Translations - Удаление в CHILD */
+/* Источники данных ^ Перевод - Удаление в CHILD */
+  DELETE z_Translations FROM z_Translations a, deleted d WHERE a.TypeID = 3 AND a.MsgID = d.DSCode
+  IF @@ERROR > 0 RETURN
+
+/* z_DataSets ^ z_Translations - Удаление в CHILD */
+/* Источники данных ^ Перевод - Удаление в CHILD */
+  DELETE z_Translations FROM z_Translations a, deleted d WHERE a.TypeID = 4 AND a.MsgID = d.DSCode
+  IF @@ERROR > 0 RETURN
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_z_DataSets', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_z_DataSets', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -168,6 +190,44 @@ BEGIN
         END
     END
 
+/* z_DataSets ^ z_Translations - Обновление CHILD */
+/* Источники данных ^ Перевод - Обновление CHILD */
+  IF UPDATE(DSCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.TypeID = 3, a.MsgID = i.DSCode
+          FROM z_Translations a, inserted i, deleted d WHERE a.TypeID = 3 AND a.MsgID = d.DSCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_Translations a, deleted d WHERE a.TypeID = 3 AND a.MsgID = d.DSCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Источники данных'' => ''Перевод''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+/* z_DataSets ^ z_Translations - Обновление CHILD */
+/* Источники данных ^ Перевод - Обновление CHILD */
+  IF UPDATE(DSCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.TypeID = 4, a.MsgID = i.DSCode
+          FROM z_Translations a, inserted i, deleted d WHERE a.TypeID = 4 AND a.MsgID = d.DSCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_Translations a, deleted d WHERE a.TypeID = 4 AND a.MsgID = d.DSCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Источники данных'' => ''Перевод''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
 END
 GO
 
@@ -176,39 +236,27 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_z_DataSets] ON [z_DataSets]
-FOR DELETE AS
-/* z_DataSets - Источники данных - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_z_DataSets] ON [z_DataSets]
+FOR INSERT AS
+/* z_DataSets - Источники данных - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* z_DataSets ^ b_GOperDocs - Проверка в CHILD */
-/* Источники данных ^ Проводки для документов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GOperDocs a WITH(NOLOCK), deleted d WHERE a.DSCode = d.DSCode)
+/* z_DataSets ^ z_Docs - Проверка в PARENT */
+/* Источники данных ^ Документы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DocCode NOT IN (SELECT DocCode FROM z_Docs))
     BEGIN
-      EXEC z_RelationError 'z_DataSets', 'b_GOperDocs', 3
+      EXEC z_RelationError 'z_Docs', 'z_DataSets', 0
       RETURN
     END
-
-/* z_DataSets ^ z_DataSetFields - Удаление в CHILD */
-/* Источники данных ^ Источники данных - Поля - Удаление в CHILD */
-  DELETE z_DataSetFields FROM z_DataSetFields a, deleted d WHERE a.DSCode = d.DSCode
-  IF @@ERROR > 0 RETURN
-
-/* z_DataSets ^ z_DatasetLinks - Удаление в CHILD */
-/* Источники данных ^ Источники данных - Связи - Удаление в CHILD */
-  DELETE z_DatasetLinks FROM z_DatasetLinks a, deleted d WHERE a.DSCode = d.DSCode
-  IF @@ERROR > 0 RETURN
-
-/* z_DataSets ^ z_DatasetLinks - Удаление в CHILD */
-/* Источники данных ^ Источники данных - Связи - Удаление в CHILD */
-  DELETE z_DatasetLinks FROM z_DatasetLinks a, deleted d WHERE a.LinkDSCode = d.DSCode
-  IF @@ERROR > 0 RETURN
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_z_DataSets', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_z_DataSets', N'Last', N'INSERT'
 GO
 
 ALTER TABLE [dbo].[z_DataSets]

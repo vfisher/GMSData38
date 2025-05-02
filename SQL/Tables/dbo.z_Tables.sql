@@ -43,6 +43,158 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
+CREATE TRIGGER [dbo].[TRel3_Del_z_Tables] ON [z_Tables]
+FOR DELETE AS
+/* z_Tables - Таблицы - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* z_Tables ^ r_DiscChargeDT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций: Накопление бонусов - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscChargeDT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscChargeDT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscChargeDT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций: Накопление бонусов - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscChargeDT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscChargeDT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscMessagesT - Удаление в CHILD */
+/* Таблицы ^ Справочник акций: Сообщения - Источники данных - Удаление в CHILD */
+  DELETE r_DiscMessagesT FROM r_DiscMessagesT a, deleted d WHERE a.CTableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ r_DiscMessagesT - Удаление в CHILD */
+/* Таблицы ^ Справочник акций: Сообщения - Источники данных - Удаление в CHILD */
+  DELETE r_DiscMessagesT FROM r_DiscMessagesT a, deleted d WHERE a.PTableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ r_DiscSaleDT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций: Скидка по товарам - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscSaleDT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscSaleDT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscSaleDT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций: Скидка по товарам - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscSaleDT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscSaleDT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscSaleT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций: Скидка - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscSaleT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscSaleT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscSaleT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций: Скидка - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscSaleT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscSaleT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscsT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscsT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscsT', 3
+      RETURN
+    END
+
+/* z_Tables ^ r_DiscsT - Проверка в CHILD */
+/* Таблицы ^ Справочник акций - Источники данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DiscsT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'r_DiscsT', 3
+      RETURN
+    END
+
+/* z_Tables ^ v_Tables - Удаление в CHILD */
+/* Таблицы ^ Анализатор - Таблицы - Удаление в CHILD */
+  DELETE v_Tables FROM v_Tables a, deleted d WHERE a.TableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_AUTables - Проверка в CHILD */
+/* Таблицы ^ Автоизменение - Таблицы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_AUTables a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'z_AUTables', 3
+      RETURN
+    END
+
+/* z_Tables ^ z_AUTables - Проверка в CHILD */
+/* Таблицы ^ Автоизменение - Таблицы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_AUTables a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'z_AUTables', 3
+      RETURN
+    END
+
+/* z_Tables ^ z_AutoUpdate - Удаление в CHILD */
+/* Таблицы ^ Автоизменение - Удаление в CHILD */
+  DELETE z_AutoUpdate FROM z_AutoUpdate a, deleted d WHERE a.AUTableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_AutoUpdate - Удаление в CHILD */
+/* Таблицы ^ Автоизменение - Удаление в CHILD */
+  DELETE z_AutoUpdate FROM z_AutoUpdate a, deleted d WHERE a.TableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_Relations - Удаление в CHILD */
+/* Таблицы ^ Таблицы - Связи - Удаление в CHILD */
+  DELETE z_Relations FROM z_Relations a, deleted d WHERE a.ChildCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_Relations - Удаление в CHILD */
+/* Таблицы ^ Таблицы - Связи - Удаление в CHILD */
+  DELETE z_Relations FROM z_Relations a, deleted d WHERE a.ParentCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_ReplicaFields - Проверка в CHILD */
+/* Таблицы ^ Объекты репликации: Поля - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_ReplicaFields a WITH(NOLOCK), deleted d WHERE a.TableCode = d.TableCode)
+    BEGIN
+      EXEC z_RelationError 'z_Tables', 'z_ReplicaFields', 3
+      RETURN
+    END
+
+/* z_Tables ^ z_ReplicaFilters - Удаление в CHILD */
+/* Таблицы ^ Объекты репликации: Фильтры - Удаление в CHILD */
+  DELETE z_ReplicaFilters FROM z_ReplicaFilters a, deleted d WHERE a.CTableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_ReplicaFilters - Удаление в CHILD */
+/* Таблицы ^ Объекты репликации: Фильтры - Удаление в CHILD */
+  DELETE z_ReplicaFilters FROM z_ReplicaFilters a, deleted d WHERE a.PTableCode = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+/* z_Tables ^ z_Translations - Удаление в CHILD */
+/* Таблицы ^ Перевод - Удаление в CHILD */
+  DELETE z_Translations FROM z_Translations a, deleted d WHERE a.TypeID = 10 AND a.MsgID = d.TableCode
+  IF @@ERROR > 0 RETURN
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel3_Del_z_Tables', N'Last', N'DELETE'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
 CREATE TRIGGER [dbo].[TRel2_Upd_z_Tables] ON [z_Tables]
 FOR UPDATE AS
 /* z_Tables - Таблицы - UPDATE TRIGGER */
@@ -432,157 +584,29 @@ BEGIN
         END
     END
 
+/* z_Tables ^ z_Translations - Обновление CHILD */
+/* Таблицы ^ Перевод - Обновление CHILD */
+  IF UPDATE(TableCode)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.TypeID = 10, a.MsgID = i.TableCode
+          FROM z_Translations a, inserted i, deleted d WHERE a.TypeID = 10 AND a.MsgID = d.TableCode
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM z_Translations a, deleted d WHERE a.TypeID = 10 AND a.MsgID = d.TableCode)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Таблицы'' => ''Перевод''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
 END
 GO
 
 EXEC sp_settriggerorder N'dbo.TRel2_Upd_z_Tables', N'Last', N'UPDATE'
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel3_Del_z_Tables] ON [z_Tables]
-FOR DELETE AS
-/* z_Tables - Таблицы - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-/* z_Tables ^ r_DiscChargeDT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций: Накопление бонусов - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscChargeDT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscChargeDT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscChargeDT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций: Накопление бонусов - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscChargeDT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscChargeDT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscMessagesT - Удаление в CHILD */
-/* Таблицы ^ Справочник акций: Сообщения - Источники данных - Удаление в CHILD */
-  DELETE r_DiscMessagesT FROM r_DiscMessagesT a, deleted d WHERE a.CTableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ r_DiscMessagesT - Удаление в CHILD */
-/* Таблицы ^ Справочник акций: Сообщения - Источники данных - Удаление в CHILD */
-  DELETE r_DiscMessagesT FROM r_DiscMessagesT a, deleted d WHERE a.PTableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ r_DiscSaleDT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций: Скидка по товарам - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscSaleDT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscSaleDT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscSaleDT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций: Скидка по товарам - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscSaleDT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscSaleDT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscSaleT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций: Скидка - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscSaleT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscSaleT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscSaleT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций: Скидка - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscSaleT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscSaleT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscsT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscsT a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscsT', 3
-      RETURN
-    END
-
-/* z_Tables ^ r_DiscsT - Проверка в CHILD */
-/* Таблицы ^ Справочник акций - Источники данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DiscsT a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'r_DiscsT', 3
-      RETURN
-    END
-
-/* z_Tables ^ v_Tables - Удаление в CHILD */
-/* Таблицы ^ Анализатор - Таблицы - Удаление в CHILD */
-  DELETE v_Tables FROM v_Tables a, deleted d WHERE a.TableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ z_AUTables - Проверка в CHILD */
-/* Таблицы ^ Автоизменение - Таблицы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_AUTables a WITH(NOLOCK), deleted d WHERE a.CTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'z_AUTables', 3
-      RETURN
-    END
-
-/* z_Tables ^ z_AUTables - Проверка в CHILD */
-/* Таблицы ^ Автоизменение - Таблицы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_AUTables a WITH(NOLOCK), deleted d WHERE a.PTableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'z_AUTables', 3
-      RETURN
-    END
-
-/* z_Tables ^ z_AutoUpdate - Удаление в CHILD */
-/* Таблицы ^ Автоизменение - Удаление в CHILD */
-  DELETE z_AutoUpdate FROM z_AutoUpdate a, deleted d WHERE a.AUTableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ z_AutoUpdate - Удаление в CHILD */
-/* Таблицы ^ Автоизменение - Удаление в CHILD */
-  DELETE z_AutoUpdate FROM z_AutoUpdate a, deleted d WHERE a.TableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ z_Relations - Удаление в CHILD */
-/* Таблицы ^ Таблицы - Связи - Удаление в CHILD */
-  DELETE z_Relations FROM z_Relations a, deleted d WHERE a.ChildCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ z_Relations - Удаление в CHILD */
-/* Таблицы ^ Таблицы - Связи - Удаление в CHILD */
-  DELETE z_Relations FROM z_Relations a, deleted d WHERE a.ParentCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ z_ReplicaFields - Проверка в CHILD */
-/* Таблицы ^ Объекты репликации: Поля - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_ReplicaFields a WITH(NOLOCK), deleted d WHERE a.TableCode = d.TableCode)
-    BEGIN
-      EXEC z_RelationError 'z_Tables', 'z_ReplicaFields', 3
-      RETURN
-    END
-
-/* z_Tables ^ z_ReplicaFilters - Удаление в CHILD */
-/* Таблицы ^ Объекты репликации: Фильтры - Удаление в CHILD */
-  DELETE z_ReplicaFilters FROM z_ReplicaFilters a, deleted d WHERE a.CTableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-/* z_Tables ^ z_ReplicaFilters - Удаление в CHILD */
-/* Таблицы ^ Объекты репликации: Фильтры - Удаление в CHILD */
-  DELETE z_ReplicaFilters FROM z_ReplicaFilters a, deleted d WHERE a.PTableCode = d.TableCode
-  IF @@ERROR > 0 RETURN
-
-END
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel3_Del_z_Tables', N'Last', N'DELETE'
 GO
 
 ALTER TABLE [dbo].[z_Tables]
