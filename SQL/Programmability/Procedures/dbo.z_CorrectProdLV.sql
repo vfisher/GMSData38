@@ -215,7 +215,8 @@ BEGIN
 
       DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Невозможно рассчитать сборы - указан неверный код документа.')
 
-      RAISERROR(@Error_msg1, 16, 1)
+      RAISERROR(@Error_msg1, 16, 1)
+
       END
 
       RETURN
@@ -226,9 +227,12 @@ BEGIN
 
   IF @UpdateKind = 1
     BEGIN
-      SELECT @ASumLevyPercent = SUM(LevyPercent) FROM dbo.zf_GetProdLevies(@AProdID, @ADocDate) 
-      SELECT @AOnePercentPartPrice = dbo.zf_GetIncludedTax(@APriceCC_wt, @ASumLevyPercent) / @ASumLevyPercent
-    END  
+      SELECT @ASumLevyPercent = SUM(LevyPercent) FROM dbo.zf_GetProdLevies(@AProdID, @ADocDate)
+      IF @ASumLevyPercent = 0 
+        SELECT @AOnePercentPartPrice = dbo.zf_GetIncludedTax(@APriceCC_wt, @ASumLevyPercent)
+      ELSE
+        SELECT @AOnePercentPartPrice = dbo.zf_GetIncludedTax(@APriceCC_wt, @ASumLevyPercent) / @ASumLevyPercent
+    END
 
   SELECT @CashType = CashType FROM r_CRs WHERE CRID = @CRID
   SELECT @ANeedCorrectPurValues = 0
