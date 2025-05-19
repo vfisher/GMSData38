@@ -227,11 +227,11 @@ BEGIN
 
   IF @UpdateKind = 1
     BEGIN
-      SELECT @ASumLevyPercent = SUM(LevyPercent) FROM dbo.zf_GetProdLevies(@AProdID, @ADocDate)
+      SELECT @ASumLevyPercent = SUM(LevyPercent) FROM dbo.zf_GetProdLevies(@AProdID, @ADocDate)    
       IF @ASumLevyPercent = 0 
         SELECT @AOnePercentPartPrice = dbo.zf_GetIncludedTax(@APriceCC_wt, @ASumLevyPercent)
       ELSE
-        SELECT @AOnePercentPartPrice = dbo.zf_GetIncludedTax(@APriceCC_wt, @ASumLevyPercent) / @ASumLevyPercent
+        SELECT @AOnePercentPartPrice = dbo.zf_GetIncludedTax(@APriceCC_wt, @ASumLevyPercent) / @ASumLevyPercent  
     END
 
   SELECT @CashType = CashType FROM r_CRs WHERE CRID = @CRID
@@ -249,7 +249,7 @@ BEGIN
       IF @UpdateKind = 0
         BEGIN
           SELECT @ALevyValue = dbo.zf_GetTax(@ABasePrice_wt, @ALevyPercent)
-		  IF @CashType = 39 And @DocCode IN (11004,11035) SELECT @ALevyValue = ROUND(@ALevyValue,3)
+		  IF @CashType = 39 And @DocCode IN (11004,11035) SELECT @ALevyValue = ROUND(@ALevyValue,4)
         END
       /* Расчет сборов на основе цены продажи */  
       ELSE IF @UpdateKind = 1
@@ -257,8 +257,8 @@ BEGIN
           SELECT @ALevyValue = @AOnePercentPartPrice * @ALevyPercent
 		       IF @CashType = 39 And @DocCode IN (11004,11035)
             BEGIN
-              SELECT @ALevyValue = ROUND(@ALevyValue,3)
-              SELECT @ABasePrice_wt = @ABasePrice_wt - ROUND(@ALevyValue,3)
+              SELECT @ALevyValue = ROUND(@ALevyValue,4)
+              SELECT @ABasePrice_wt = @ABasePrice_wt - @ALevyValue
             END
           ELSE
             SELECT @ABasePrice_wt = @ABasePrice_wt - @ALevyValue
