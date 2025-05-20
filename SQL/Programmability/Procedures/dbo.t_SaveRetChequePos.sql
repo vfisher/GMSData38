@@ -38,10 +38,18 @@ BEGIN
   DECLARE @SrcDocDate smalldatetime 
   DECLARE @ValidQty numeric(21, 9) 
   DECLARE @SrcPosIDFound bit 
-  DECLARE @DBiID int 
+  DECLARE @DBiID int
+  DECLARE @CashType int
+  DECLARE @RoundToLV int
+  DECLARE @LevyID int
+  DECLARE @SaleDocDate datetime
+
 
   SET @SumCC_nt = 0
   SET @PriceCC_nt = 0
+  SET @CashType = ISNULL((SELECT CashType FROM r_CRs WITH(NOLOCK) WHERE CRID = @CRID),0)
+  SET @RoundToLV = (SELECT CASE WHEN @CashType = 39 THEN 4 ELSE 2 END)
+
   /* Если вместо акцизной марки передали мусор */
   IF EXISTS(SELECT * FROM r_Prods WITH(NOLOCK) WHERE ProdID = @ProdID AND RequireLevyMark = 1 AND @AskLevyMark = 1 AND @LevyMark NOT LIKE '[a-z][a-z][a-z][a-z][0-9][0-9][0-9][0-9][0-9][0-9]')
     BEGIN 
@@ -49,7 +57,8 @@ BEGIN
  
       DECLARE @Error_msg1 varchar(2000) = dbo.zf_Translate('Формат акцизной марки некорректен.')
  
-      RAISERROR(@Error_msg1, 16, 1)  
+      RAISERROR(@Error_msg1, 16, 1) 
+ 
       END
 
       RETURN 
@@ -64,7 +73,8 @@ BEGIN
  
       DECLARE @Error_msg2 varchar(2000) = dbo.zf_Translate('Товар с такой акцизной маркой уже присутствует в этом чеке.')
  
-      RAISERROR(@Error_msg2, 16, 1)  
+      RAISERROR(@Error_msg2, 16, 1) 
+ 
       END
 
       RETURN 
@@ -115,7 +125,7 @@ BEGIN
 
       IF @ValidQty > @Qty SET @ValidQty = @Qty
 
-      SELECT TOP 1 @PriceCC_nt = d.PriceCC_nt, @PriceCC_wt = d.PriceCC_wt, @RealPrice = d.RealPrice, @Tax = d.Tax  
+      SELECT TOP 1 @PriceCC_nt = d.PriceCC_nt, @PriceCC_wt = d.PriceCC_wt, @RealPrice = d.RealPrice, @Tax = d.Tax, @SaleDocDate = m.DocTime  
       FROM t_Sale m 
       INNER JOIN t_SaleD d ON d.ChID = m.ChID
       WHERE m.OurID = @OurID AND m.DocID = @SrcDocID AND d.SrcPosID = @SaleSrcPosID AND d.ProdID = @ProdID
@@ -173,7 +183,8 @@ END
  
           DECLARE @Error_msg3 varchar(2000) = dbo.zf_Translate('Невозможно определить партию для документа возврата.')
  
-          RAISERROR(@Error_msg3, 16, 1)  
+          RAISERROR(@Error_msg3, 16, 1) 
+ 
           END
 
           RETURN 
@@ -186,13 +197,15 @@ END
         @SumCC_nt, @Tax, @TaxSum, @PriceCC_wt, @SumCC_wt, @BarCode, @TaxTypeID, @SecID, @SaleSrcPosID, @EmpID, @RealPrice, @RealSum, @CReasonID, @MarkCode, @LevyMark) 
 
       /* EXEC z_CorrectProdLV 11004, @ChID, @PosID, 1 */
-      DELETE FROM t_CRRetDLV WHERE ChID = @ChID AND SrcPosID = @PosID 
-
+	  SELECT @LevyID = LevyID FROM dbo.zf_GetProdLevies(@ProdID, @SaleDocDate) 
+      DELETE t_CRRetDLV WHERE ChID = @ChID AND SrcPosID = @PosID AND LevyID = @LevyID
+	  
 	     INSERT INTO t_CRRetDLV (ChID, SrcPosID, LevyID, LevySum) 
-	     SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, d1.LevySum 
-	     FROM t_Sale m 
+	     SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, CASE WHEN d.Qty <> 0 THEN ROUND(d1.LevySum / d.Qty * @ValidQty, @RoundToLV) ELSE 0 END  
+	     FROM t_Sale m
+		 INNER JOIN t_SaleD d ON d.ChID = m.ChID  
 	     INNER JOIN t_SaleDLV d1 ON d1.ChID = m.ChID
-	     WHERE m.OurID = @OurID AND m.DocID = @SrcDocID AND d1.SrcPosID = @SaleSrcPosID  
+	     WHERE m.OurID = @OurID AND m.DocID = @SrcDocID AND d1.SrcPosID = @SaleSrcPosID 
     END 
   ELSE 
     BEGIN 
@@ -202,7 +215,8 @@ END
  
           DECLARE @Error_msg4 varchar(2000) = dbo.zf_Translate('Позиция в базе данных отсутствует.')
  
-          RAISERROR(@Error_msg4, 16, 1)  
+          RAISERROR(@Error_msg4, 16, 1) 
+ 
           END
 
           RETURN 
@@ -231,11 +245,13 @@ END
       WHERE ChID = @ChID AND SrcPosID = @SrcPosID 
 
       /* EXEC z_CorrectProdLV 11004, @ChID, @SrcPosID, 1 */
-      DELETE FROM t_CRRetDLV WHERE ChID = @ChID AND SrcPosID = @PosID 
+	  SELECT @LevyID = LevyID FROM dbo.zf_GetProdLevies(@ProdID, @SaleDocDate) 
+      DELETE t_CRRetDLV WHERE ChID = @ChID AND SrcPosID = @PosID AND LevyID = @LevyID
 
       INSERT INTO t_CRRetDLV (ChID, SrcPosID, LevyID, LevySum) 
-	     SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, d1.LevySum 
-	     FROM t_Sale m 
+	     SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, CASE WHEN d.Qty <> 0 THEN ROUND(d1.LevySum / d.Qty * @ValidQty, @RoundToLV) ELSE 0 END 
+	     FROM t_Sale m
+		 INNER JOIN t_SaleD d ON d.ChID = m.ChID
 	     INNER JOIN t_SaleDLV d1 ON d1.ChID = m.ChID 
 	     WHERE m.OurID = @OurID AND m.DocID = @SrcDocID AND d1.SrcPosID = @SaleSrcPosID 
     END 
