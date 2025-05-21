@@ -258,47 +258,53 @@ BEGIN
   /*SELECT @SaleSum_4 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SaleD WHERE TaxTypeID = 4 */
   /*SELECT @SaleSum_5 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SaleD WHERE TaxTypeID = 5 */
 
-  SELECT @SaleSum_0 = ISNULL(ROUND(ISNULL(Sum(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) 
+  SELECT @SaleSum_0 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
-  LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
+  LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 0  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 0)
+  GROUP BY m.ChID) t
 
-  SELECT @SaleSum_1 = ISNULL(ROUND(ISNULL(Sum(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) 
+  SELECT @SaleSum_1 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 1  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 1)
+  GROUP BY m.ChID) t
 
-  SELECT @SaleSum_2 = ISNULL(ROUND(ISNULL(Sum(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) 
+  SELECT @SaleSum_2 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 2  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 2)
+  GROUP BY m.ChID) t
 
-  SELECT @SaleSum_3 = ISNULL(ROUND(ISNULL(Sum(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) 
+  SELECT @SaleSum_3 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 3  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 3)
-  
-  SELECT @SaleSum_4 = ISNULL(ROUND(ISNULL(Sum(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) 
+  GROUP BY m.ChID) t
+
+  SELECT @SaleSum_4 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 4  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 4)
+  GROUP BY m.ChID) t
 
-  SELECT @SaleSum_5 = ISNULL(ROUND(ISNULL(Sum(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) 
+  SELECT @SaleSum_5 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 5  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 5)
+  GROUP BY m.ChID) t
 
   IF @CashType <> 39
   BEGIN
@@ -392,47 +398,59 @@ BEGIN
   /*SELECT @RetSum_4 = ROUND(ISNULL(SUM(d.SumCC_wt), 0), 2) FROM #t_CRRetD d WHERE d.TaxTypeID = 4 */
   /*SELECT @RetSum_5 = ROUND(ISNULL(SUM(d.SumCC_wt), 0), 2) FROM #t_CRRetD d WHERE d.TaxTypeID = 5 */
 
-  SELECT @RetSum_0 = ISNULL(ROUND(ISNULL(SUM(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) FROM #t_CRRet m 
+    SELECT @RetSum_0 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+	FROM #t_CRRet m 
     INNER JOIN #t_CRRetD d ON d.ChID = m.ChID
     LEFT JOIN #t_CRRetDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
     LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 0
     WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID 
-	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 0) 
+	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 0)
+	GROUP BY m.ChID) t
 
-  SELECT @RetSum_1 = ISNULL(ROUND(ISNULL(SUM(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) FROM #t_CRRet m 
+    SELECT @RetSum_1 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+	FROM #t_CRRet m 
     INNER JOIN #t_CRRetD d ON d.ChID = m.ChID
     LEFT JOIN #t_CRRetDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
     LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 1
     WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID 
-	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 1)  
+	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 1)
+	GROUP BY m.ChID) t
 
-  SELECT @RetSum_2 = ISNULL(ROUND(ISNULL(SUM(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) FROM #t_CRRet m 
+    SELECT @RetSum_2 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+	FROM #t_CRRet m 
     INNER JOIN #t_CRRetD d ON d.ChID = m.ChID
     LEFT JOIN #t_CRRetDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
     LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 2
     WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID 
-	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 2) 
+	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 2)
+	GROUP BY m.ChID) t
 
-  SELECT @RetSum_3 = ISNULL(ROUND(ISNULL(SUM(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) FROM #t_CRRet m 
+    SELECT @RetSum_3 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+	FROM #t_CRRet m 
     INNER JOIN #t_CRRetD d ON d.ChID = m.ChID
     LEFT JOIN #t_CRRetDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
     LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 3
     WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID 
 	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 3)
+	GROUP BY m.ChID) t
 
-  SELECT @RetSum_4 = ISNULL(ROUND(ISNULL(SUM(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) FROM #t_CRRet m 
+    SELECT @RetSum_4 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+	FROM #t_CRRet m  
     INNER JOIN #t_CRRetD d ON d.ChID = m.ChID
     LEFT JOIN #t_CRRetDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
     LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 4
     WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID 
-	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 4)  
+	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 4)
+	GROUP BY m.ChID) t
 
-  SELECT @RetSum_5 = ISNULL(ROUND(ISNULL(SUM(d.SumCC_wt), 0) + SUM(ISNULL(ROUND(dlv.LevySum,4),0)), 2),0) FROM #t_CRRet m 
+    SELECT @RetSum_5 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+	FROM #t_CRRet m 
     INNER JOIN #t_CRRetD d ON d.ChID = m.ChID
     LEFT JOIN #t_CRRetDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
     LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 5
     WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID 
-	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 5) 
+	OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 5)
+	GROUP BY m.ChID) t
 
 
   IF @CashType <> 39 

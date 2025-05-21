@@ -47,8 +47,6 @@ BEGIN
 
   SET @SumCC_nt = 0
   SET @PriceCC_nt = 0
-  SET @CashType = ISNULL((SELECT CashType FROM r_CRs WITH(NOLOCK) WHERE CRID = @CRID),0)
-  SET @RoundToLV = (SELECT CASE WHEN @CashType = 39 THEN 4 ELSE 2 END)
 
   /* Если вместо акцизной марки передали мусор */
   IF EXISTS(SELECT * FROM r_Prods WITH(NOLOCK) WHERE ProdID = @ProdID AND RequireLevyMark = 1 AND @AskLevyMark = 1 AND @LevyMark NOT LIKE '[a-z][a-z][a-z][a-z][0-9][0-9][0-9][0-9][0-9][0-9]')
@@ -91,6 +89,9 @@ BEGIN
     @StockID = StockID 
   FROM t_CRRet 
   WHERE ChID = @ChID 
+
+  SET @CashType = ISNULL((SELECT CashType FROM r_CRs WITH(NOLOCK) WHERE CRID = @CRID),0)
+  SET @RoundToLV = (SELECT CASE WHEN @CashType = 39 THEN 4 ELSE 2 END)
 
   SELECT 
     @SecID = SecID 
@@ -199,13 +200,13 @@ END
       /* EXEC z_CorrectProdLV 11004, @ChID, @PosID, 1 */
 	  SELECT @LevyID = LevyID FROM dbo.zf_GetProdLevies(@ProdID, @SaleDocDate) 
       DELETE t_CRRetDLV WHERE ChID = @ChID AND SrcPosID = @PosID AND LevyID = @LevyID
-	  
-	     INSERT INTO t_CRRetDLV (ChID, SrcPosID, LevyID, LevySum) 
-	     SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, CASE WHEN d.Qty <> 0 THEN ROUND(d1.LevySum / d.Qty * @ValidQty, @RoundToLV) ELSE 0 END  
-	     FROM t_Sale m
-		 INNER JOIN t_SaleD d ON d.ChID = m.ChID  
-	     INNER JOIN t_SaleDLV d1 ON d1.ChID = m.ChID
-	     WHERE m.OurID = @OurID AND m.DocID = @SrcDocID AND d1.SrcPosID = @SaleSrcPosID 
+
+	  INSERT INTO t_CRRetDLV (ChID, SrcPosID, LevyID, LevySum) 
+	  SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, CASE WHEN d.Qty <> 0 THEN ROUND(d1.LevySum / d.Qty * @ValidQty, @RoundToLV) ELSE 0 END 
+	  FROM t_Sale m
+      INNER JOIN t_SaleD d ON d.ChID = m.ChID AND d.SrcPosID = @SaleSrcPosID   
+	  INNER JOIN t_SaleDLV d1 ON d1.ChID = m.ChID AND d1.SrcPosID = d.SrcPosID 
+	  WHERE m.OurID = @OurID AND m.DocID = @SrcDocID 
     END 
   ELSE 
     BEGIN 
@@ -249,11 +250,11 @@ END
       DELETE t_CRRetDLV WHERE ChID = @ChID AND SrcPosID = @PosID AND LevyID = @LevyID
 
       INSERT INTO t_CRRetDLV (ChID, SrcPosID, LevyID, LevySum) 
-	     SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, CASE WHEN d.Qty <> 0 THEN ROUND(d1.LevySum / d.Qty * @ValidQty, @RoundToLV) ELSE 0 END 
-	     FROM t_Sale m
-		 INNER JOIN t_SaleD d ON d.ChID = m.ChID
-	     INNER JOIN t_SaleDLV d1 ON d1.ChID = m.ChID 
-	     WHERE m.OurID = @OurID AND m.DocID = @SrcDocID AND d1.SrcPosID = @SaleSrcPosID 
+	  SELECT @ChID AS ChID, @PosID AS SrcPosId, d1.LevyID, CASE WHEN d.Qty <> 0 THEN ROUND(d1.LevySum / d.Qty * @ValidQty, @RoundToLV) ELSE 0 END 
+	  FROM t_Sale m
+      INNER JOIN t_SaleD d ON d.ChID = m.ChID AND d.SrcPosID = @SaleSrcPosID 
+	  INNER JOIN t_SaleDLV d1 ON d1.ChID = m.ChID AND d1.SrcPosID = d.SrcPosID  
+	  WHERE m.OurID = @OurID AND m.DocID = @SrcDocID 
     END 
   /* Установка признака возможности продажи для маркируемого товара */ 
   UPDATE r_ProdMarks SET InUse = 1, DateChange=GETDATE() WHERE MarkCode=@MarkCode 
