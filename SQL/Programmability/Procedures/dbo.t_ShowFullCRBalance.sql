@@ -1,6 +1,6 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-create PROCEDURE [dbo].[t_ShowFullCRBalance] @ParamsIn VARCHAR(MAX)
+CREATE PROCEDURE [dbo].[t_ShowFullCRBalance] @ParamsIn VARCHAR(MAX)
 /* Возвращает баланс по кассе (для отображения пользователю) */
 AS
 BEGIN
@@ -700,7 +700,7 @@ BEGIN
   WHERE pcr.CashType = @CashType
 
   UPDATE #RetPays SET SumDB = @RetSumCashDB, SumCR = @RetSumCashCR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 0)
-  UPDATE #RetPays SET SumDB = @RetSumCardDB, SumCR = @RetSumCardCR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 1)
+  UPDATE #RetPays SET SumDB = @RetSumCardDB, SumCR = @RetSumCardCR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 1 AND PayFormCode <> 11)
   UPDATE #RetPays SET SumDB = @RetSumCreditDB, SumCR = @RetSumCreditCR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 2)
   UPDATE #RetPays SET SumDB = @RetSumChequeDB, SumCR = @RetSumChequeCR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 3)
   UPDATE #RetPays SET SumDB = @RetSumCustom1DB, SumCR = @RetSumCustom1CR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 4)
