@@ -2572,3 +2572,5 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2716, 'zf_TranslateMetadata', 'Возвращает перевод для метаданных', NULL, 'FN', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2717, 't_SaleGetProdImage', 'Возвращает изображение товара для дополнительной панели ТК', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2718, 't_ShowFullCRBalance', 'Возвращает полный баланс по кассе (для отображения пользователю)', NULL, 'P', 0);
+
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2719, 'z_MDIOnEvent', 'Процедура, вызываемая при различных событиях в MDI модулях', NULL, 'P', 1);
