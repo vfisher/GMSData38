@@ -182,6 +182,7 @@
   [RequireProdAdd] [bit] NOT NULL DEFAULT (0),
   [SetForcedToOfflineMode] [bit] NOT NULL DEFAULT (0),
   [OpenShiftByZeroCheque] [bit] NOT NULL DEFAULT (0),
+  [CheckRetSumMaxDifference] [numeric](21, 9) NOT NULL DEFAULT (0),
   CONSTRAINT [pk_r_WPRoles] PRIMARY KEY CLUSTERED ([WPRoleID])
 )
 ON [PRIMARY]
@@ -209,49 +210,44 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_WPRoles] ON [r_WPRoles]
-FOR INSERT AS
-/* r_WPRoles - Справочник рабочих мест: роли - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_WPRoles] ON [r_WPRoles]
+FOR DELETE AS
+/* r_WPRoles - Справочник рабочих мест: роли - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_WPRoles ^ r_Emps - Проверка в PARENT */
-/* Справочник рабочих мест: роли ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PosEmpID NOT IN (SELECT EmpID FROM r_Emps))
+/* r_WPRoles ^ r_WPs - Проверка в CHILD */
+/* Справочник рабочих мест: роли ^ Справочник рабочих мест - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_WPs a WITH(NOLOCK), deleted d WHERE a.WPRoleID = d.WPRoleID)
     BEGIN
-      EXEC z_RelationError 'r_Emps', 'r_WPRoles', 0
+      EXEC z_RelationError 'r_WPRoles', 'r_WPs', 3
       RETURN
     END
 
-/* r_WPRoles ^ r_Menu - Проверка в PARENT */
-/* Справочник рабочих мест: роли ^ Справочник меню - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.MenuID NOT IN (SELECT MenuID FROM r_Menu))
-    BEGIN
-      EXEC z_RelationError 'r_Menu', 'r_WPRoles', 0
-      RETURN
-    END
-
-/* r_WPRoles ^ r_Processings - Проверка в PARENT */
-/* Справочник рабочих мест: роли ^ Справочник процессинговых центров - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ProcessingID NOT IN (SELECT ProcessingID FROM r_Processings))
-    BEGIN
-      EXEC z_RelationError 'r_Processings', 'r_WPRoles', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10551001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10551001 AND m.PKValue = 
     '[' + cast(i.WPRoleID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10551001 AND m.PKValue = 
+    '[' + cast(i.WPRoleID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10551001, -ChID, 
+    '[' + cast(d.WPRoleID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10551 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPRoles', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_WPRoles', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -392,42 +388,70 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_WPRoles] ON [r_WPRoles]
-FOR DELETE AS
-/* r_WPRoles - Справочник рабочих мест: роли - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_WPRoles] ON [r_WPRoles]
+FOR INSERT AS
+/* r_WPRoles - Справочник рабочих мест: роли - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_WPRoles ^ r_WPs - Проверка в CHILD */
-/* Справочник рабочих мест: роли ^ Справочник рабочих мест - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_WPs a WITH(NOLOCK), deleted d WHERE a.WPRoleID = d.WPRoleID)
+/* r_WPRoles ^ r_Emps - Проверка в PARENT */
+/* Справочник рабочих мест: роли ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PosEmpID NOT IN (SELECT EmpID FROM r_Emps))
     BEGIN
-      EXEC z_RelationError 'r_WPRoles', 'r_WPs', 3
+      EXEC z_RelationError 'r_Emps', 'r_WPRoles', 0
       RETURN
     END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10551001 AND m.PKValue = 
+/* r_WPRoles ^ r_Menu - Проверка в PARENT */
+/* Справочник рабочих мест: роли ^ Справочник меню - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.MenuID NOT IN (SELECT MenuID FROM r_Menu))
+    BEGIN
+      EXEC z_RelationError 'r_Menu', 'r_WPRoles', 0
+      RETURN
+    END
+
+/* r_WPRoles ^ r_Processings - Проверка в PARENT */
+/* Справочник рабочих мест: роли ^ Справочник процессинговых центров - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ProcessingID NOT IN (SELECT ProcessingID FROM r_Processings))
+    BEGIN
+      EXEC z_RelationError 'r_Processings', 'r_WPRoles', 0
+      RETURN
+    END
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10551001, ChID, 
     '[' + cast(i.WPRoleID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10551001 AND m.PKValue = 
-    '[' + cast(i.WPRoleID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10551001, -ChID, 
-    '[' + cast(d.WPRoleID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10551 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_WPRoles', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPRoles', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
