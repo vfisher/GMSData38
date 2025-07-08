@@ -2574,3 +2574,9 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2718, 't_ShowFullCRBalance', 'Возвращает полный баланс по кассе (для отображения пользователю)', NULL, 'P', 0);
 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2719, 'z_MDIOnEvent', 'Процедура, вызываемая при различных событиях в MDI модулях', NULL, 'P', 1);
+
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2720, 't_SaleCustomRRNCheck', 't_SaleCustomRRNCheck', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2721, 't_GetCROperName', 't_GetCROperName', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2722, 't_SaleSavePOSPayData', 't_SaleSavePOSPayData', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2723, 'z_GetRecordFromXML', 'z_GetRecordFromXML', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2724, 't_SaleRetDoRound', 't_SaleRetDoRound', NULL, 'P ', 0);

@@ -183,6 +183,8 @@
   [SetForcedToOfflineMode] [bit] NOT NULL DEFAULT (0),
   [OpenShiftByZeroCheque] [bit] NOT NULL DEFAULT (0),
   [CheckRetSumMaxDifference] [numeric](21, 9) NOT NULL DEFAULT (0),
+  [ExtraPanelWidth] [varchar](250) NULL DEFAULT ('20%'),
+  [UseExtraPanel] [bit] NOT NULL DEFAULT (0),
   CONSTRAINT [pk_r_WPRoles] PRIMARY KEY CLUSTERED ([WPRoleID])
 )
 ON [PRIMARY]
@@ -223,6 +225,7 @@ BEGIN
       EXEC z_RelationError 'r_WPRoles', 'r_WPs', 3
       RETURN
     END
+
 
 /* Удаление регистрации создания записи */
   DELETE z_LogCreate FROM z_LogCreate m, deleted i
@@ -306,6 +309,7 @@ BEGIN
           RETURN
         END
     END
+
 
 /* Регистрация изменения записи */
 
@@ -421,6 +425,7 @@ BEGIN
       RETURN
     END
 
+
 /* Регистрация создания записи */
   INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
   SELECT 10551001, ChID, 
@@ -432,6 +437,32 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPRoles', N'Last', N'INSERT'
 GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
 
 
 
