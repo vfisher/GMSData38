@@ -3040,6 +3040,10 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ZRepShiftTimeCheck', 82, NULL, 1, 4, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ZRepWarningPeriod', 125, NULL, 1, 4, '((2))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ZRepWarningTime', 124, NULL, 1, 4, '((5))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseExtraPanel', 184, NULL, 1, 1, '(0)');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ExtraPanelWidth', 185, NULL, 0, 250, '(''20%'')');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetSumMaxDifference', 186, NULL, 1, 13, '(0)');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'RoundInCheque', 187, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10600001, 'ChID', 1, NULL, 1, 8, '');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10600001, 'DeskGCode', 2, NULL, 1, 4, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10600001, 'DeskGName', 3, NULL, 1, 200, NULL);
@@ -12635,8 +12639,6 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001182, 'RU', 3, NULL, 0, -1, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001182, 'TypeID', 2, NULL, 1, 1, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001182, 'UK', 4, NULL, 0, -1, NULL);
-INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ExtraPanelWidth', 185, NULL, 0, 250, '(''20%'')');
-INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseExtraPanel', 184, NULL, 1, 1, '(0)');
 
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'RetNoRndSum', 69, NULL, 1, 13, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'RetRndSum', 68, NULL, 1, 13, '((0))');
@@ -12652,7 +12654,8 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11951001, 'SaleSumType2', 72, NULL, 1, 13, '((0))');
 
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001007, 'FieldID', 44, NULL, 1, 4, NULL);
-
-INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetSumMaxDifference', 186, NULL, 1, 13, '(0)');
-
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10457001, 'UseFacePay', 18, NULL, 1, 1, '((0))');
+
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011001, 'SaleRNDSum', 31, NULL, 1, 13, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11004001, 'RetRNDSum', 37, NULL, 1, 13, '(NULL)');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11035001, 'SaleRNDSum', 47, NULL, 1, 13, NULL);

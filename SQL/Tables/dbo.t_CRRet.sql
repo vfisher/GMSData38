@@ -32,6 +32,7 @@
   [DCardChID] [bigint] NOT NULL CONSTRAINT [DF__t_CRRet__DCardCh__17B30797] DEFAULT (0),
   [ExtraInfo] [varchar](8000) NULL,
   [GUID] [uniqueidentifier] NOT NULL DEFAULT (newid()),
+  [RetRNDSum] [numeric](21, 9) NULL,
   CONSTRAINT [pk_t_CRRet] PRIMARY KEY CLUSTERED ([ChID])
 )
 ON [PRIMARY]
