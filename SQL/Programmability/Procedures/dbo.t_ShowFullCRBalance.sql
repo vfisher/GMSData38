@@ -184,6 +184,8 @@ BEGIN
    
 
   DECLARE @CashType int
+  DECLARE @WPID int
+  DECLARE @RoundInCheque bit
   DECLARE @ParamsOut varchar(max)
 
   DROP TABLE IF EXISTS #Sale
@@ -211,6 +213,10 @@ BEGIN
   SET @CRID = JSON_VALUE(@ParamsIn, '$.CRID')
   /* Тип РРО */
   SET @CashType = (SELECT CashType FROM r_CRs WITH(NOLOCK) WHERE CRID = @CRID)
+  /* Код робочого місця */
+  SET @WPID = JSON_VALUE(@ParamsIn, '$.WPID')
+  /* Округлити суму чека без зміни цін на товари */
+  SET @RoundInCheque = (SELECT RoundInCheque  FROM r_WPRoles WITH(NOLOCK) WHERE WPRoleID = (SELECT WPRoleID FROM r_WPs WHERE WPID = @WPID))
   /* Режим роботи РРО (онлайн/офлайн) */
   SET @IsOfflineMode = JSON_VALUE(@ParamsIn, '$.IsOfflineMode')
   /* Режим перехідного залишку */
@@ -665,17 +671,19 @@ BEGIN
   INSERT INTO #Sale
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Сума готівки в касі' AS [Name], @SumRemDB AS ValueDB, @SumRemCR AS ValueCR, 0 AS Diff
   
-  /* Заокруглення
-  INSERT INTO #Sale
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Продажі: Сума заокруглення' AS [Name], @SaleRndSumDB AS ValueDB, @SaleRndSumCR AS ValueCR, 0 AS Diff
-  INSERT INTO #Sale
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Продажі: Сума без заокруглення' AS [Name], @SaleNoRndSumDB AS ValueDB, @SaleNoRndSumCR AS ValueCR, 0 AS Diff
-  INSERT INTO #Sale
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Повернення: Сума заокруглення' AS [Name], @RetRndSumDB AS ValueDB, @RetRndSumCR AS ValueCR, 0 AS Diff
-  INSERT INTO #Sale
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Повернення: Сума без заокруглення' AS [Name], @RetNoRndSumDB AS ValueDB, @RetNoRndSumCR AS ValueCR, 0 AS Diff
-  */
- 
+  /* Заокруглення */
+  IF (@CashType = 39) AND (@RoundInCheque = 1)
+    BEGIN
+	  INSERT INTO #Sale
+	  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Продажі: Сума заокруглення' AS [Name], @SaleRndSumDB AS ValueDB, @SaleRndSumCR AS ValueCR, 0 AS Diff
+	  INSERT INTO #Sale
+	  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Продажі: Сума без заокруглення' AS [Name], @SaleNoRndSumDB AS ValueDB, @SaleNoRndSumCR AS ValueCR, 0 AS Diff
+	  INSERT INTO #Sale
+	  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Повернення: Сума заокруглення' AS [Name], @RetRndSumDB AS ValueDB, @RetRndSumCR AS ValueCR, 0 AS Diff
+	  INSERT INTO #Sale
+	  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Повернення: Сума без заокруглення' AS [Name], @RetNoRndSumDB AS ValueDB, @RetNoRndSumCR AS ValueCR, 0 AS Diff
+	END
+
   INSERT INTO #SalePays
   SELECT p.PayFormCode, p.PayFormName, pcr.CRPayFormCode, 0 AS SumDB, 0 AS SumCR, 0 AS Diff
   FROM r_PayFormCR pcr

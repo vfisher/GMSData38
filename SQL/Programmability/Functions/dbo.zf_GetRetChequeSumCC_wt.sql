@@ -10,6 +10,8 @@ CREATE FUNCTION [dbo].[zf_GetRetChequeSumCC_wt](@ChID bigint)
    FROM t_CRRetD WITH(NOLOCK)
    WHERE ChID = @ChID AND Qty <> 0
  
+   SELECT @SumCC_wt =  @SumCC_wt + ISNULL((SELECT p.RetRndSum FROM t_CRRet p WITH(NOLOCK) WHERE p.ChID = @ChID), 0)
+
    RETURN @SumCC_wt
  END
 GO

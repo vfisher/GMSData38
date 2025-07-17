@@ -28,7 +28,7 @@
   [ExtraInfo] [varchar](8000) NULL,
   [GUID] [uniqueidentifier] NOT NULL DEFAULT (newid()),
   [ChequeTypeID] [int] NOT NULL DEFAULT (1),
-  [SaleRNDSum] [numeric](21, 9) NULL,
+  [SaleRndSum] [numeric](21, 9) NULL,
   CONSTRAINT [pk_t_SaleTemp] PRIMARY KEY CLUSTERED ([ChID])
 )
 ON [PRIMARY]
