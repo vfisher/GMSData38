@@ -31,12 +31,12 @@ BEGIN
 	     SET @ParamsOut = (
 	     SELECT 
 		     Doc = ISNULL((SELECT m.* FROM t_SaleTemp m WITH(NOLOCK) WHERE m.CHID = @ChID FOR JSON PATH), '{}'),
-            DocD = ISNULL((SELECT m.*, p.ProdName, p.CstProdCode, m.PriceCC_wt AS RealPrice,
+             DocD = ISNULL((SELECT m.*, p.ProdName, p.CstProdCode, m.PriceCC_wt AS RealPrice,
 		                      CASE WHEN @TaxPayer = 1 THEN m.TaxTypeID ELSE 1 END TaxTypeIDWithCheckTax
 		                    FROM t_SaleTempD m WITH(NOLOCK), r_Prods p WITH(NOLOCK) WHERE m.ProdID = p.ProdID AND m.CHID = @ChID FOR JSON PATH),'{}'),
             /* Если форма оплаты: Картой с выдачей наличных, то нам нужно получить запись только по 2 форме оплаты */
 		     DocPays = ISNULL((SELECT m.*, p.CRPayTypeCode, 
-			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE p.CRPayTypeCode END CRPRROPayTypeCode
+			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE c.CRPayFormCode END CRPRROPayTypeCode
 			 FROM t_SaleTempPays m WITH(NOLOCK)
              INNER JOIN r_Payforms p WITH(NOLOCK) ON m.PayFormCode = p.PayFormCode
              INNER JOIN r_PayFormCR c WITH(NOLOCK) ON p.PayFormCode = c.PayFormCode AND c.CashType = @CashType
@@ -75,7 +75,7 @@ BEGIN
 
             /* Если форма оплаты: Картой с выдачей наличных, то нам нужно получить запись только по 2 форме оплаты */
 		     DocPays = ISNULL((SELECT m.*, p.CRPayTypeCode, 
-			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE p.CRPayTypeCode END CRPRROPayTypeCode
+			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE c.CRPayFormCode END CRPRROPayTypeCode
 			 FROM t_SalePays m WITH(NOLOCK)
              INNER JOIN r_Payforms p WITH(NOLOCK) ON m.PayFormCode = p.PayFormCode
              INNER JOIN r_PayFormCR c WITH(NOLOCK) ON p.PayFormCode = c.PayFormCode AND c.CashType = @CashType
@@ -88,7 +88,8 @@ BEGIN
     BEGIN
 	     SELECT 
 		     @UseProdNotes = c.UseProdNotes, 
-		     @GroupProds = c.GroupProds, 
+		     @GroupProds = c.GroupProds,
+			 @CashType = c.CashType,
 		     @OurID = m.OurID
 	     FROM t_CRRet m WITH(NOLOCK), r_CRs c WITH(NOLOCK), r_Ours o WITH(NOLOCK)  
 	     WHERE m.ChID = @ChID AND c.CRID = m.CRID AND m.OurID = o.OurID 
@@ -103,7 +104,7 @@ BEGIN
 		                      CASE WHEN @TaxPayer = 1 THEN m.TaxTypeID ELSE 1 END TaxTypeIDWithCheckTax
 						    FROM t_CRRetD m WITH(NOLOCK), r_Prods p WITH(NOLOCK) WHERE m.ProdID = p.ProdID AND m.CHID = @ChID FOR JSON PATH),'{}'),
 		     DocPays = ISNULL((SELECT m.*, p.CRPayTypeCode, 
-			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE p.CRPayTypeCode END CRPRROPayTypeCode
+			 CASE WHEN ISNULL(p.CRPayTypeCode,0) = 2 THEN 100000 + c.CRPayFormCode ELSE c.CRPayFormCode END CRPRROPayTypeCode
 			 FROM t_CRRetPays m WITH(NOLOCK)
              INNER JOIN r_Payforms p WITH(NOLOCK) ON m.PayFormCode = p.PayFormCode
              INNER JOIN r_PayFormCR c WITH(NOLOCK) ON p.PayFormCode = c.PayFormCode AND c.CashType = @CashType
