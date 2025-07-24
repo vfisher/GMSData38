@@ -11,10 +11,37 @@
   [PGr2Filter] [varchar](4000) NULL,
   [PGr3Filter] [varchar](4000) NULL,
   [Notes] [varchar](200) NULL,
+  [SumFilter] [varchar](4000) NULL,
   CONSTRAINT [pk_r_BServParams] PRIMARY KEY CLUSTERED ([BServID], [SrcPosID]),
   CHECK ([MaxPayPartsQty]>=(1) AND [MaxPayPartsQty]<=(25))
 )
 ON [PRIMARY]
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_r_BServParams] ON [r_BServParams]
+FOR UPDATE AS
+/* r_BServParams - Справочник банковских услуг: параметры - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* r_BServParams ^ r_BServs - Проверка в PARENT */
+/* Справочник банковских услуг: параметры ^ Справочник банковских услуг - Проверка в PARENT */
+  IF UPDATE(BServID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.BServID NOT IN (SELECT BServID FROM r_BServs))
+      BEGIN
+        EXEC z_RelationError 'r_BServs', 'r_BServParams', 1
+        RETURN
+      END
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel2_Upd_r_BServParams', N'Last', N'UPDATE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -44,26 +71,9 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel2_Upd_r_BServParams] ON [r_BServParams]
-FOR UPDATE AS
-/* r_BServParams - Справочник банковских услуг: параметры - UPDATE TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
 
-/* r_BServParams ^ r_BServs - Проверка в PARENT */
-/* Справочник банковских услуг: параметры ^ Справочник банковских услуг - Проверка в PARENT */
-  IF UPDATE(BServID)
-    IF EXISTS (SELECT * FROM inserted i WHERE i.BServID NOT IN (SELECT BServID FROM r_BServs))
-      BEGIN
-        EXEC z_RelationError 'r_BServs', 'r_BServParams', 1
-        RETURN
-      END
 
-END
-GO
 
-EXEC sp_settriggerorder N'dbo.TRel2_Upd_r_BServParams', N'Last', N'UPDATE'
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

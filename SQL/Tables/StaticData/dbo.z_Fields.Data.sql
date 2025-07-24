@@ -12656,3 +12656,6 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetSumMaxDifference', 186, NULL, 1, 13, '(0)');
 
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10457001, 'UseFacePay', 18, NULL, 1, 1, '((0))');
+
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10103002, 'SumFilter', 13, NULL, 0, 4000, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseExtendedPayPartsSelector', 187, NULL, 0, 1, '((0))');

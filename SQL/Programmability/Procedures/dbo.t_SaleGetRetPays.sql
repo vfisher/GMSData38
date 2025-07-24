@@ -20,7 +20,7 @@ BEGIN
 
   SELECT *
   FROM (
-    SELECT d.SrcPosID, d.PayFormCode, d.Notes, d.POSPayDocID, d.POSPayRRN,
+    SELECT d.SrcPosID, d.PayFormCode, d.Notes, d.POSPayDocID, d.POSPayRRN, d.POSPayID,
       CASE
         WHEN @PayFormCode = 1 THEN
             d.SumCC_wt -

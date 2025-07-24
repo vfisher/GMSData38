@@ -2580,3 +2580,5 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2722, 't_SaleSavePOSPayData', 't_SaleSavePOSPayData', NULL, 'P ', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2723, 'z_GetRecordFromXML', 'z_GetRecordFromXML', NULL, 'P ', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2724, 't_SaleRetDoRound', 't_SaleRetDoRound', NULL, 'P ', 0);
+
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2725, 't_SaleGetPayPartsPayformInfo', 't_SaleGetPayPartsPayformInfo', NULL, 'P ', 0);
