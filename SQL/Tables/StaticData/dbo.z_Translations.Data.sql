@@ -6231,3 +6231,5 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000026, 10, 'Анал
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000027, 10, 'Анализатор - Доступные значения (Подробно)', 'Аналізатор - Доступні значення (Детально)');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000028, 10, 'Анализатор - Виды отчетов', 'Аналізатор - Типи звітів');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000029, 10, 'Анализатор - Виды отчетов - Поля', 'Аналізатор - Типи звітів - Поля');
+
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2754, 1, 'Фильтр по сумме', 'Фільтр по сумі');
