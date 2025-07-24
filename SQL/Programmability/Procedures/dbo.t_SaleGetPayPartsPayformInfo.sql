@@ -67,10 +67,3 @@ BEGIN
   GROUP BY s.BServID, p.POSPayID, bs.PosBServID, b.BankName, r.POSPayName
   ORDER BY r.POSPayName
 END
-
-
-
-
-
-commit
-GO
