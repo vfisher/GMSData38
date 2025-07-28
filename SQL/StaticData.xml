@@ -313,6 +313,7 @@
     <StaticDataLink>dbo.z_ToolRep</StaticDataLink>
     <StaticDataLink>dbo.z_Tools</StaticDataLink>
     <StaticDataLink>dbo.z_ToolUserEvents</StaticDataLink>
+    <StaticDataLink>dbo.z_Translations</StaticDataLink>
     <StaticDataLink>dbo.z_UserCodes1</StaticDataLink>
     <StaticDataLink>dbo.z_UserCodes2</StaticDataLink>
     <StaticDataLink>dbo.z_UserCodes3</StaticDataLink>

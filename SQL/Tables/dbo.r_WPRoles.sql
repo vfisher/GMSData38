@@ -186,6 +186,7 @@
   [ExtraPanelWidth] [varchar](250) NULL DEFAULT ('20%'),
   [UseExtraPanel] [bit] NOT NULL DEFAULT (0),
   [RoundInCheque] [bit] NOT NULL DEFAULT (0),
+  [UseExtendedPayPartsSelector] [bit] NULL DEFAULT (0),
   CONSTRAINT [pk_r_WPRoles] PRIMARY KEY CLUSTERED ([WPRoleID])
 )
 ON [PRIMARY]
@@ -438,6 +439,32 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPRoles', N'Last', N'INSERT'
 GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
 
 
 
