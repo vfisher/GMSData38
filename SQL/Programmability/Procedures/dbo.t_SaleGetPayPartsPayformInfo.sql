@@ -1,7 +1,7 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
 
-create proc [dbo].[t_SaleGetPayPartsPayformInfo](@DocCode int, @ChID bigint, @WPID int, @PayFormCode int)
+CREATE PROCEDURE [dbo].[t_SaleGetPayPartsPayformInfo](@DocCode int, @ChID bigint, @WPID int, @PayFormCode int)
 AS
 BEGIN
   DECLARE @Sample varbinary(max)
