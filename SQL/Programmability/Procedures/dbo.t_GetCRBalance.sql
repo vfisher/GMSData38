@@ -102,7 +102,7 @@ BEGIN
 
   /* Данные за период последней открытой смены */
   /* Все документы по продажам кассы @CRID */ 
-  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate, SaleRndSum  
+  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate, SaleRndSum, TSumCC_wt AS SaleNoRndSum  
   INTO #t_Sale
   FROM t_Sale m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
@@ -127,7 +127,7 @@ BEGIN
   INNER JOIN t_SalePays d WITH(NOLOCK) ON m.ChID = d.ChID 
 
   /* Все возвратные документы кассы @CRID */ 
-  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate, RetRndSum  
+  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate, RetRndSum, TSumCC_wt AS RetNoRndSum   
   INTO #t_CRRet
   FROM t_CRRet m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode))
@@ -546,10 +546,20 @@ BEGIN
 
   IF (@CashType = 39) AND (@RoundInCheque = 1)
     BEGIN
+	  UPDATE m 
+	  SET SaleNoRndSum = 0 
+	  FROM #t_Sale m
+	  WHERE ISNULL(m.SaleRndSum,0) = 0
+
+	  UPDATE m 
+	  SET RetNoRndSum = 0 
+	  FROM #t_CRRet m
+	  WHERE ISNULL(m.RetRndSum,0) = 0
+
       SET @SaleRndSum = (-1) * ISNULL((SELECT SUM(SaleRndSum) FROM #t_Sale WHERE TSumCC_wt <> 0),0)
-      SET @SaleNoRndSum = @SaleSumType0 + @SaleRndSum
+	  SET @SaleNoRndSum = ISNULL((SELECT SUM(SaleNoRndSum) FROM #t_Sale WHERE TSumCC_wt <> 0),0)
       SET @RetRndSum = (-1) * ISNULL((SELECT SUM(RetRndSum) FROM #t_CRRet WHERE TSumCC_wt <> 0),0)
-      SET @RetNoRndSum = @RetSumType0 + @RetRndSum
+	  SET @RetNoRndSum = ISNULL((SELECT SUM(RetNoRndSum) FROM #t_CRRet WHERE TSumCC_wt <> 0),0) 
     END
 
   SET @ParamsOut = (

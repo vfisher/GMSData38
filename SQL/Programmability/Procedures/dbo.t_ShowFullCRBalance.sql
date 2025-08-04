@@ -674,6 +674,11 @@ BEGIN
   /* Заокруглення */
   IF (@CashType = 39) AND (@RoundInCheque = 1)
     BEGIN
+	  IF @SaleRndSumDB < 0 SET @SaleRndSumDB = (-1) * @SaleRndSumDB
+	  IF @RetRndSumDB < 0 SET @RetRndSumDB = (-1) * @RetRndSumDB
+      IF @SaleRndSumCR < 0 SET @SaleRndSumCR = (-1) * @SaleRndSumCR
+	  IF @RetRndSumCR < 0 SET @RetRndSumCR = (-1) * @RetRndSumCR
+
 	  INSERT INTO #Sale
 	  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Продажі: Сума заокруглення' AS [Name], @SaleRndSumDB AS ValueDB, @SaleRndSumCR AS ValueCR, 0 AS Diff
 	  INSERT INTO #Sale
