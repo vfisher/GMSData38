@@ -90,8 +90,10 @@ BEGIN
   SET @LastZRep = ISNULL(@LastZRep,'1900-01-01 00:00:00')
   SET @InitialBalance = ISNULL(@InitialBalance,0)
 
-  DECLARE @UseHardwareDisc BIT  
-  SELECT @UseHardwareDisc = CASE WHEN pw.DiscountMode = 1 THEN 1 ELSE 0 END FROM r_WPRoles AS pw  
+  DECLARE @UseHardwareDisc BIT, @RoundInCheque BIT   
+  SELECT @UseHardwareDisc = CASE WHEN pw.DiscountMode = 1 THEN 1 ELSE 0 END,
+         @RoundInCheque = pw.RoundInCheque
+  FROM r_WPRoles AS pw  
   JOIN r_WPs AS rw ON pw.WPRoleID = rw.WPRoleID
   JOIN r_CRs AS cr ON rw.CRID = cr.CRID
   WHERE cr.CRID = @CRID
@@ -100,7 +102,7 @@ BEGIN
 
   /* Данные за период последней открытой смены */
   /* Все документы по продажам кассы @CRID */ 
-  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate  
+  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate, SaleRndSum, TSumCC_wt AS SaleNoRndSum  
   INTO #t_Sale
   FROM t_Sale m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
@@ -125,7 +127,7 @@ BEGIN
   INNER JOIN t_SalePays d WITH(NOLOCK) ON m.ChID = d.ChID 
 
   /* Все возвратные документы кассы @CRID */ 
-  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate  
+  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate, RetRndSum, TSumCC_wt AS RetNoRndSum   
   INTO #t_CRRet
   FROM t_CRRet m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode))
@@ -542,20 +544,23 @@ BEGIN
   SET @RetRndSum = 0
   SET @RetNoRndSum = 0
 
-  IF (@UseHardwareDisc = 1) AND (@CashType = 39)
+  IF (@CashType = 39) AND (@RoundInCheque = 1)
     BEGIN
-	  SELECT @SaleRndSum = ISNULL(SUM(ROUND(ISNULL(lrnd.SumBonus,0),2)),0)
-	  FROM #t_SaleD d WITH(NOLOCK)
-      LEFT JOIN z_LogDiscExpP lrnd WITH(NOLOCK) ON d.ChID = lrnd.ChID AND lrnd.DocCode = 11035 AND d.SrcPosID = lrnd.SrcPosID AND lrnd.DiscCode = @SaleRoundDiscCode
-	  print @SaleRndSum
+	  UPDATE m 
+	  SET SaleNoRndSum = 0 
+	  FROM #t_Sale m
+	  WHERE ISNULL(m.SaleRndSum,0) = 0
 
-      SELECT @RetRndSum = ISNULL(SUM(ROUND(ISNULL(lrnd.SumBonus,0),2)),0)
-	  FROM #t_CRRetD d WITH(NOLOCK)
-      LEFT JOIN z_LogDiscExpP lrnd WITH(NOLOCK) ON d.ChID = lrnd.ChID AND lrnd.DocCode = 11004 AND d.SrcPosID = lrnd.SrcPosID AND lrnd.DiscCode = @SaleRoundDiscCode
-	
-	  SET @SaleNoRndSum = @SaleSumCashFact + @SaleRndSum
-      SET @RetNoRndSum = @SumRetCash + @RetRndSum
-	END
+	  UPDATE m 
+	  SET RetNoRndSum = 0 
+	  FROM #t_CRRet m
+	  WHERE ISNULL(m.RetRndSum,0) = 0
+
+      SET @SaleRndSum = (-1) * ISNULL((SELECT SUM(SaleRndSum) FROM #t_Sale WHERE TSumCC_wt <> 0),0)
+	  SET @SaleNoRndSum = ISNULL((SELECT SUM(SaleNoRndSum) FROM #t_Sale WHERE TSumCC_wt <> 0),0)
+      SET @RetRndSum = (-1) * ISNULL((SELECT SUM(RetRndSum) FROM #t_CRRet WHERE TSumCC_wt <> 0),0)
+	  SET @RetNoRndSum = ISNULL((SELECT SUM(RetNoRndSum) FROM #t_CRRet WHERE TSumCC_wt <> 0),0) 
+    END
 
   SET @ParamsOut = (
     SELECT

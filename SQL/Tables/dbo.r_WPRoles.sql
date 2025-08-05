@@ -185,6 +185,7 @@
   [CheckRetSumMaxDifference] [numeric](21, 9) NOT NULL DEFAULT (0),
   [ExtraPanelWidth] [varchar](250) NULL DEFAULT ('20%'),
   [UseExtraPanel] [bit] NOT NULL DEFAULT (0),
+  [RoundInCheque] [bit] NOT NULL DEFAULT (0),
   [UseExtendedPayPartsSelector] [bit] NULL DEFAULT (0),
   CONSTRAINT [pk_r_WPRoles] PRIMARY KEY CLUSTERED ([WPRoleID])
 )

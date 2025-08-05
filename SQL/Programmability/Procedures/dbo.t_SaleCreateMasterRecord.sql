@@ -40,10 +40,10 @@ BEGIN
 
   INSERT INTO t_Sale(ChID, DocID, DocDate, DocTime, DocCreateTime, CurrID, KursMC, OurID, StockID, 
     CRID, OperID, EmpID, DeskCode, Visitors, CodeID1, CodeID2, CodeID3, CodeID4, CodeID5, Notes, 
-    CreditID, Discount, CompID, CashSumCC, ChangeSumCC, ExtraInfo, ChequeTypeID, GUID, WPID) 
+    CreditID, Discount, CompID, CashSumCC, ChangeSumCC, ExtraInfo, ChequeTypeID, GUID, WPID, SaleRndSum) 
   SELECT TOP 1 @AChID, @ADocID, dbo.zf_GetDate(GETDATE()), GETDATE(), m.DocTime, dbo.zf_GetCurrCC(), m.RateMC, m.OurID, m.StockID, 
     @CRID, @OperID, m.EmpID, m.DeskCode, m.Visitors, m.CodeID1, m.CodeID2, m.CodeID3, m.CodeID4, m.CodeID5, LEFT(m.Notes, 200), 
-    m.CreditID, m.Discount, dbo.zf_Var('t_ChequeCompID'), @CashSumCC, @ChangeSumCC, ExtraInfo, ChequeTypeID, GUID, m.WPID
+    m.CreditID, m.Discount, dbo.zf_Var('t_ChequeCompID'), @CashSumCC, @ChangeSumCC, ExtraInfo, ChequeTypeID, GUID, m.WPID, m.SaleRndSum
   FROM t_SaleTemp m WITH(NOLOCK) 
   WHERE m.ChID = @ChID 
   IF @@ERROR <> 0 GOTO Error 
