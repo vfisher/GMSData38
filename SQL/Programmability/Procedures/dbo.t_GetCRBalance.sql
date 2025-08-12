@@ -18,6 +18,9 @@ BEGIN
   DECLARE @SaleTaxSum_0 numeric(21, 9), @SaleTaxSum_1 numeric(21, 9), @SaleTaxSum_2 numeric(21, 9), @SaleTaxSum_3 numeric(21, 9), @SaleTaxSum_4 numeric(21, 9), @SaleTaxSum_5 numeric(21, 9)
   DECLARE @RetTaxSum_0 numeric(21, 9), @RetTaxSum_1 numeric(21, 9), @RetTaxSum_2 numeric(21, 9), @RetTaxSum_3 numeric(21, 9), @RetTaxSum_4 numeric(21, 9), @RetTaxSum_5 numeric(21, 9)
   DECLARE @SaleSum_0 numeric(21, 9), @SaleSum_1 numeric(21, 9), @SaleSum_2 numeric(21, 9), @SaleSum_3 numeric(21, 9), @SaleSum_4 numeric(21, 9), @SaleSum_5 numeric(21, 9)
+  DECLARE @SaleDiscountSum_0 numeric(21, 9), @SaleDiscountSum_1 numeric(21, 9), @SaleDiscountSum_2 numeric(21, 9), @SaleDiscountSum_3 numeric(21, 9), @SaleDiscountSum_4 numeric(21, 9), @SaleDiscountSum_5 numeric(21, 9)
+  DECLARE @TurnOverDiscountByTax0 numeric(21, 9), @TurnOverDiscountByTax1 numeric(21, 9), @TurnOverDiscountByTax2 numeric(21, 9), @TurnOverDiscountByTax3 numeric(21, 9),
+  @TurnOverDiscountByTax4 numeric(21, 9), @TurnOverDiscountByTax5 numeric(21, 9)
   DECLARE @RetSum_0 numeric(21, 9), @RetSum_1 numeric(21, 9), @RetSum_2 numeric(21, 9), @RetSum_3 numeric(21, 9), @RetSum_4 numeric(21, 9), @RetSum_5 numeric(21, 9)
   DECLARE @SaleSumCashFact numeric(21, 9), @SaleSumCCardFact numeric(21, 9), @SaleSumCreditFact numeric(21, 9), @SaleSumChequeFact numeric(21, 9), @SaleSumOtherFact numeric(21, 9), @SaleSumCustom1Fact numeric(21, 9), @SaleSumCustom2Fact numeric(21, 9), @SaleSumCustom3Fact numeric(21, 9), @SaleSumCustom4Fact numeric(21, 9), @SaleSumCustom5Fact numeric(21, 9)
   DECLARE @SaleSumCustom1 numeric(21, 9), @SaleSumCustom2 numeric(21, 9), @SaleSumCustom3 numeric(21, 9), @SaleSumCustom4 numeric(21, 9), @SaleSumCustom5 numeric(21, 9)
@@ -25,7 +28,6 @@ BEGIN
   @SumRetCustom5 numeric(21, 9)
   DECLARE @CashBack numeric(21, 9), @SaleSumCCardOnlyCashBack numeric(21, 9)
   DECLARE @SaleRndSum numeric(21, 9), @SaleNoRndSum numeric(21, 9), @RetRndSum numeric(21, 9), @RetNoRndSum numeric(21, 9)
-  DECLARE @SaleRoundDiscCode int
   DECLARE @SaleSumType0 numeric(21, 9), @SaleSumType1 numeric(21, 9), @SaleSumType2 numeric(21, 9)
   DECLARE @RetSumType0 numeric(21, 9), @RetSumType1 numeric(21, 9), @RetSumType2 numeric(21, 9)
   DECLARE @SaleLevySum_0 numeric(21, 9), @SaleLevySum_1 numeric(21, 9), @SaleLevySum_2 numeric(21, 9), @SaleLevySum_3 numeric(21, 9), @SaleLevySum_4 numeric(21, 9), @SaleLevySum_5 numeric(21, 9)
@@ -91,18 +93,16 @@ BEGIN
   SET @InitialBalance = ISNULL(@InitialBalance,0)
 
   DECLARE @UseHardwareDisc BIT, @RoundInCheque BIT   
-  SELECT @UseHardwareDisc = CASE WHEN pw.DiscountMode = 1 THEN 1 ELSE 0 END,
+  SELECT @UseHardwareDisc = CASE WHEN pw.DiscountMode = 3 THEN 1 ELSE 0 END,
          @RoundInCheque = pw.RoundInCheque
   FROM r_WPRoles AS pw  
   JOIN r_WPs AS rw ON pw.WPRoleID = rw.WPRoleID
   JOIN r_CRs AS cr ON rw.CRID = cr.CRID
   WHERE cr.CRID = @CRID
-  
-  SET @SaleRoundDiscCode = ISNULL(dbo.zf_Var('t_SaleRoundDiscCode'),-1)
 
   /* Данные за период последней открытой смены */
   /* Все документы по продажам кассы @CRID */ 
-  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate, SaleRndSum, TSumCC_wt AS SaleNoRndSum  
+  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate, m.SaleRndSum, m.TPurSumCC_wt   
   INTO #t_Sale
   FROM t_Sale m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
@@ -114,8 +114,9 @@ BEGIN
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID 
 
   SELECT d.ChID, d.SrcPosID, d.TaxTypeID, 
-  CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurTax),2) ELSE d.TaxSum END TaxSum,
-  CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurPriceCC_wt),2) ELSE d.SumCC_wt END SumCC_wt 
+    d.TaxSum AS TaxSum,
+    CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 AND @RoundInCheque = 1 THEN ROUND((Qty * PurPriceCC_wt),2) ELSE d.SumCC_wt END SumCC_wt, 
+    CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 AND @RoundInCheque = 1 THEN ROUND((Qty * PurPriceCC_wt),2) - ROUND(d.SumCC_wt,2) END DiscountSum
   INTO #t_SaleD
   FROM #t_Sale m WITH(NOLOCK)
   INNER JOIN t_SaleD d WITH(NOLOCK) ON m.ChID = d.ChID 
@@ -127,7 +128,7 @@ BEGIN
   INNER JOIN t_SalePays d WITH(NOLOCK) ON m.ChID = d.ChID 
 
   /* Все возвратные документы кассы @CRID */ 
-  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate, RetRndSum, TSumCC_wt AS RetNoRndSum   
+  SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate, m.RetRndSum  
   INTO #t_CRRet
   FROM t_CRRet m WITH(NOLOCK)
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode))
@@ -260,7 +261,8 @@ BEGIN
   /*SELECT @SaleSum_4 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SaleD WHERE TaxTypeID = 4 */
   /*SELECT @SaleSum_5 = ROUND(ISNULL(SUM(SumCC_wt), 0), 2) FROM #t_SaleD WHERE TaxTypeID = 5 */
 
-  SELECT @SaleSum_0 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+  SELECT @SaleSum_0 = ISNULL(SUM(RealSum),0), @SaleDiscountSum_0 = ISNULL(SUM(DiscountSum),0) 
+  FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum, SUM(ROUND(d.DiscountSum,2)) AS DiscountSum 
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID
@@ -268,7 +270,8 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 0)
   GROUP BY m.ChID) t
 
-  SELECT @SaleSum_1 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+  SELECT @SaleSum_1 = ISNULL(SUM(RealSum),0), @SaleDiscountSum_1 = ISNULL(SUM(DiscountSum),0)
+  FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum, SUM(ROUND(d.DiscountSum,2)) AS DiscountSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
@@ -276,7 +279,8 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 1)
   GROUP BY m.ChID) t
 
-  SELECT @SaleSum_2 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+  SELECT @SaleSum_2 = ISNULL(SUM(RealSum),0), @SaleDiscountSum_2 = ISNULL(SUM(DiscountSum),0)
+  FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum, SUM(ROUND(d.DiscountSum,2)) AS DiscountSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
@@ -284,7 +288,8 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 2)
   GROUP BY m.ChID) t
 
-  SELECT @SaleSum_3 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+  SELECT @SaleSum_3 = ISNULL(SUM(RealSum),0), @SaleDiscountSum_3 = ISNULL(SUM(DiscountSum),0)
+  FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum, SUM(ROUND(d.DiscountSum,2)) AS DiscountSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
@@ -292,7 +297,8 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 3)
   GROUP BY m.ChID) t
 
-  SELECT @SaleSum_4 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+  SELECT @SaleSum_4 = ISNULL(SUM(RealSum),0), @SaleDiscountSum_4 = ISNULL(SUM(DiscountSum),0) 
+  FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum, SUM(ROUND(d.DiscountSum,2)) AS DiscountSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
@@ -300,13 +306,24 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 4)
   GROUP BY m.ChID) t
 
-  SELECT @SaleSum_5 = ISNULL(SUM(RealSum),0) FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum
+  SELECT @SaleSum_5 = ISNULL(SUM(RealSum),0), @SaleDiscountSum_5 = ISNULL(SUM(DiscountSum),0) 
+  FROM (SELECT SUM(ROUND(d.SumCC_wt + ISNULL(dlv.LevySum,0),2)) AS RealSum, SUM(ROUND(d.DiscountSum,2)) AS DiscountSum
   FROM #t_Sale m
   INNER JOIN #t_SaleD d ON m.ChID = d.ChID
   LEFT JOIN #t_SaleDLV dlv ON dlv.ChID = d.ChID AND dlv.SrcPosID = d.SrcPosID 
   LEFT JOIN #r_LevyCR lcr ON lcr.LevyID = dlv.LevyID AND lcr.TaxID = 5  
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 5)
   GROUP BY m.ChID) t
+
+  SELECT @TurnOverDiscountByTax0 = 0, @TurnOverDiscountByTax1 = 0, @TurnOverDiscountByTax2 = 0, @TurnOverDiscountByTax3 = 0, @TurnOverDiscountByTax4 = 0, @TurnOverDiscountByTax5 = 0 
+  IF @CashType = 39 AND @UseHardwareDisc = 1 AND @RoundInCheque = 1
+    SELECT
+    @TurnOverDiscountByTax0 = ROUND(@SaleSum_0 - @SaleDiscountSum_0, 2),
+    @TurnOverDiscountByTax1 = ROUND(@SaleSum_1 - @SaleDiscountSum_1, 2),
+    @TurnOverDiscountByTax2 = ROUND(@SaleSum_2 - @SaleDiscountSum_2, 2),
+	@TurnOverDiscountByTax3 = ROUND(@SaleSum_3 - @SaleDiscountSum_3, 2),
+    @TurnOverDiscountByTax4 = ROUND(@SaleSum_4 - @SaleDiscountSum_4, 2),
+    @TurnOverDiscountByTax5 = ROUND(@SaleSum_5 - @SaleDiscountSum_5, 2)
 
   IF @CashType <> 39
   BEGIN
@@ -546,20 +563,10 @@ BEGIN
 
   IF (@CashType = 39) AND (@RoundInCheque = 1)
     BEGIN
-	  UPDATE m 
-	  SET SaleNoRndSum = 0 
-	  FROM #t_Sale m
-	  WHERE ISNULL(m.SaleRndSum,0) = 0
-
-	  UPDATE m 
-	  SET RetNoRndSum = 0 
-	  FROM #t_CRRet m
-	  WHERE ISNULL(m.RetRndSum,0) = 0
-
       SET @SaleRndSum = (-1) * ISNULL((SELECT SUM(SaleRndSum) FROM #t_Sale WHERE TSumCC_wt <> 0),0)
-	  SET @SaleNoRndSum = ISNULL((SELECT SUM(SaleNoRndSum) FROM #t_Sale WHERE TSumCC_wt <> 0),0)
+      SET @SaleNoRndSum = @SaleSumType0 + @SaleRndSum
       SET @RetRndSum = (-1) * ISNULL((SELECT SUM(RetRndSum) FROM #t_CRRet WHERE TSumCC_wt <> 0),0)
-	  SET @RetNoRndSum = ISNULL((SELECT SUM(RetNoRndSum) FROM #t_CRRet WHERE TSumCC_wt <> 0),0) 
+      SET @RetNoRndSum = @RetSumType0 + @RetRndSum
     END
 
   SET @ParamsOut = (
@@ -636,7 +643,13 @@ BEGIN
 	  @SaleSumType2 AS SaleSumType2,
 	  @RetSumType0 AS RetSumType0,
 	  @RetSumType1 AS RetSumType1,
-	  @RetSumType2 AS RetSumType2
+	  @RetSumType2 AS RetSumType2,
+	  @TurnOverDiscountByTax0 AS TurnOverDiscountByTax0,
+	  @TurnOverDiscountByTax1 AS TurnOverDiscountByTax1,
+	  @TurnOverDiscountByTax2 AS TurnOverDiscountByTax2,
+	  @TurnOverDiscountByTax3 AS TurnOverDiscountByTax3,
+	  @TurnOverDiscountByTax4 AS TurnOverDiscountByTax4,
+	  @TurnOverDiscountByTax5 AS TurnOverDiscountByTax5
    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END
 GO

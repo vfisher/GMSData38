@@ -159,6 +159,8 @@ BEGIN
 
   DECLARE @SumByTax_0CR numeric(21, 9), @SumByTax_1CR numeric(21, 9), @SumByTax_2CR numeric(21, 9), @SumByTax_3CR numeric(21, 9), @SumByTax_4CR numeric(21, 9), @SumByTax_5CR numeric(21, 9), @SumByTax_6CR numeric(21, 9), @SumByTax_7CR numeric(21, 9)
   DECLARE @SumByTax_0DB numeric(21, 9), @SumByTax_1DB numeric(21, 9), @SumByTax_2DB numeric(21, 9), @SumByTax_3DB numeric(21, 9), @SumByTax_4DB numeric(21, 9), @SumByTax_5DB numeric(21, 9), @SumByTax_6DB numeric(21, 9), @SumByTax_7DB numeric(21, 9)
+  DECLARE @TurnOverDiscountByTax0 numeric(21, 9), @TurnOverDiscountByTax1 numeric(21, 9), @TurnOverDiscountByTax2 numeric(21, 9), @TurnOverDiscountByTax3 numeric(21, 9),
+  @TurnOverDiscountByTax4 numeric(21, 9), @TurnOverDiscountByTax5 numeric(21, 9), @TurnOverDiscountByTax6 numeric(21, 9), @TurnOverDiscountByTax7 numeric(21, 9)
 
   DECLARE @RetSumByTax_0CR numeric(21, 9), @RetSumByTax_1CR numeric(21, 9), @RetSumByTax_2CR numeric(21, 9), @RetSumByTax_3CR numeric(21, 9), @RetSumByTax_4CR numeric(21, 9), @RetSumByTax_5CR numeric(21, 9), @RetSumByTax_6CR numeric(21, 9), @RetSumByTax_7CR numeric(21, 9)
   DECLARE @RetSumByTax_0DB numeric(21, 9), @RetSumByTax_1DB numeric(21, 9), @RetSumByTax_2DB numeric(21, 9), @RetSumByTax_3DB numeric(21, 9), @RetSumByTax_4DB numeric(21, 9), @RetSumByTax_5DB numeric(21, 9), @RetSumByTax_6DB numeric(21, 9), @RetSumByTax_7DB numeric(21, 9)
@@ -258,7 +260,6 @@ BEGIN
   SET @RetSumType1CR = JSON_VALUE(@ParamsIn, '$.RetSumType1')
   /* Сума повернень (2-інше) */
   SET @RetSumType2CR = JSON_VALUE(@ParamsIn, '$.RetSumType2')
-
 
   /* Сума продажу (податок A) */
   SET @SumByTax_0CR = JSON_VALUE(@ParamsIn, '$.SumByTax_1')
@@ -498,6 +499,23 @@ BEGIN
     /* Сума продажу (податок H) */
     SET @SumByTax_7DB = JSON_VALUE(@ParamsOutDB, '$.SaleSum_7')
 
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок A) */
+	SET @TurnOverDiscountByTax0 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax0')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок B) */
+	SET @TurnOverDiscountByTax1 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax1')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок C) */
+	SET @TurnOverDiscountByTax2 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax2')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок D) */
+	SET @TurnOverDiscountByTax3 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax3')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок E) */
+	SET @TurnOverDiscountByTax4 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax4')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок F) */
+	SET @TurnOverDiscountByTax5 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax5')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок G) */
+	SET @TurnOverDiscountByTax6 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax6')
+	/* Сума обсягів для розрахування податку/збору з урахуванням знижки (податок H) */
+	SET @TurnOverDiscountByTax7 = JSON_VALUE(@ParamsOutDB, '$.TurnOverDiscountByTax7')
+
     /* Сума повернень (податок A) */
     SET @RetSumByTax_0DB = JSON_VALUE(@ParamsOutDB, '$.RetSum_0')
     /* Сума повернень (податок B) */
@@ -514,7 +532,6 @@ BEGIN
     SET @RetSumByTax_6DB = JSON_VALUE(@ParamsOutDB, '$.RetSum_6')
     /* Сума повернень (податок H) */
     SET @RetSumByTax_7DB = JSON_VALUE(@ParamsOutDB, '$.RetSum_7')
-
 
 	/* Сума податку на продаж за групою A */
 	SET @TaxSum_0DB = JSON_VALUE(@ParamsOutDB, '$.SaleTaxSum_0')
@@ -674,11 +691,6 @@ BEGIN
   /* Заокруглення */
   IF (@CashType = 39) AND (@RoundInCheque = 1)
     BEGIN
-	  IF @SaleRndSumDB < 0 SET @SaleRndSumDB = (-1) * @SaleRndSumDB
-	  IF @RetRndSumDB < 0 SET @RetRndSumDB = (-1) * @RetRndSumDB
-      IF @SaleRndSumCR < 0 SET @SaleRndSumCR = (-1) * @SaleRndSumCR
-	  IF @RetRndSumCR < 0 SET @RetRndSumCR = (-1) * @RetRndSumCR
-
 	  INSERT INTO #Sale
 	  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Продажі: Сума заокруглення' AS [Name], @SaleRndSumDB AS ValueDB, @SaleRndSumCR AS ValueCR, 0 AS Diff
 	  INSERT INTO #Sale
@@ -721,7 +733,6 @@ BEGIN
   UPDATE #RetPays SET SumDB = @RetSumCustom3DB, SumCR = @RetSumCustom3CR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 6)
   UPDATE #RetPays SET SumDB = @RetSumCustom4DB, SumCR = @RetSumCustom4CR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 7)
   UPDATE #RetPays SET SumDB = @RetSumCustom5DB, SumCR = @RetSumCustom5CR WHERE PayFormCode IN (SELECT PayFormCode FROM r_PayFormCR WITH(NOLOCK) WHERE CashType = @CashType AND CRPayFormCode = 8)
-
 
   /* Begin Taxes */
 
@@ -766,35 +777,35 @@ BEGIN
   SET @Name = 'Сума продажу'
 
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_0DB AS ValueDB, @SumByTax_0CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 0
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax0 <> 0 THEN @TurnOverDiscountByTax0 ELSE @SumByTax_0DB END AS ValueDB, @SumByTax_0CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 0
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_0DB AS ValueDB, @TaxSum_0CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 0
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_1DB AS ValueDB, @SumByTax_1CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 1
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax1 <> 0 THEN @TurnOverDiscountByTax1 ELSE @SumByTax_1DB END AS ValueDB, @SumByTax_1CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 1
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_1DB AS ValueDB, @TaxSum_1CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 1
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_2DB AS ValueDB, @SumByTax_2CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 2
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax2 <> 0 THEN @TurnOverDiscountByTax2 ELSE @SumByTax_2DB END AS ValueDB, @SumByTax_2CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 2
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_2DB AS ValueDB, @TaxSum_2CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 2
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_3DB AS ValueDB, @SumByTax_3CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 3
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax3 <> 0 THEN @TurnOverDiscountByTax3 ELSE @SumByTax_3DB END AS ValueDB, @SumByTax_3CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 3
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_3DB AS ValueDB, @TaxSum_3CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 3
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_4DB AS ValueDB, @SumByTax_4CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 4
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax4 <> 0 THEN @TurnOverDiscountByTax4 ELSE @SumByTax_4DB END AS ValueDB, @SumByTax_4CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 4
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_4DB AS ValueDB, @TaxSum_4CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 4
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_5DB AS ValueDB, @SumByTax_5CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 5
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax5 <> 0 THEN @TurnOverDiscountByTax5 ELSE @SumByTax_5DB END AS ValueDB, @SumByTax_5CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 5
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_5DB AS ValueDB, @TaxSum_5CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 5
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_6DB AS ValueDB, @SumByTax_6CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 6
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax6 <> 0 THEN @TurnOverDiscountByTax6 ELSE @SumByTax_6DB END AS ValueDB, @SumByTax_6CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 6
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_6DB AS ValueDB, @TaxSum_6CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 6
   INSERT INTO #SaleTaxes
-  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], @SumByTax_7DB AS ValueDB, @SumByTax_7CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 7
+  SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, @Name + ' (податок '+ Letter + ')' AS [Name], CASE WHEN @TurnOverDiscountByTax7 <> 0 THEN @TurnOverDiscountByTax7 ELSE @SumByTax_7DB END AS ValueDB, @SumByTax_7CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 7
   INSERT INTO #SaleTaxes
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, TaxPerName AS [Name], @TaxSum_7DB AS ValueDB, @TaxSum_7CR AS ValueCR, 0 AS Diff FROM #Taxes WHERE TaxID = 7
   
