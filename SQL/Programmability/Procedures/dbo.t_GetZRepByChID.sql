@@ -9,18 +9,19 @@ AS
 BEGIN
   DECLARE @tZRep table (DocTime datetime, SaleCash numeric(21, 9), SaleCard numeric(21, 9), SaleCredit numeric(21, 9), SaleCheque numeric(21, 9), SaleOther numeric(21, 9),
           MRec numeric(21, 9), MExp numeric(21, 9), SumCash numeric(21, 9),
-					 RetCash numeric(21, 9), RetCard numeric(21, 9), RetCredit numeric(21, 9), RetCheque numeric(21, 9), RetOther numeric(21, 9), 
-					 InitialBalance numeric(21, 9), SaleOrdersCount integer, RetOrdersCount integer, 
-					 SaleTaxSum_0 numeric(21, 9), SaleTaxSum_1 numeric(21, 9), SaleTaxSum_2 numeric(21, 9), SaleTaxSum_3 numeric(21, 9), SaleTaxSum_4 numeric(21, 9), SaleTaxSum_5 numeric(21, 9),
+          RetCash numeric(21, 9), RetCard numeric(21, 9), RetCredit numeric(21, 9), RetCheque numeric(21, 9), RetOther numeric(21, 9), InitialBalance numeric(21, 9),
+          SaleOrdersCount integer, RetOrdersCount integer, 
+		  SaleTaxSum_0 numeric(21, 9), SaleTaxSum_1 numeric(21, 9), SaleTaxSum_2 numeric(21, 9), SaleTaxSum_3 numeric(21, 9), SaleTaxSum_4 numeric(21, 9), SaleTaxSum_5 numeric(21, 9),
           RetTaxSum_0 numeric(21, 9), RetTaxSum_1 numeric(21, 9), RetTaxSum_2 numeric(21, 9), RetTaxSum_3 numeric(21, 9), RetTaxSum_4 numeric(21, 9), RetTaxSum_5 numeric(21, 9),
           SaleSum_0 numeric(21, 9), SaleSum_1 numeric(21, 9), SaleSum_2 numeric(21, 9), SaleSum_3 numeric(21, 9), SaleSum_4 numeric(21, 9), SaleSum_5 numeric(21, 9),
           RetSum_0 numeric(21, 9), RetSum_1 numeric(21, 9), RetSum_2 numeric(21, 9), RetSum_3 numeric(21, 9), RetSum_4 numeric(21, 9), RetSum_5 numeric(21, 9),
           SaleCashFact numeric(21, 9), SaleCardFact numeric(21, 9), SaleCreditFact numeric(21, 9), SaleChequeFact numeric(21, 9), SaleOtherFact numeric(21, 9),
           SaleCustom1Fact numeric(21, 9), SaleCustom2Fact numeric(21, 9), SaleCustom3Fact numeric(21, 9), 
-					 SaleCustom1 numeric(21, 9), SaleCustom2 numeric(21, 9), SaleCustom3 numeric(21, 9),
-					 RetCustom1 numeric(21, 9), RetCustom2 numeric(21, 9), RetCustom3 numeric(21, 9), 
-					 CashBack numeric(21, 9), CashBackOrdersCount integer, SaleSumCCardOnlyCashBack numeric(21, 9),
-					 SaleSum numeric(21, 9), RetSum numeric(21, 9), SaleSumFact numeric(21, 9))
+		  SaleCustom1 numeric(21, 9), SaleCustom2 numeric(21, 9), SaleCustom3 numeric(21, 9),
+		  RetCustom1 numeric(21, 9), RetCustom2 numeric(21, 9), RetCustom3 numeric(21, 9), 
+		  CashBack numeric(21, 9), CashBackOrdersCount integer, SaleSumCCardOnlyCashBack numeric(21, 9),
+		  SaleSum numeric(21, 9), RetSum numeric(21, 9), SaleSumFact numeric(21, 9),
+		  SaleRndSum numeric(21, 9), SaleNoRndSum numeric(21, 9), RetRndSum numeric(21, 9), RetNoRndSum numeric(21, 9))
 
   INSERT INTO @tZRep
   SELECT
@@ -82,9 +83,13 @@ BEGIN
     CashBack = m.SumCashBack,
     CashBackOrdersCount = m.ChequesCountCashBack,
     SaleSumCCardOnlyCashBack = m.SaleSumCCardCashBack,
-	   SaleSum = m.SumCash + m.SumCard + m.SumCredit + m.SumCheque + m.SumOther,
+	SaleSum = m.SumCash + m.SumCard + m.SumCredit + m.SumCheque + m.SumOther,
     RetSum = m.RetSumCash + m.RetSumCard + m.RetSumCredit + m.RetSumCheque + m.RetSumOther,
-	   SaleSumFact = m.SumCash + m.SumCard + m.SumCredit + m.SumCheque + m.SumOther
+	SaleSumFact = m.SumCash + m.SumCard + m.SumCredit + m.SumCheque + m.SumOther,
+	SaleRndSum = m.SaleRndSum,
+	SaleNoRndSum = m.SaleNoRndSum,
+	RetRndSum = m.RetRndSum,
+	RetNoRndSum = m.RetNoRndSum
   FROM t_ZRep m
   WHERE m.CHID = @CHID
 
