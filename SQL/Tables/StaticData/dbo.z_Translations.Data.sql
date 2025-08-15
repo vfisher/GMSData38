@@ -6233,5 +6233,5 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000028, 10, 'Анал
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000029, 10, 'Анализатор - Виды отчетов - Поля', 'Аналізатор - Типи звітів - Поля');
 
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2754, 1, 'Фильтр по сумме', 'Фільтр по сумі');
-
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2736, 1, 'Использовать доп панель в ТК для отображения информации о товаре', 'Використовувати додаткову панель у ТК для відображення інформації про товар');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2756, 1, 'Округлять сумму чека без изменения цен товаров', 'Округлити суму чека без зміни цін на товари');
