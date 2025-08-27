@@ -1,4 +1,5 @@
-﻿INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (-10, 8, 'Настройки пользователя', 'Налаштування користувача');
+﻿
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (-10, 8, 'Настройки пользователя', 'Налаштування користувача');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (0, 2, 'Нет документа', 'Немає документа');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (0, 7, 'Нет приложения', '
 Немає програми');
@@ -3478,8 +3479,11 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2731, 1, 'SaleSumCustom
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2732, 1, 'SumRetCustom1', '');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2733, 1, 'SumRetCustom2', '');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2734, 1, 'Использовать FacePay', 'Використовувати FacePay');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2736, 1, 'Использовать доп панель в ТК для отображения информации о товаре', 'Використовувати додаткову панель у ТК для відображення інформації про товар');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2753, 1, 'Допустимое расхожение', 'Припустима різниця сум');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2754, 1, 'Фильтр по сумме', 'Фільтр по сумі');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2755, 1, 'Расширенный диалог оплаты частями', 'Розширений діалог оплати частинами');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2756, 1, 'Округлять сумму чека без изменения цен товаров', 'Заокруглення суми чека без зміни цін товарів');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2801, 9, 'Общие данные', 'Загальні дані');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2901, 9, 'Список', 'Список');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (4201, 9, 'Проводник по товарам', 'Провідник по товарах');
@@ -6231,7 +6235,3 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000026, 10, 'Анал
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000027, 10, 'Анализатор - Доступные значения (Подробно)', 'Аналізатор - Доступні значення (Детально)');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000028, 10, 'Анализатор - Виды отчетов', 'Аналізатор - Типи звітів');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000029, 10, 'Анализатор - Виды отчетов - Поля', 'Аналізатор - Типи звітів - Поля');
-
-INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2754, 1, 'Фильтр по сумме', 'Фільтр по сумі');
-
-INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2736, 1, 'Использовать доп панель в ТК для отображения информации о товаре', 'Використовувати додаткову панель у ТК для відображення інформації про товар');
