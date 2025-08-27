@@ -19,8 +19,10 @@ BEGIN
   DECLARE @RetTaxSum_0 numeric(21, 9), @RetTaxSum_1 numeric(21, 9), @RetTaxSum_2 numeric(21, 9), @RetTaxSum_3 numeric(21, 9), @RetTaxSum_4 numeric(21, 9), @RetTaxSum_5 numeric(21, 9)
   DECLARE @SaleSum_0 numeric(21, 9), @SaleSum_1 numeric(21, 9), @SaleSum_2 numeric(21, 9), @SaleSum_3 numeric(21, 9), @SaleSum_4 numeric(21, 9), @SaleSum_5 numeric(21, 9)
   DECLARE @SaleDiscountSum_0 numeric(21, 9), @SaleDiscountSum_1 numeric(21, 9), @SaleDiscountSum_2 numeric(21, 9), @SaleDiscountSum_3 numeric(21, 9), @SaleDiscountSum_4 numeric(21, 9), @SaleDiscountSum_5 numeric(21, 9)
-  DECLARE @TurnOverDiscountByTax0 numeric(21, 9), @TurnOverDiscountByTax1 numeric(21, 9), @TurnOverDiscountByTax2 numeric(21, 9), @TurnOverDiscountByTax3 numeric(21, 9),
-  @TurnOverDiscountByTax4 numeric(21, 9), @TurnOverDiscountByTax5 numeric(21, 9)
+  DECLARE @SaleDiscountByTax0 numeric(21, 9), @SaleDiscountByTax1 numeric(21, 9), @SaleDiscountByTax2 numeric(21, 9), @SaleDiscountByTax3 numeric(21, 9),
+  @SaleDiscountByTax4 numeric(21, 9), @SaleDiscountByTax5 numeric(21, 9)
+  DECLARE @SaleTurnOverDiscountByTax0 numeric(21, 9), @SaleTurnOverDiscountByTax1 numeric(21, 9), @SaleTurnOverDiscountByTax2 numeric(21, 9), @SaleTurnOverDiscountByTax3 numeric(21, 9),
+  @SaleTurnOverDiscountByTax4 numeric(21, 9), @SaleTurnOverDiscountByTax5 numeric(21, 9)
   DECLARE @RetSum_0 numeric(21, 9), @RetSum_1 numeric(21, 9), @RetSum_2 numeric(21, 9), @RetSum_3 numeric(21, 9), @RetSum_4 numeric(21, 9), @RetSum_5 numeric(21, 9)
   DECLARE @SaleSumCashFact numeric(21, 9), @SaleSumCCardFact numeric(21, 9), @SaleSumCreditFact numeric(21, 9), @SaleSumChequeFact numeric(21, 9), @SaleSumOtherFact numeric(21, 9), @SaleSumCustom1Fact numeric(21, 9), @SaleSumCustom2Fact numeric(21, 9), @SaleSumCustom3Fact numeric(21, 9), @SaleSumCustom4Fact numeric(21, 9), @SaleSumCustom5Fact numeric(21, 9)
   DECLARE @SaleSumCustom1 numeric(21, 9), @SaleSumCustom2 numeric(21, 9), @SaleSumCustom3 numeric(21, 9), @SaleSumCustom4 numeric(21, 9), @SaleSumCustom5 numeric(21, 9)
@@ -115,7 +117,7 @@ BEGIN
 
   SELECT d.ChID, d.SrcPosID, d.TaxTypeID, 
     d.TaxSum AS TaxSum,
-    CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 AND @RoundInCheque = 1 THEN ROUND((Qty * PurPriceCC_wt),2) ELSE d.SumCC_wt END SumCC_wt, 
+	d.SumCC_wt AS SumCC_wt,
     CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 AND @RoundInCheque = 1 THEN ROUND((Qty * PurPriceCC_wt),2) - ROUND(d.SumCC_wt,2) END DiscountSum
   INTO #t_SaleD
   FROM #t_Sale m WITH(NOLOCK)
@@ -315,15 +317,22 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 5)
   GROUP BY m.ChID) t
 
-  SELECT @TurnOverDiscountByTax0 = 0, @TurnOverDiscountByTax1 = 0, @TurnOverDiscountByTax2 = 0, @TurnOverDiscountByTax3 = 0, @TurnOverDiscountByTax4 = 0, @TurnOverDiscountByTax5 = 0 
+  SELECT @SaleDiscountByTax0 = 0, @SaleDiscountByTax1 = 0, @SaleDiscountByTax2 = 0, @SaleDiscountByTax3 = 0, @SaleDiscountByTax4 = 0, @SaleDiscountByTax5 = 0
+  SELECT @SaleTurnOverDiscountByTax0 = 0, @SaleTurnOverDiscountByTax1 = 0, @SaleTurnOverDiscountByTax2 = 0, @SaleTurnOverDiscountByTax3 = 0, @SaleTurnOverDiscountByTax4 = 0, @SaleTurnOverDiscountByTax5 = 0 
   IF @CashType = 39 AND @UseHardwareDisc = 1 AND @RoundInCheque = 1
     SELECT
-    @TurnOverDiscountByTax0 = ROUND(@SaleSum_0 - @SaleDiscountSum_0, 2),
-    @TurnOverDiscountByTax1 = ROUND(@SaleSum_1 - @SaleDiscountSum_1, 2),
-    @TurnOverDiscountByTax2 = ROUND(@SaleSum_2 - @SaleDiscountSum_2, 2),
-	@TurnOverDiscountByTax3 = ROUND(@SaleSum_3 - @SaleDiscountSum_3, 2),
-    @TurnOverDiscountByTax4 = ROUND(@SaleSum_4 - @SaleDiscountSum_4, 2),
-    @TurnOverDiscountByTax5 = ROUND(@SaleSum_5 - @SaleDiscountSum_5, 2)
+	@SaleDiscountByTax0 = ROUND(@SaleDiscountSum_0, 2),
+    @SaleDiscountByTax1 = ROUND(@SaleDiscountSum_1, 2),
+    @SaleDiscountByTax2 = ROUND(@SaleDiscountSum_2, 2),
+	@SaleDiscountByTax3 = ROUND(@SaleDiscountSum_3, 2),
+    @SaleDiscountByTax4 = ROUND(@SaleDiscountSum_4, 2),
+    @SaleDiscountByTax5 = ROUND(@SaleDiscountSum_5, 2),
+    @SaleTurnOverDiscountByTax0 = @SaleSum_0,
+    @SaleTurnOverDiscountByTax1 = @SaleSum_1,
+    @SaleTurnOverDiscountByTax2 = @SaleSum_2,
+	@SaleTurnOverDiscountByTax3 = @SaleSum_3,
+    @SaleTurnOverDiscountByTax4 = @SaleSum_4,
+    @SaleTurnOverDiscountByTax5 = @SaleSum_5
 
   IF @CashType <> 39
   BEGIN
@@ -654,12 +663,18 @@ BEGIN
 	  @RetSumType0 AS RetSumType0,
 	  @RetSumType1 AS RetSumType1,
 	  @RetSumType2 AS RetSumType2,
-	  @TurnOverDiscountByTax0 AS TurnOverDiscountByTax0,
-	  @TurnOverDiscountByTax1 AS TurnOverDiscountByTax1,
-	  @TurnOverDiscountByTax2 AS TurnOverDiscountByTax2,
-	  @TurnOverDiscountByTax3 AS TurnOverDiscountByTax3,
-	  @TurnOverDiscountByTax4 AS TurnOverDiscountByTax4,
-	  @TurnOverDiscountByTax5 AS TurnOverDiscountByTax5
+	  @SaleDiscountByTax0 AS SaleDiscountByTax0,
+	  @SaleDiscountByTax1 AS SaleDiscountByTax1,
+	  @SaleDiscountByTax2 AS SaleDiscountByTax2,
+	  @SaleDiscountByTax3 AS SaleDiscountByTax3,
+	  @SaleDiscountByTax4 AS SaleDiscountByTax4,
+	  @SaleDiscountByTax5 AS SaleDiscountByTax5,
+	  @SaleTurnOverDiscountByTax0 AS SaleTurnOverDiscountByTax0,
+	  @SaleTurnOverDiscountByTax1 AS SaleTurnOverDiscountByTax1,
+	  @SaleTurnOverDiscountByTax2 AS SaleTurnOverDiscountByTax2,
+	  @SaleTurnOverDiscountByTax3 AS SaleTurnOverDiscountByTax3,
+	  @SaleTurnOverDiscountByTax4 AS SaleTurnOverDiscountByTax4,
+	  @SaleTurnOverDiscountByTax5 AS SaleTurnOverDiscountByTax5
    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END
 GO
