@@ -6199,3 +6199,16 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000026, 10, 'Анал
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000027, 10, 'Анализатор - Доступные значения (Подробно)', 'Аналізатор - Доступні значення (Детально)');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000028, 10, 'Анализатор - Виды отчетов', 'Аналізатор - Типи звітів');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (18000029, 10, 'Анализатор - Виды отчетов - Поля', 'Аналізатор - Типи звітів - Поля');
+
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2735, 1, 'Размер доп панели. Число или число с %', 'Розмір дод. панелі. Число або число з %');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2741, 1, 'Сумма оплат (округление)', 'Сума оплати (округлення)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2742, 1, 'Сумма оплат (без округления)', 'Сума оплати (без округлення)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2743, 1, 'Сумма возвратов (округление)', 'Сума повернень (округлення)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2744, 1, 'Сумма возвратов (без округления)', 'Сума повернень (без округлення)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2745, 1, 'Тип оплаты', 'Тип оплати');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2746, 1, 'Сумма оплат (0-наличные)', 'Сума оплат (0-готівка)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2747, 1, 'Сумма оплат (1-безналичная)', 'Сума оплат (1-безготівкова)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2748, 1, 'Сумма оплат (2-другое)', 'Сума оплат (2-інше)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2749, 1, 'Сумма возвратов (0-наличные)', 'Сума повернень (0-готівка)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2750, 1, 'Сумма возвратов (1-безналичная)', 'Сума повернень (1-безготівкова)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2751, 1, 'Сумма возвратов (2-другое)', 'Сума повернень (2-інше)');
