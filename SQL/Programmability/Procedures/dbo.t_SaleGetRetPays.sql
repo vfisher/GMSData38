@@ -5,18 +5,28 @@ CREATE PROCEDURE [dbo].[t_SaleGetRetPays](@DocChID bigint, @PayFormCode int) AS
 BEGIN
   DECLARE @DocID bigint
   DECLARE @OurID int
-  DECLARE @CRRetPays TABLE (PayFormCode int NOT NULL, SumCC_wt numeric(21,9) NOT NULL)
+  DECLARE @CRRetPays TABLE (SrcPosID int, PayFormCode int NOT NULL, SumCC_wt numeric(21,9) NOT NULL)
+  DECLARE @SalePays TABLE (SrcPosID int, PayFormCode int NOT NULL, SumCC_wt numeric(21,9) NOT NULL)
 
   SELECT @OurID = OurID, @DocID = SrcDocID FROM t_CRRet WHERE ChID = @DocChID
 
-  INSERT INTO @CRRetPays (PayFormCode, SumCC_wt) 
-  SELECT 
-      PayFormCode
-    , SUM(SumCC_wt)
+  INSERT INTO @CRRetPays (SrcPosID, PayFormCode, SumCC_wt) 
+  SELECT
+      SrcPosID,
+      PayFormCode,
+      SUM(SumCC_wt)
   FROM t_CRRet m
   JOIN t_CRRetPays d ON m.ChID = d.ChID
   WHERE m.SrcDocID = @DocID AND m.ChID <> @DocChID
-  GROUP BY PayFormCode
+  GROUP BY d.SrcPosID, d.PayFormCode
+  
+  INSERT INTO @SalePays (SrcPosID, PayFormCode, SumCC_wt) 
+  Select d.SrcPosID, d.PayFormCode, SUM(d.SumCC_wt)
+    FROM t_Sale m
+    INNER JOIN t_SalePays d ON m.ChID = d.ChID
+    LEFT OUTER JOIN @CRRetPays p ON p.PayFormCode = d.PayFormCode
+    WHERE m.OurID = @OurID AND m.DocID = @DocID AND (d.PayFormCode = @PayFormCode) OR (@PayFormCode = 0)
+    GROUP BY d.SrcPosID, d.PayFormCode 
 
   SELECT *
   FROM (
@@ -40,7 +50,8 @@ BEGIN
       END AS SumCC_wt
     FROM t_Sale m
     INNER JOIN t_SalePays d ON m.ChID = d.ChID
-    LEFT OUTER JOIN @CRRetPays p ON p.PayFormCode = d.PayFormCode
+    LEFT OUTER JOIN @CRRetPays p ON p.PayFormCode = d.PayFormCode AND p.SrcPosID = d.SrcPosID
+    --LEFT OUTER JOIN @SalePays s ON s.PayFormCode = d.PayFormCode AND s.SrcPosID = d.SrcPosID
     WHERE m.OurID = @OurID AND m.DocID = @DocID AND (d.PayFormCode = @PayFormCode) OR (@PayFormCode = 0)) q
   WHERE q.SumCC_wt > 0
   ORDER BY q.SrcPosID
