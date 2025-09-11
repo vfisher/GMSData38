@@ -27,7 +27,7 @@ BEGIN
       SELECT TOP 1 @SaleChID = m.ChID, @DocID = m.DocID,
       @CashType = (SELECT TOP 1 CashType FROM r_CRs WHERE CRID = m.CRID)
 	     FROM t_Sale m WITH(NOLOCK)
-	     WHERE m.DocID IN (SELECT TOP 1 SrcDocID FROM t_CRRet WITH(NOLOCK) WHERE ChID = @ChID)
+	     WHERE m.DocID IN (SELECT TOP 1 SrcDocID FROM t_CRRet WITH(NOLOCK) WHERE ChID = @ChID) AND m.OurID = @OurID
 
 	     SELECT TOP 1 @InetChequeNum = InetChequeNum, @SaleFinID = FinID, @SaleDocTime = DocTime
       FROM t_CashRegInetCheques WITH(NOLOCK)
