@@ -26,7 +26,7 @@ BEGIN
   SET @Result = 1
   IF @AppCode <> 26000 OR (@AppCode = 26000 AND @CashType <> 39)
     UPDATE t_CRRet 
-	SET StateCode = dbo.zf_Var('t_ChequeStateCode') 
+	SET StateCode = dbo.zf_Var('t_ChequeStateCode'), DocTime = GetDate() 
 	WHERE ChID = @ChID
 
   SET @ParamsOut = (SELECT @Continue AS [Continue], @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
