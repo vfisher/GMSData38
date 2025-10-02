@@ -12663,3 +12663,6 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11004001, 'RetRNDSum', 37, NULL, 1, 13, '(NULL)');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (11035001, 'SaleRNDSum', 47, NULL, 1, 13, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10103002, 'SumFilter', 13, NULL, 0, 4000, NULL);
+
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001027, 'CacheCalcFields', 31, NULL, 1, 1, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001027, 'CalcSumListOnServer', 32, NULL, 1, 1, '((0))');
