@@ -27,6 +27,8 @@
   [AFCodeWidth] [int] NOT NULL,
   [OptimizeData] [bit] NOT NULL DEFAULT (0),
   [LockMode] [tinyint] NOT NULL DEFAULT (1),
+  [CacheCalcFields] [bit] NOT NULL DEFAULT (0),
+  [CalcSumListOnServer] [bit] NOT NULL DEFAULT (0),
   CONSTRAINT [pk_z_DataSets] PRIMARY KEY CLUSTERED ([DSCode])
 )
 ON [PRIMARY]
