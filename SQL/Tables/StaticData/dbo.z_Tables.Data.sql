@@ -845,3 +845,5 @@ INSERT dbo.z_Tables(TableCode, DocCode, TableName, TableDesc, TableInfo, DateFie
 INSERT dbo.z_Tables(TableCode, DocCode, TableName, TableDesc, TableInfo, DateField, PKFields, SortFields, IntFilter, OpenFilter, IsView, IsDefault, HaveOur, ForSync, UpdateLog, SyncAUFields) VALUES (18000029, 18000, 'v_ViewFields', 'Анализатор - Виды отчетов - Поля', '', '', 'ViewID;Caption', NULL, NULL, NULL, 0, 0, 0, 0, 0, 0);
 
 INSERT dbo.z_Tables(TableCode, DocCode, TableName, TableDesc, TableInfo, DateField, PKFields, SortFields, IntFilter, OpenFilter, IsView, IsDefault, HaveOur, ForSync, UpdateLog, SyncAUFields) VALUES (1001182, 1001, 'z_Translations', 'Перевод', 'Перевод сообщений в БД', '', 'MsgID;TypeID', '', '', '', 0, 0, 0, 0, 0, 0);
+
+INSERT dbo.z_Tables(TableCode, DocCode, TableName, TableDesc, TableInfo, DateField, PKFields, SortFields, IntFilter, OpenFilter, IsView, IsDefault, HaveOur, ForSync, UpdateLog, SyncAUFields) VALUES (1011017, 1011, 't_POSPayJournal', 'POS Journal', '', '', 'ChID', NULL, NULL, NULL, 0, 0, 0, 1, 0, 0);

@@ -43,49 +43,63 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_WPs] ON [r_WPs]
-FOR INSERT AS
-/* r_WPs - Справочник рабочих мест - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_WPs] ON [r_WPs]
+FOR DELETE AS
+/* r_WPs - Справочник рабочих мест - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_WPs ^ r_CRs - Проверка в PARENT */
-/* Справочник рабочих мест ^ Справочник ЭККА - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CRID NOT IN (SELECT CRID FROM r_CRs))
+/* r_WPs ^ r_CRDeskG - Проверка в CHILD */
+/* Справочник рабочих мест ^ Справочник ЭККА - Столики: группы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRDeskG a WITH(NOLOCK), deleted d WHERE a.WPID = d.WPID)
     BEGIN
-      EXEC z_RelationError 'r_CRs', 'r_WPs', 0
+      EXEC z_RelationError 'r_WPs', 'r_CRDeskG', 3
       RETURN
     END
 
-/* r_WPs ^ r_Scales - Проверка в PARENT */
-/* Справочник рабочих мест ^ Справочник весов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ScaleID NOT IN (SELECT ScaleID FROM r_Scales))
+/* r_WPs ^ r_CRPOSPays - Проверка в CHILD */
+/* Справочник рабочих мест ^ Справочник ЭККА: Платежные терминалы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRPOSPays a WITH(NOLOCK), deleted d WHERE a.WPID = d.WPID)
     BEGIN
-      EXEC z_RelationError 'r_Scales', 'r_WPs', 0
+      EXEC z_RelationError 'r_WPs', 'r_CRPOSPays', 3
       RETURN
     END
 
-/* r_WPs ^ r_WPRoles - Проверка в PARENT */
-/* Справочник рабочих мест ^ Справочник рабочих мест: роли - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.WPRoleID NOT IN (SELECT WPRoleID FROM r_WPRoles))
-    BEGIN
-      EXEC z_RelationError 'r_WPRoles', 'r_WPs', 0
-      RETURN
-    END
+/* r_WPs ^ r_Displays - Удаление в CHILD */
+/* Справочник рабочих мест ^ Рабочие места: внешние дисплеи - Удаление в CHILD */
+  DELETE r_Displays FROM r_Displays a, deleted d WHERE a.WPID = d.WPID
+  IF @@ERROR > 0 RETURN
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10550001, ChID, 
+/* r_WPs ^ t_POSPayJournal - Удаление в CHILD */
+/* Справочник рабочих мест ^ POS Journal - Удаление в CHILD */
+  DELETE t_POSPayJournal FROM t_POSPayJournal a, deleted d WHERE a.WPID = d.WPName
+  IF @@ERROR > 0 RETURN
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10550001 AND m.PKValue = 
     '[' + cast(i.WPID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10550001 AND m.PKValue = 
+    '[' + cast(i.WPID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10550001, -ChID, 
+    '[' + cast(d.WPID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10550 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPs', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_WPs', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -183,6 +197,26 @@ BEGIN
         END
     END
 
+/* r_WPs ^ t_POSPayJournal - Обновление CHILD */
+/* Справочник рабочих мест ^ POS Journal - Обновление CHILD */
+  IF UPDATE(WPName)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.WPID = i.WPName
+          FROM t_POSPayJournal a, inserted i, deleted d WHERE a.WPID = d.WPName
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM t_POSPayJournal a, deleted d WHERE a.WPID = d.WPName)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Справочник рабочих мест'' => ''POS Journal''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+
 /* Регистрация изменения записи */
 
 
@@ -264,55 +298,71 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_WPs] ON [r_WPs]
-FOR DELETE AS
-/* r_WPs - Справочник рабочих мест - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_WPs] ON [r_WPs]
+FOR INSERT AS
+/* r_WPs - Справочник рабочих мест - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_WPs ^ r_CRDeskG - Проверка в CHILD */
-/* Справочник рабочих мест ^ Справочник ЭККА - Столики: группы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRDeskG a WITH(NOLOCK), deleted d WHERE a.WPID = d.WPID)
+/* r_WPs ^ r_CRs - Проверка в PARENT */
+/* Справочник рабочих мест ^ Справочник ЭККА - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CRID NOT IN (SELECT CRID FROM r_CRs))
     BEGIN
-      EXEC z_RelationError 'r_WPs', 'r_CRDeskG', 3
+      EXEC z_RelationError 'r_CRs', 'r_WPs', 0
       RETURN
     END
 
-/* r_WPs ^ r_CRPOSPays - Проверка в CHILD */
-/* Справочник рабочих мест ^ Справочник ЭККА: Платежные терминалы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRPOSPays a WITH(NOLOCK), deleted d WHERE a.WPID = d.WPID)
+/* r_WPs ^ r_Scales - Проверка в PARENT */
+/* Справочник рабочих мест ^ Справочник весов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ScaleID NOT IN (SELECT ScaleID FROM r_Scales))
     BEGIN
-      EXEC z_RelationError 'r_WPs', 'r_CRPOSPays', 3
+      EXEC z_RelationError 'r_Scales', 'r_WPs', 0
       RETURN
     END
 
-/* r_WPs ^ r_Displays - Удаление в CHILD */
-/* Справочник рабочих мест ^ Рабочие места: внешние дисплеи - Удаление в CHILD */
-  DELETE r_Displays FROM r_Displays a, deleted d WHERE a.WPID = d.WPID
-  IF @@ERROR > 0 RETURN
+/* r_WPs ^ r_WPRoles - Проверка в PARENT */
+/* Справочник рабочих мест ^ Справочник рабочих мест: роли - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.WPRoleID NOT IN (SELECT WPRoleID FROM r_WPRoles))
+    BEGIN
+      EXEC z_RelationError 'r_WPRoles', 'r_WPs', 0
+      RETURN
+    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10550001 AND m.PKValue = 
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10550001, ChID, 
     '[' + cast(i.WPID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10550001 AND m.PKValue = 
-    '[' + cast(i.WPID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10550001, -ChID, 
-    '[' + cast(d.WPID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10550 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_WPs', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPs', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

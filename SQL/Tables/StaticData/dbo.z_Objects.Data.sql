@@ -2582,3 +2582,8 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2724, 't_SaleRetDoRound', 't_SaleRetDoRound', NULL, 'P ', 0);
 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2725, 't_SaleGetPayPartsPayformInfo', 't_SaleGetPayPartsPayformInfo', NULL, 'P ', 0);
+
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2726, 'TRel3_Del_t_POSPayJournal', 'Обеспечение ссылочной целостности при удалении (POS Journal)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2727, 'TRel1_Ins_t_POSPayJournal', 'Обеспечение ссылочной целостности при создании (POS Journal)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2728, 'TRel2_Upd_t_POSPayJournal', 'Обеспечение ссылочной целостности при изменении (POS Journal)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2729, 't_SaleSavePOSOperation', 't_SaleSavePOSOperation', NULL, 'P ', 0);
