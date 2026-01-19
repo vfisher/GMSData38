@@ -3063,4 +3063,5 @@ INSERT dbo.z_Relations(RelName, ParentCode, ParentNames, ParentDescs, ChildCode,
 INSERT dbo.z_Relations(RelName, ParentCode, ParentNames, ParentDescs, ChildCode, ChildNames, ChildDescs, CascUpdate, CascDelete, RelType) VALUES ('z_VarPages."8";VarPageCode = z_Translations.TypeID;MsgID', 1001038, '"8";VarPageCode', '"8";VarPageCode', 1001182, 'TypeID;MsgID', 'TypeID;MsgID', 1, 1, 1);
 
 INSERT dbo.z_Relations(RelName, ParentCode, ParentNames, ParentDescs, ChildCode, ChildNames, ChildDescs, CascUpdate, CascDelete, RelType) VALUES ('r_POSPays.POSPayID = t_POSPayJournal.POSPayID', 10457001, 'POSPayID', 'Код ПТ', 1011017, 'POSPayID', 'Код ПТ', 1, 1, 1);
-INSERT dbo.z_Relations(RelName, ParentCode, ParentNames, ParentDescs, ChildCode, ChildNames, ChildDescs, CascUpdate, CascDelete, RelType) VALUES ('r_WPs.WPName = t_POSPayJournal.WPID', 10550001, 'WPName', 'Рабочее место', 1011017, 'WPID', 'Код рабочего места', 1, 1, 1);
+
+INSERT dbo.z_Relations(RelName, ParentCode, ParentNames, ParentDescs, ChildCode, ChildNames, ChildDescs, CascUpdate, CascDelete, RelType) VALUES ('r_WPs.WPID = t_POSPayJournal.WPID', 10550001, 'WPID', 'Код рабочего места', 1011017, 'WPID', 'Код рабочего места', 1, 1, 1);

@@ -1,11 +1,10 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-
-create function [dbo].[zf_Translate](@RUText varchar(max))
-returns varchar(max)
+CREATE function [dbo].[zf_Translate](@RUText varchar(max))
+returns nvarchar(max)
 as
 begin
-  declare @lng varchar(20), @s varchar(max)
+  declare @lng varchar(20), @s nvarchar(max)
   set @lng = Cast(SESSION_CONTEXT(N'language') as varchar(20))
 
   if @lng = 'Russian' 

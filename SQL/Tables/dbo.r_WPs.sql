@@ -72,7 +72,7 @@ BEGIN
 
 /* r_WPs ^ t_POSPayJournal - Удаление в CHILD */
 /* Справочник рабочих мест ^ POS Journal - Удаление в CHILD */
-  DELETE t_POSPayJournal FROM t_POSPayJournal a, deleted d WHERE a.WPID = d.WPName
+  DELETE t_POSPayJournal FROM t_POSPayJournal a, deleted d WHERE a.WPID = d.WPID
   IF @@ERROR > 0 RETURN
 
 
@@ -199,15 +199,15 @@ BEGIN
 
 /* r_WPs ^ t_POSPayJournal - Обновление CHILD */
 /* Справочник рабочих мест ^ POS Journal - Обновление CHILD */
-  IF UPDATE(WPName)
+  IF UPDATE(WPID)
     BEGIN
       IF @RCount = 1
         BEGIN
-          UPDATE a SET a.WPID = i.WPName
-          FROM t_POSPayJournal a, inserted i, deleted d WHERE a.WPID = d.WPName
+          UPDATE a SET a.WPID = i.WPID
+          FROM t_POSPayJournal a, inserted i, deleted d WHERE a.WPID = d.WPID
           IF @@ERROR > 0 RETURN
         END
-      ELSE IF EXISTS (SELECT * FROM t_POSPayJournal a, deleted d WHERE a.WPID = d.WPName)
+      ELSE IF EXISTS (SELECT * FROM t_POSPayJournal a, deleted d WHERE a.WPID = d.WPID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник рабочих мест'' => ''POS Journal''.'
 , 18, 1)
@@ -343,6 +343,33 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPs', N'Last', N'INSERT'
 GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
 
 
 
