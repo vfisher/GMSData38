@@ -1,11 +1,11 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
 CREATE function [dbo].[zf_TranslateMetadata](@MsgID int, @TypeID tinyint)
-returns varchar(max)
+returns nvarchar(max)
 as
 begin
   /* TypeID: 0:Text 1:FieldDesc 2:DocName 3:DsName 4:PageName 5:ToolName 6:RepToolName 7:AppName 8:VarPageName 9:PageName (ToolCode*100+PageIndex) 10:TableDesc */
-  declare @lng varchar(20), @s varchar(max)
+  declare @lng varchar(20), @s nvarchar(max)
   set @lng = Cast(SESSION_CONTEXT(N'language') as varchar(20))
 
   if @lng = 'Russian' 

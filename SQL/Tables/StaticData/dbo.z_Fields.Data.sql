@@ -12666,3 +12666,15 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001027, 'CacheCalcFields', 31, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001027, 'CalcSumListOnServer', 32, NULL, 1, 1, '((0))');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'ChID', 1, NULL, 1, 8, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'DocTime', 9, NULL, 1, 8, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Flags', 11, NULL, 0, 4, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'GUID', 5, NULL, 1, 16, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Msg', 12, NULL, 0, 250, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Operation', 3, NULL, 1, 1, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'POSPayID', 4, NULL, 1, 4, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Request', 6, NULL, 0, -1, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Response', 7, NULL, 0, -1, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'RRN', 8, NULL, 0, 250, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Status', 10, NULL, 0, 4, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'WPID', 2, NULL, 1, 4, NULL);

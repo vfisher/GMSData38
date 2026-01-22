@@ -34,34 +34,82 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_POSPays] ON [r_POSPays]
-FOR INSERT AS
-/* r_POSPays - Справочник платежных терминалов - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_POSPays] ON [r_POSPays]
+FOR DELETE AS
+/* r_POSPays - Справочник платежных терминалов - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_POSPays ^ r_Banks - Проверка в PARENT */
-/* Справочник платежных терминалов ^ Справочник банков - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.BankID NOT IN (SELECT BankID FROM r_Banks))
+/* r_POSPays ^ r_CRPOSPays - Проверка в CHILD */
+/* Справочник платежных терминалов ^ Справочник ЭККА: Платежные терминалы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRPOSPays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
     BEGIN
-      EXEC z_RelationError 'r_Banks', 'r_POSPays', 0
+      EXEC z_RelationError 'r_POSPays', 'r_CRPOSPays', 3
+      RETURN
+    END
+
+/* r_POSPays ^ t_CRRetPays - Проверка в CHILD */
+/* Справочник платежных терминалов ^ Возврат товара по чеку: Оплата - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRRetPays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
+    BEGIN
+      EXEC z_RelationError 'r_POSPays', 't_CRRetPays', 3
+      RETURN
+    END
+
+/* r_POSPays ^ t_POSPayJournal - Удаление в CHILD */
+/* Справочник платежных терминалов ^ POS Journal - Удаление в CHILD */
+  DELETE t_POSPayJournal FROM t_POSPayJournal a, deleted d WHERE a.POSPayID = d.POSPayID
+  IF @@ERROR > 0 RETURN
+
+/* r_POSPays ^ t_SalePays - Проверка в CHILD */
+/* Справочник платежных терминалов ^ Продажа товара оператором: Оплата - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SalePays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
+    BEGIN
+      EXEC z_RelationError 'r_POSPays', 't_SalePays', 3
+      RETURN
+    END
+
+/* r_POSPays ^ t_SaleTempPays - Проверка в CHILD */
+/* Справочник платежных терминалов ^ Временные данные продаж: Оплата - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SaleTempPays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
+    BEGIN
+      EXEC z_RelationError 'r_POSPays', 't_SaleTempPays', 3
+      RETURN
+    END
+
+/* r_POSPays ^ t_ZRepT - Проверка в CHILD */
+/* Справочник платежных терминалов ^ Z-отчеты плат. терминалов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_ZRepT a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
+    BEGIN
+      EXEC z_RelationError 'r_POSPays', 't_ZRepT', 3
       RETURN
     END
 
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10457001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10457001 AND m.PKValue = 
     '[' + cast(i.POSPayID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10457001 AND m.PKValue = 
+    '[' + cast(i.POSPayID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10457001, -ChID, 
+    '[' + cast(d.POSPayID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10457 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_POSPays', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_POSPays', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -116,6 +164,25 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM t_CRRetPays a, deleted d WHERE a.POSPayID = d.POSPayID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник платежных терминалов'' => ''Возврат товара по чеку: Оплата''.'
+, 18, 1)
+          ROLLBACK TRAN
+          RETURN
+        END
+    END
+
+/* r_POSPays ^ t_POSPayJournal - Обновление CHILD */
+/* Справочник платежных терминалов ^ POS Journal - Обновление CHILD */
+  IF UPDATE(POSPayID)
+    BEGIN
+      IF @RCount = 1
+        BEGIN
+          UPDATE a SET a.POSPayID = i.POSPayID
+          FROM t_POSPayJournal a, inserted i, deleted d WHERE a.POSPayID = d.POSPayID
+          IF @@ERROR > 0 RETURN
+        END
+      ELSE IF EXISTS (SELECT * FROM t_POSPayJournal a, deleted d WHERE a.POSPayID = d.POSPayID)
+        BEGIN
+          RAISERROR ('Каскадная операция невозможна ''Справочник платежных терминалов'' => ''POS Journal''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -261,75 +328,51 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_POSPays] ON [r_POSPays]
-FOR DELETE AS
-/* r_POSPays - Справочник платежных терминалов - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_POSPays] ON [r_POSPays]
+FOR INSERT AS
+/* r_POSPays - Справочник платежных терминалов - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_POSPays ^ r_CRPOSPays - Проверка в CHILD */
-/* Справочник платежных терминалов ^ Справочник ЭККА: Платежные терминалы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRPOSPays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
+/* r_POSPays ^ r_Banks - Проверка в PARENT */
+/* Справочник платежных терминалов ^ Справочник банков - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.BankID NOT IN (SELECT BankID FROM r_Banks))
     BEGIN
-      EXEC z_RelationError 'r_POSPays', 'r_CRPOSPays', 3
-      RETURN
-    END
-
-/* r_POSPays ^ t_CRRetPays - Проверка в CHILD */
-/* Справочник платежных терминалов ^ Возврат товара по чеку: Оплата - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRRetPays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
-    BEGIN
-      EXEC z_RelationError 'r_POSPays', 't_CRRetPays', 3
-      RETURN
-    END
-
-/* r_POSPays ^ t_SalePays - Проверка в CHILD */
-/* Справочник платежных терминалов ^ Продажа товара оператором: Оплата - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SalePays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
-    BEGIN
-      EXEC z_RelationError 'r_POSPays', 't_SalePays', 3
-      RETURN
-    END
-
-/* r_POSPays ^ t_SaleTempPays - Проверка в CHILD */
-/* Справочник платежных терминалов ^ Временные данные продаж: Оплата - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SaleTempPays a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
-    BEGIN
-      EXEC z_RelationError 'r_POSPays', 't_SaleTempPays', 3
-      RETURN
-    END
-
-/* r_POSPays ^ t_ZRepT - Проверка в CHILD */
-/* Справочник платежных терминалов ^ Z-отчеты плат. терминалов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_ZRepT a WITH(NOLOCK), deleted d WHERE a.POSPayID = d.POSPayID)
-    BEGIN
-      EXEC z_RelationError 'r_POSPays', 't_ZRepT', 3
+      EXEC z_RelationError 'r_Banks', 'r_POSPays', 0
       RETURN
     END
 
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10457001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10457001, ChID, 
     '[' + cast(i.POSPayID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10457001 AND m.PKValue = 
-    '[' + cast(i.POSPayID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10457001, -ChID, 
-    '[' + cast(d.POSPayID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10457 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_POSPays', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_POSPays', N'Last', N'INSERT'
+GO
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
