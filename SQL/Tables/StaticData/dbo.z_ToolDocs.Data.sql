@@ -14,7 +14,6 @@ INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (18, 11032);
 INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (19, 14103);
 INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (20, 14113);
 INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (43, 10400);
-INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (1044, 10601);
 INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (1076, 11330);
 INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (1077, 11330);
 INSERT dbo.z_ToolDocs(ToolCode, DocCode) VALUES (1078, 11330);

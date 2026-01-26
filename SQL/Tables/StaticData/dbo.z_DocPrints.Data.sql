@@ -68,8 +68,6 @@ INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10452, 'Торговля\Справочники\Справочник ЭККА.fr3', 'Справочник ЭККА', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10454, 'Торговля\Справочники\Справочник ЭККА - операторы.fr3', 'Справочник ЭККА - операторы', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10456, 'Торговля\Справочники\Справочник ЭККА - единый ввод.fr3', 'Справочник ЭККА - единый ввод', NULL, NULL, 0);
-INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10600, 'Торговля\Справочники\Справочник групп столиков ресторана.fr3', 'Справочник групп столиков ресторана', NULL, NULL, 0);
-INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10601, 'Торговля\Справочники\Справочник столиков ресторана.fr3', 'Справочник столиков ресторана', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10605, 'Торговля\Справочники\Справочник модификаторов блюд.fr3', 'Справочник модификаторов блюд', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10702, 'Бухгалтерия\Основные средства\Справочники\Справочник категорий основных средств.fr3', 'Справочник категорий основных средств', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (10703, 'Бухгалтерия\Основные средства\Справочники\Справочник групп основных средств.fr3', 'Справочник групп основных средств', NULL, NULL, 0);
@@ -144,8 +142,6 @@ INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11045, 'Торговля\Документы\Приход товара по ГТД.fr3', 'Приход товара по ГТД', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11051, 'Торговля\Документы\Служебный приход денег.fr3', 'Служебный приход денег', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11052, 'Торговля\Документы\Служебный расход денег.fr3', 'Служебный расход денег', NULL, NULL, 0);
-INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11060, 'Торговля\Документы\Ресторан - Смена.fr3', 'Ресторан - Смена', NULL, NULL, 0);
-INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11101, 'Торговля\Документы\Ресторан - Резервирование столиков.fr3', 'Ресторан - Резервирование столиков', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11211, 'Торговля\Документы\Заказ внешний - Формирование.fr3', 'Заказ внешний - Формирование', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11212, 'Торговля\Документы\Заказ внешний - Обработка.fr3', 'Заказ внешний - Обработка', NULL, NULL, 0);
 INSERT dbo.z_DocPrints(DocCode, FileName, FileDesc, FileDate, BlobValue, UseBlob) VALUES (11221, 'Торговля\Документы\Заказ внутренний - Формирование с НДС.fr3', 'Заказ внутренний - Формирование с НДС', NULL, NULL, 0);

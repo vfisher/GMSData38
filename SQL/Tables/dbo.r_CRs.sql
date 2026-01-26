@@ -132,49 +132,74 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_CRs] ON [r_CRs]
-FOR INSERT AS
-/* r_CRs - Справочник ЭККА - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_CRs] ON [r_CRs]
+FOR DELETE AS
+/* r_CRs - Справочник ЭККА - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_CRs ^ r_CRSrvs - Проверка в PARENT */
-/* Справочник ЭККА ^ Справочник торговых серверов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SrvID NOT IN (SELECT SrvID FROM r_CRSrvs))
+/* r_CRs ^ r_OperCRs - Проверка в CHILD */
+/* Справочник ЭККА ^ Справочник ЭККА - Операторы ЭККА - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_OperCRs a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
     BEGIN
-      EXEC z_RelationError 'r_CRSrvs', 'r_CRs', 0
+      EXEC z_RelationError 'r_CRs', 'r_OperCRs', 3
       RETURN
     END
 
-/* r_CRs ^ r_Secs - Проверка в PARENT */
-/* Справочник ЭККА ^ Справочник секций - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
+/* r_CRs ^ r_CRMP - Проверка в CHILD */
+/* Справочник ЭККА ^ Справочник ЭККА - Товары - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRMP a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
     BEGIN
-      EXEC z_RelationError 'r_Secs', 'r_CRs', 0
+      EXEC z_RelationError 'r_CRs', 'r_CRMP', 3
       RETURN
     END
 
-/* r_CRs ^ r_Stocks - Проверка в PARENT */
-/* Справочник ЭККА ^ Справочник складов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
+/* r_CRs ^ r_WPs - Проверка в CHILD */
+/* Справочник ЭККА ^ Справочник рабочих мест - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_WPs a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
     BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_CRs', 0
+      EXEC z_RelationError 'r_CRs', 'r_WPs', 3
       RETURN
     END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10452001, ChID, 
+/* r_CRs ^ t_SaleTemp - Удаление в CHILD */
+/* Справочник ЭККА ^ Временные данные продаж: Заголовок - Удаление в CHILD */
+  DELETE t_SaleTemp FROM t_SaleTemp a, deleted d WHERE a.CRID = d.CRID
+  IF @@ERROR > 0 RETURN
+
+/* r_CRs ^ t_zRep - Проверка в CHILD */
+/* Справочник ЭККА ^ Z-отчеты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_zRep a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
+    BEGIN
+      EXEC z_RelationError 'r_CRs', 't_zRep', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10452001 AND m.PKValue = 
     '[' + cast(i.CRID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10452001 AND m.PKValue = 
+    '[' + cast(i.CRID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10452001, -ChID, 
+    '[' + cast(d.CRID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10452 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_CRs', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_CRs', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -253,25 +278,6 @@ BEGIN
         END
     END
 
-/* r_CRs ^ r_CRShed - Обновление CHILD */
-/* Справочник ЭККА ^ Справочник ЭККА: Расписание торгового сервера - Обновление CHILD */
-  IF UPDATE(CRID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.CRID = i.CRID
-          FROM r_CRShed a, inserted i, deleted d WHERE a.CRID = d.CRID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_CRShed a, deleted d WHERE a.CRID = d.CRID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник ЭККА'' => ''Справочник ЭККА: Расписание торгового сервера''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_CRs ^ r_WPs - Обновление CHILD */
 /* Справочник ЭККА ^ Справочник рабочих мест - Обновление CHILD */
   IF UPDATE(CRID)
@@ -317,6 +323,7 @@ BEGIN
           RETURN
         END
     END
+
 
 /* Регистрация изменения записи */
 
@@ -399,79 +406,103 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_CRs] ON [r_CRs]
-FOR DELETE AS
-/* r_CRs - Справочник ЭККА - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_CRs] ON [r_CRs]
+FOR INSERT AS
+/* r_CRs - Справочник ЭККА - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_CRs ^ r_OperCRs - Проверка в CHILD */
-/* Справочник ЭККА ^ Справочник ЭККА - Операторы ЭККА - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_OperCRs a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
+/* r_CRs ^ r_CRSrvs - Проверка в PARENT */
+/* Справочник ЭККА ^ Справочник торговых серверов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SrvID NOT IN (SELECT SrvID FROM r_CRSrvs))
     BEGIN
-      EXEC z_RelationError 'r_CRs', 'r_OperCRs', 3
+      EXEC z_RelationError 'r_CRSrvs', 'r_CRs', 0
       RETURN
     END
 
-/* r_CRs ^ r_CRMP - Проверка в CHILD */
-/* Справочник ЭККА ^ Справочник ЭККА - Товары - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRMP a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
+/* r_CRs ^ r_Secs - Проверка в PARENT */
+/* Справочник ЭККА ^ Справочник секций - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
     BEGIN
-      EXEC z_RelationError 'r_CRs', 'r_CRMP', 3
+      EXEC z_RelationError 'r_Secs', 'r_CRs', 0
       RETURN
     END
 
-/* r_CRs ^ r_CRShed - Проверка в CHILD */
-/* Справочник ЭККА ^ Справочник ЭККА: Расписание торгового сервера - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRShed a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
+/* r_CRs ^ r_Stocks - Проверка в PARENT */
+/* Справочник ЭККА ^ Справочник складов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
     BEGIN
-      EXEC z_RelationError 'r_CRs', 'r_CRShed', 3
+      EXEC z_RelationError 'r_Stocks', 'r_CRs', 0
       RETURN
     END
 
-/* r_CRs ^ r_WPs - Проверка в CHILD */
-/* Справочник ЭККА ^ Справочник рабочих мест - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_WPs a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
-    BEGIN
-      EXEC z_RelationError 'r_CRs', 'r_WPs', 3
-      RETURN
-    END
 
-/* r_CRs ^ t_SaleTemp - Удаление в CHILD */
-/* Справочник ЭККА ^ Временные данные продаж: Заголовок - Удаление в CHILD */
-  DELETE t_SaleTemp FROM t_SaleTemp a, deleted d WHERE a.CRID = d.CRID
-  IF @@ERROR > 0 RETURN
-
-/* r_CRs ^ t_zRep - Проверка в CHILD */
-/* Справочник ЭККА ^ Z-отчеты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_zRep a WITH(NOLOCK), deleted d WHERE a.CRID = d.CRID)
-    BEGIN
-      EXEC z_RelationError 'r_CRs', 't_zRep', 3
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10452001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10452001, ChID, 
     '[' + cast(i.CRID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10452001 AND m.PKValue = 
-    '[' + cast(i.CRID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10452001, -ChID, 
-    '[' + cast(d.CRID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10452 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_CRs', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_CRs', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

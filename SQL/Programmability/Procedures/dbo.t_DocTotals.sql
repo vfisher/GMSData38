@@ -33,9 +33,12 @@ AS
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Cos
   SET
@@ -48,9 +51,12 @@ AS
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_CRRet
   SET
@@ -65,12 +71,6 @@ AS
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
     TSumCC_In = 0, 
-    TTaxSum = 0
-
-  UPDATE t_DeskRes
-  SET
-    TSumCC_nt = 0, 
-    TSumCC_wt = 0, 
     TTaxSum = 0
 
   UPDATE t_Dis
@@ -95,42 +95,60 @@ AS
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Est
   SET
+    TNewSumAC_nt = 0, 
+    TNewSumAC_wt = 0, 
     TNewSumCC_nt = 0, 
     TNewSumCC_wt = 0, 
     TNewTaxSum = 0, 
+    TNewTaxSumAC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Exc
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Exp
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Inv
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_IOExp
   SET
@@ -155,17 +173,23 @@ AS
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Ret
   SET
     TRouteSumCC = 0, 
     TSpendSumCC = 0, 
+    TSumAC_nt = 0, 
+    TSumAC_wt = 0, 
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
-    TTaxSum = 0
+    TTaxSum = 0, 
+    TTaxSumAC = 0
 
   UPDATE t_Sale
   SET
@@ -254,14 +278,6 @@ AS
     TSumCC_nt = 0, 
     TSumCC_wt = 0, 
     TTaxSum = 0
-/* Счет на оплату товара: Товар */
-  UPDATE t_Acc
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_AccD.SumCC_nt),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_AccD.TaxSum),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_AccD.SumCC_wt),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID)
-  FROM t_Acc
-
 /* Счет на оплату товара: Затраты */
   UPDATE t_Acc
   SET 
@@ -274,14 +290,6 @@ AS
     TRouteSumCC = TRouteSumCC + (SELECT ISNULL(SUM(t_AccRoutes.RouteSumCC),0) FROM t_AccRoutes WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccRoutes.ChID)
   FROM t_Acc
 
-/* Приход товара: Товар */
-  UPDATE t_Rec
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_RecD.SumCC_nt),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_RecD.TaxSum),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_RecD.SumCC_wt),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID)
-  FROM t_Rec
-
 /* Приход товара: Затраты */
   UPDATE t_Rec
   SET 
@@ -293,14 +301,6 @@ AS
   SET 
     TRouteSumCC = TRouteSumCC + (SELECT ISNULL(SUM(t_RecRoutes.RouteSumCC),0) FROM t_RecRoutes WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecRoutes.ChID)
   FROM t_Rec
-
-/* Возврат товара от получателя: Товар */
-  UPDATE t_Ret
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_RetD.SumCC_nt),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_RetD.TaxSum),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_RetD.SumCC_wt),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID)
-  FROM t_Ret
 
 /* Возврат товара от получателя: Затраты */
   UPDATE t_Ret
@@ -323,14 +323,6 @@ AS
     TRealSum = TRealSum + (SELECT ISNULL(SUM(t_CRRetD.RealSum),0) FROM t_CRRetD WITH(NOLOCK)  WHERE t_CRRet.ChID = t_CRRetD.ChID)
   FROM t_CRRet
 
-/* Возврат товара поставщику: Товары */
-  UPDATE t_CRet
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_CRetD.SumCC_nt),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_CRetD.TaxSum),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_CRetD.SumCC_wt),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID)
-  FROM t_CRet
-
 /* Возврат товара поставщику: Затраты */
   UPDATE t_CRet
   SET 
@@ -342,14 +334,6 @@ AS
   SET 
     TRouteSumCC = TRouteSumCC + (SELECT ISNULL(SUM(t_CRetRoutes.RouteSumCC),0) FROM t_CRetRoutes WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetRoutes.ChID)
   FROM t_CRet
-
-/* Расходная накладная: Товар */
-  UPDATE t_Inv
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_InvD.SumCC_nt),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_InvD.TaxSum),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_InvD.SumCC_wt),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID)
-  FROM t_Inv
 
 /* Расходная накладная: Затраты */
   UPDATE t_Inv
@@ -363,14 +347,6 @@ AS
     TRouteSumCC = TRouteSumCC + (SELECT ISNULL(SUM(t_InvRoutes.RouteSumCC),0) FROM t_InvRoutes WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvRoutes.ChID)
   FROM t_Inv
 
-/* Расходный документ: Товар */
-  UPDATE t_Exp
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_ExpD.SumCC_nt),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_ExpD.TaxSum),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_ExpD.SumCC_wt),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID)
-  FROM t_Exp
-
 /* Расходный документ: Затраты */
   UPDATE t_Exp
   SET 
@@ -383,14 +359,6 @@ AS
     TRouteSumCC = TRouteSumCC + (SELECT ISNULL(SUM(t_ExpRoutes.RouteSumCC),0) FROM t_ExpRoutes WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpRoutes.ChID)
   FROM t_Exp
 
-/* Расходный документ в ценах прихода: Товары */
-  UPDATE t_Epp
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_EppD.SumCC_nt),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_EppD.TaxSum),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_EppD.SumCC_wt),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID)
-  FROM t_Epp
-
 /* Расходный документ в ценах прихода: Затраты */
   UPDATE t_Epp
   SET 
@@ -402,14 +370,6 @@ AS
   SET 
     TRouteSumCC = TRouteSumCC + (SELECT ISNULL(SUM(t_EppRoutes.RouteSumCC),0) FROM t_EppRoutes WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppRoutes.ChID)
   FROM t_Epp
-
-/* Перемещение товара: Товар */
-  UPDATE t_Exc
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_ExcD.SumCC_nt),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_ExcD.TaxSum),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_ExcD.SumCC_wt),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID)
-  FROM t_Exc
 
 /* Перемещение товара: Затраты */
   UPDATE t_Exc
@@ -433,17 +393,6 @@ AS
     TNewTaxSum = TNewTaxSum + (SELECT ISNULL(SUM(t_VenA.TNewTaxSum),0) FROM t_VenA WITH(NOLOCK)  WHERE t_Ven.ChID = t_VenA.ChID),
     TNewSumCC_wt = TNewSumCC_wt + (SELECT ISNULL(SUM(t_VenA.TNewSumCC_wt),0) FROM t_VenA WITH(NOLOCK)  WHERE t_Ven.ChID = t_VenA.ChID)
   FROM t_Ven
-
-/* Переоценка цен прихода: Товар */
-  UPDATE t_Est
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_EstD.SumCC_nt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_EstD.TaxSum),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_EstD.SumCC_wt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
-    TNewSumCC_nt = TNewSumCC_nt + (SELECT ISNULL(SUM(t_EstD.NewSumCC_nt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
-    TNewTaxSum = TNewTaxSum + (SELECT ISNULL(SUM(t_EstD.NewTaxSum),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
-    TNewSumCC_wt = TNewSumCC_wt + (SELECT ISNULL(SUM(t_EstD.NewSumCC_wt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID)
-  FROM t_Est
 
 /* Продажа товара оператором: Продажи товара */
   UPDATE t_Sale
@@ -718,14 +667,6 @@ AS
     TSpendSumCC = TSpendSumCC + (SELECT ISNULL(SUM(t_CosSpends.SpendSumCC),0) FROM t_CosSpends WITH(NOLOCK)  WHERE t_Cos.ChID = t_CosSpends.ChID)
   FROM t_Cos
 
-/* Ресторан: Резервирование столиков: Товар */
-  UPDATE t_DeskRes
-  SET 
-    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_DeskResD.SumCC_nt),0) FROM t_DeskResD WITH(NOLOCK)  WHERE t_DeskRes.ChID = t_DeskResD.ChID),
-    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_DeskResD.TaxSum),0) FROM t_DeskResD WITH(NOLOCK)  WHERE t_DeskRes.ChID = t_DeskResD.ChID),
-    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_DeskResD.SumCC_wt),0) FROM t_DeskResD WITH(NOLOCK)  WHERE t_DeskRes.ChID = t_DeskResD.ChID)
-  FROM t_DeskRes
-
 /* Продажа товара оператором: Сборы по товару */
   UPDATE t_Sale
   SET 
@@ -755,6 +696,111 @@ AS
   SET 
     TLevySum = TLevySum + (SELECT ISNULL(SUM(b_RetDLV.LevySum),0) FROM b_RetDLV WITH(NOLOCK)  WHERE b_Ret.ChID = b_RetDLV.ChID)
   FROM b_Ret
+
+/* Приход товара: Товар */
+  UPDATE t_Rec
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_RecD.SumCC_nt),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_RecD.TaxSum),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_RecD.SumCC_wt),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_RecD.SumAC_nt),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_RecD.TaxSumAC),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_RecD.SumAC_wt),0) FROM t_RecD WITH(NOLOCK)  WHERE t_Rec.ChID = t_RecD.ChID)
+  FROM t_Rec
+
+/* Возврат товара от получателя: Товар */
+  UPDATE t_Ret
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_RetD.SumCC_nt),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_RetD.TaxSum),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_RetD.SumCC_wt),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_RetD.SumAC_nt),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_RetD.TaxSumAC),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_RetD.SumAC_wt),0) FROM t_RetD WITH(NOLOCK)  WHERE t_Ret.ChID = t_RetD.ChID)
+  FROM t_Ret
+
+/* Возврат товара поставщику: Товары */
+  UPDATE t_CRet
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_CRetD.SumCC_nt),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_CRetD.TaxSum),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_CRetD.SumCC_wt),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_CRetD.SumAC_nt),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_CRetD.TaxSumAC),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_CRetD.SumAC_wt),0) FROM t_CRetD WITH(NOLOCK)  WHERE t_CRet.ChID = t_CRetD.ChID)
+  FROM t_CRet
+
+/* Расходная накладная: Товар */
+  UPDATE t_Inv
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_InvD.SumCC_nt),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_InvD.TaxSum),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_InvD.SumCC_wt),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_InvD.SumAC_nt),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_InvD.TaxSumAC),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_InvD.SumAC_wt),0) FROM t_InvD WITH(NOLOCK)  WHERE t_Inv.ChID = t_InvD.ChID)
+  FROM t_Inv
+
+/* Расходный документ: Товар */
+  UPDATE t_Exp
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_ExpD.SumCC_nt),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_ExpD.TaxSum),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_ExpD.SumCC_wt),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_ExpD.SumAC_nt),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_ExpD.TaxSumAC),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_ExpD.SumAC_wt),0) FROM t_ExpD WITH(NOLOCK)  WHERE t_Exp.ChID = t_ExpD.ChID)
+  FROM t_Exp
+
+/* Расходный документ в ценах прихода: Товары */
+  UPDATE t_Epp
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_EppD.SumCC_nt),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_EppD.TaxSum),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_EppD.SumCC_wt),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_EppD.SumAC_nt),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_EppD.TaxSumAC),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_EppD.SumAC_wt),0) FROM t_EppD WITH(NOLOCK)  WHERE t_Epp.ChID = t_EppD.ChID)
+  FROM t_Epp
+
+/* Счет на оплату товара: Товар */
+  UPDATE t_Acc
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_AccD.SumCC_nt),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_AccD.TaxSum),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_AccD.SumCC_wt),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_AccD.SumAC_nt),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_AccD.TaxSumAC),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_AccD.SumAC_wt),0) FROM t_AccD WITH(NOLOCK)  WHERE t_Acc.ChID = t_AccD.ChID)
+  FROM t_Acc
+
+/* Переоценка цен прихода: Товар */
+  UPDATE t_Est
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_EstD.SumCC_nt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_EstD.TaxSum),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_EstD.SumCC_wt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_EstD.SumAC_nt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_EstD.TaxSumAC),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_EstD.SumAC_wt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TNewSumAC_nt = TNewSumAC_nt + (SELECT ISNULL(SUM(t_EstD.NewSumAC_nt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TNewTaxSumAC = TNewTaxSumAC + (SELECT ISNULL(SUM(t_EstD.NewTaxSumAC),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TNewSumAC_wt = TNewSumAC_wt + (SELECT ISNULL(SUM(t_EstD.NewSumAC_wt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TNewSumCC_nt = TNewSumCC_nt + (SELECT ISNULL(SUM(t_EstD.NewSumCC_nt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TNewTaxSum = TNewTaxSum + (SELECT ISNULL(SUM(t_EstD.NewTaxSum),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID),
+    TNewSumCC_wt = TNewSumCC_wt + (SELECT ISNULL(SUM(t_EstD.NewSumCC_wt),0) FROM t_EstD WITH(NOLOCK)  WHERE t_Est.ChID = t_EstD.ChID)
+  FROM t_Est
+
+/* Перемещение товара: Товар */
+  UPDATE t_Exc
+  SET 
+    TSumCC_nt = TSumCC_nt + (SELECT ISNULL(SUM(t_ExcD.SumCC_nt),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
+    TTaxSum = TTaxSum + (SELECT ISNULL(SUM(t_ExcD.TaxSum),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
+    TSumCC_wt = TSumCC_wt + (SELECT ISNULL(SUM(t_ExcD.SumCC_wt),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
+    TSumAC_nt = TSumAC_nt + (SELECT ISNULL(SUM(t_ExcD.SumAC_nt),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
+    TTaxSumAC = TTaxSumAC + (SELECT ISNULL(SUM(t_ExcD.TaxSumAC),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID),
+    TSumAC_wt = TSumAC_wt + (SELECT ISNULL(SUM(t_ExcD.SumAC_wt),0) FROM t_ExcD WITH(NOLOCK)  WHERE t_Exc.ChID = t_ExcD.ChID)
+  FROM t_Exc
 
 
   /* Логирование расчета */

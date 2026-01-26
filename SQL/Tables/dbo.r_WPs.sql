@@ -49,14 +49,6 @@ FOR DELETE AS
 BEGIN
   SET NOCOUNT ON
 
-/* r_WPs ^ r_CRDeskG - Проверка в CHILD */
-/* Справочник рабочих мест ^ Справочник ЭККА - Столики: группы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRDeskG a WITH(NOLOCK), deleted d WHERE a.WPID = d.WPID)
-    BEGIN
-      EXEC z_RelationError 'r_WPs', 'r_CRDeskG', 3
-      RETURN
-    END
-
 /* r_WPs ^ r_CRPOSPays - Проверка в CHILD */
 /* Справочник рабочих мест ^ Справочник ЭККА: Платежные терминалы - Проверка в CHILD */
   IF EXISTS (SELECT * FROM r_CRPOSPays a WITH(NOLOCK), deleted d WHERE a.WPID = d.WPID)
@@ -139,25 +131,6 @@ BEGIN
         EXEC z_RelationError 'r_WPRoles', 'r_WPs', 1
         RETURN
       END
-
-/* r_WPs ^ r_CRDeskG - Обновление CHILD */
-/* Справочник рабочих мест ^ Справочник ЭККА - Столики: группы - Обновление CHILD */
-  IF UPDATE(WPID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.WPID = i.WPID
-          FROM r_CRDeskG a, inserted i, deleted d WHERE a.WPID = d.WPID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_CRDeskG a, deleted d WHERE a.WPID = d.WPID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник рабочих мест'' => ''Справочник ЭККА - Столики: группы''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
 
 /* r_WPs ^ r_CRPOSPays - Обновление CHILD */
 /* Справочник рабочих мест ^ Справочник ЭККА: Платежные терминалы - Обновление CHILD */
@@ -343,6 +316,33 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_WPs', N'Last', N'INSERT'
 GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
 
 
 

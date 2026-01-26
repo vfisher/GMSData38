@@ -41,18 +41,9 @@ BEGIN
 
   DECLARE @GroupProds bit 
   DECLARE @SrcPosID_Table table(SrcPosID int NOT NULL, GroupField int NOT NULL, IsBonus bit NOT NULL) 
-  DECLARE @SrcBookingPosID_Table table(SrcPosID int NOT NULL, DetSrcPosID int NOT NULL) 
 
-  DECLARE @BookingChID bigint 
-  DECLARE @UseBooking bit
-  
   DECLARE @ATempChID bigint, @ADocChID bigint, @ReturnValue int, @AppCode int, @CashType int
 
-  SELECT @BookingChID = ChID FROM t_Booking WITH (NOLOCK) WHERE DocCode = 1011 AND DocChID = @ATempChID 
-  IF @BookingChID IS NULL 
-  SELECT @UseBooking = 0 
-  ELSE 
-  SELECT @UseBooking = 1 
 
   SET @ParamsOut = '{}'
 
@@ -77,6 +68,13 @@ BEGIN
   INNER JOIN z_LogDiscExpP p WITH (XLOCK, HOLDLOCK) ON 1=1 
   WHERE a.DBiID = @DBiID AND b.DBiID = @DBiID AND p.DBiID = @DBiID 
 
+  DECLARE @lock2 bit 
+  SELECT TOP 1 @lock2 = 1 FROM t_LogDiscRec a WITH (XLOCK, HOLDLOCK) 
+  INNER JOIN t_LogDiscExp b WITH (XLOCK, HOLDLOCK) ON 1=1 
+  INNER JOIN t_LogDiscExpP p WITH (XLOCK, HOLDLOCK) ON 1=1 
+  WHERE a.DBiID = @DBiID AND b.DBiID = @DBiID AND p.DBiID = @DBiID 
+
+
   SELECT @GroupProds = GroupProds 
   FROM t_SaleTemp m WITH(NOLOCK), r_CRs c WITH(NOLOCK) 
   WHERE c.CRID = m.CRID AND m.ChID = @ATempChID 
@@ -90,9 +88,6 @@ BEGIN
   IF @@ERROR <> 0 GOTO Error
 
   SET @CashType = ISNULL((SELECT CashType FROM r_CRs WITH(NOLOCK) WHERE CRID = @appCRID),0)
-
-  IF @UseBooking = 1 
-    UPDATE t_Booking SET DocCode = 11035, DocChID = @ADocChID WHERE ChID = @BookingChID  
 
   /* Удаление нулевой ДК, если не было скидок по ней */ 
   IF NOT EXISTS (SELECT TOP 1 1 FROM t_LogDiscExp WHERE ChID = @ATempChID AND DocCode = 1011 AND DCardChID = 0)
@@ -184,11 +179,6 @@ BEGIN
               @ADocChID, @appOurID, @appStockID, @appSecID, @appCRID, 0, @APLID, @TRealQty, @TIntQty, @EmpID, @CreateTime, @ModifyTime, @MarkCode, @LevyMark 
       IF (@@ERROR <> 0) OR (@ExecResult <> 1) GOTO Error 
 
-      /* Обновление номера позиции в таблице заказов */      
-      IF @UseBooking = 1 AND @Qty > 0 AND EXISTS(SELECT TOP 1 1 FROM r_Services WITH (NOLOCK) WHERE ProdID = @ProdID AND StockID = @appStockID AND TimeNorm > 0) 
-        INSERT INTO @SrcBookingPosID_Table(SrcPosID, DetSrcPosID) 
-        SELECT TOP 1 SrcPosID, @ASrcPosID - 1 FROM t_BookingD WHERE ChID = @BookingChID AND DetSrcPosID = @SrcPosID 
-
       IF @Qty > 0 
         INSERT INTO t_SaleM (ChID, SrcPosID, ModCode, ModQty, SaleSrcPosID) 
         SELECT @ADocChID, @AOldSrcPosID, ModCode, ModQty, SaleSrcPosID FROM t_SaleTempM WHERE ChID = @ATempChID AND SrcPosID = @SrcPosID  
@@ -256,7 +246,7 @@ BEGIN
   DEALLOCATE appClientT 
 
   /* Перенос остальных позиций чека */ 
-  IF (@GroupProds = 1) AND (@UseBooking = 0) 
+  IF (@GroupProds = 1)
     INSERT INTO @SrcPosID_Table(SrcPosID, GroupField, IsBonus) 
     SELECT DISTINCT m.SrcPosID, CASE WHEN d.Sum1 = d.Sum2 THEN 0 ELSE m.CSrcPosID END, 0 
     FROM t_SaleTempD m WITH(NOLOCK) INNER JOIN ( 
@@ -297,9 +287,6 @@ BEGIN
         @APriceCC_wt, @ASumCC_wt, @APurPriceCC_wt, @APurSumCC_wt, @BarCode, @AMainUM, 
         @ADocChID, @appOurID, @appStockID, @appSecID, @appCRID, 0, @APLID, @TRealQty, @TIntQty, @EmpID, @CreateTime, @ModifyTime, @MarkCode, @LevyMark
       IF (@@ERROR <> 0) OR (@ExecResult <> 1) GOTO Error 
-      IF @UseBooking = 1 AND @Qty > 0 AND EXISTS(SELECT TOP 1 1 FROM r_Services WITH (NOLOCK) WHERE ProdID = @ProdID AND StockID = @appStockID AND TimeNorm > 0) 
-        INSERT INTO @SrcBookingPosID_Table(SrcPosID, DetSrcPosID) 
-        SELECT TOP 1 SrcPosID, @ASrcPosID - 1 FROM t_BookingD WHERE ChID = @BookingChID AND DetSrcPosID = @SrcPosID 
 
       IF @Qty > 0 
         INSERT INTO t_SaleM (ChID, SrcPosID, ModCode, ModQty, SaleSrcPosID) 
@@ -464,27 +451,7 @@ BEGIN
   DELETE FROM t_SaleTemp WHERE ChID = @ATempChID 
   IF @@ERROR <> 0 GOTO Error 
 
-  DECLARE @PersonID bigint 
-  IF @UseBooking = 1 
-    BEGIN 
-      /* Обновление DetSrcPosID на t_SaleD.SrcPosID */ 
-      UPDATE t_BookingD 
-        SET DetSrcPosID = d.DetSrcPosID 
-      FROM t_BookingD m JOIN @SrcBookingPosID_Table d ON m.SrcPosID = d.SrcPosID AND m.ChID = @BookingChID 
-
-      /* Пересчет SrcPosID в t_BookingD */ 
-      SET @ASrcPosID = 0 
-      UPDATE t_BookingD 
-        SET @ASrcPosID = SrcPosID = @ASrcPosID + 1 
-      FROM 
-        t_BookingD WHERE ChID = @BookingChID         
-    END 
-
-  SELECT @PersonID = PersonID  
-  FROM t_Booking  
-  WHERE DocChID = @ADocChID AND DocCode = 11035 
-
-  /* Деактивация использованных подарочных сертификатов */ 
+    /* Деактивация использованных подарочных сертификатов */ 
   IF EXISTS(SELECT TOP 1 1 FROM t_SalePays WHERE ChID = @ADocChID) 
     UPDATE d 
     SET InUse = 0 
@@ -534,11 +501,11 @@ BEGIN
 
       UPDATE r_DCards SET InUse = 1, BDate = dbo.zf_GetDate(GETDATE()) WHERE ChID = @DCardChID 
 
-      IF @PersonID <> 0 
+/*      IF @PersonID <> 0 
         IF NOT EXISTS(SELECT TOP 1 1 FROM r_PersonDC WHERE PersonID = @PersonID AND DCardChID = @DCardChID) 
           INSERT INTO r_PersonDC (PersonID, DCardChID) 
           VALUES  (@PersonID, @DCardChID) 
-
+*/
       FETCH NEXT FROM DiscCursor 
       INTO @DCardChID, @InitSum, @Qty, @BonusType 
     END /* WHILE @@FETCH_STATUS = 0 */ 
@@ -559,13 +526,6 @@ BEGIN
     UPDATE t_Sale 
     SET StateCode = dbo.zf_Var('t_ChequeStateCode') 
     WHERE ChID = @ADocChID 
-
-  /* Установка статуса заявки */ 
-  UPDATE t_Booking 
-  SET 
-     StateCode = dbo.zf_Var('t_ChequeStateCode') 
-  WHERE DocCode = 11035 AND DocChID = @ADocChID   
-
 
   COMMIT TRAN 
   SET @ReturnValue = 1 
