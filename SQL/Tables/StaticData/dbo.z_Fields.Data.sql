@@ -2917,7 +2917,7 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetPayForms', 46, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetSum', 47, NULL, 1, 1, '((1))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ChequeEmp', 48, NULL, 1, 1, '((0))');
-INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ChID', 1, NULL, 1, 8, '');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ChID', 1, NULL, 1, 8, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CloseDCardsAfterAdd', 168, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CloseProdSelectAfterAdd', 169, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CompletedChequesCount', 101, NULL, 1, 4, NULL);
@@ -3040,9 +3040,9 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ZRepShiftTimeCheck', 82, NULL, 1, 4, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ZRepWarningPeriod', 125, NULL, 1, 4, '((2))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ZRepWarningTime', 124, NULL, 1, 4, '((5))');
-INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseExtraPanel', 184, NULL, 1, 1, '(0)');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseExtraPanel', 184, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'ExtraPanelWidth', 185, NULL, 0, 250, '(''20%'')');
-INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetSumMaxDifference', 186, NULL, 1, 13, '(0)');
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'CheckRetSumMaxDifference', 186, NULL, 1, 13, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseExtendedPayPartsSelector', 187, NULL, 0, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'RoundInCheque', 188, NULL, 1, 1, '((0))');
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10600001, 'ChID', 1, NULL, 1, 8, '');
@@ -12678,3 +12678,4 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'RRN', 8, NULL, 0, 250, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'Status', 10, NULL, 0, 4, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011017, 'WPID', 2, NULL, 1, 4, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UseEReceiptComment', 189, NULL, 0, 1, '((0))');
