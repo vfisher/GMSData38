@@ -54,7 +54,7 @@ BEGIN
 		     @GroupProds = c.GroupProds, 
 		     @TaxPayer = dbo.zf_GetTaxPayerByDate(m.OurID, m.DocTime),
 			 @CashType = c.CashType,
-             @UseHardwareDisc = CASE WHEN pw.DiscountMode IN (1,3) THEN 1 ELSE 0 END,
+             @UseHardwareDisc = CASE WHEN pw.DiscountMode = 3 THEN 1 ELSE 0 END,
 			 @RoundInCheque = pw.RoundInCheque
 	     FROM t_Sale m WITH(NOLOCK), r_CRs c WITH(NOLOCK), r_Ours o WITH(NOLOCK), r_WPs rw WITH(NOLOCK), r_WPRoles pw WITH(NOLOCK)   
 	     WHERE m.ChID = @ChID AND c.CRID = m.CRID AND m.OurID = o.OurID AND m.WPID = rw.WPID AND rw.WPRoleID = pw.WPRoleID 
