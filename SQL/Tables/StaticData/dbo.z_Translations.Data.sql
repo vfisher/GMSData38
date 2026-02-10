@@ -6212,3 +6212,4 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2748, 1, 'Сумма о
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2749, 1, 'Сумма возвратов (0-наличные)', 'Сума повернень (0-готівка)');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2750, 1, 'Сумма возвратов (1-безналичная)', 'Сума повернень (1-безготівкова)');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2751, 1, 'Сумма возвратов (2-другое)', 'Сума повернень (2-інше)');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2762, 1, 'Печатать комментарий к проекту «еЧек»', 'Друкувати коментар до проєкту «єЧек»');

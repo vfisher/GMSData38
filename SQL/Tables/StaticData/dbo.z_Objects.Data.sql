@@ -2587,3 +2587,4 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2727, 'TRel1_Ins_t_POSPayJournal', 'Обеспечение ссылочной целостности при создании (POS Journal)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2728, 'TRel2_Upd_t_POSPayJournal', 'Обеспечение ссылочной целостности при изменении (POS Journal)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2729, 't_SaleSavePOSOperation', 't_SaleSavePOSOperation', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2730, 't_SaleGetEReceiptComment', 'Возвращает комментари к чеку для поддержки программы єЧек', NULL, 'P', 0);
