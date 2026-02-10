@@ -58,6 +58,11 @@ BEGIN
                 SELECT TransactionInfo
                 FROM t_CRRetPays
                 WHERE @DocCode = 11004 AND ChID = @ChID
+
+                UNION ALL
+                SELECT TransactionInfo
+                FROM t_CashBack
+                WHERE @DocCode = 11036 AND ChID = @ChID
             ) p
             WHERE
                 ISJSON(JSON_VALUE(p.TransactionInfo,'$.POSPayAdv')) = 1
