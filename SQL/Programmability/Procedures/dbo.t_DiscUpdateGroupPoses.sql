@@ -162,6 +162,7 @@ BEGIN
     END
 
   /* Если фактически предоставленная сумма скидки оказалась больше расчетной, начинаем ее уменьшать, пока не войдем в пределы бонуса */
+  DECLARE @BonusAvailable NUMERIC(21, 9)
   IF @DiscSumCCReal > @DiscSumCC
     BEGIN
       DECLARE @DiscOffset numeric(21, 9)
@@ -181,7 +182,15 @@ BEGIN
                     FROM dbo.tf_DiscDoc(1011, @ChID) t
                     WHERE CSrcPosID = @CSrcPosID) <> 0
                 BEGIN             
-                  SET @SumCC_wt1 = @SumCC_wt + (@DiscSumCCReal - @DiscSumCC) + @DiscOffset
+                  -- Смотрим, что у нас было использовано из бонусов
+                  SELECT @BonusAvailable = ISNULL(SumBonus, 0)
+                        FROM t_LogDiscExp
+                        WHERE DCardChID = @DCardChID
+                        AND DocCode = @DocCode
+                        AND ChID = @ChID
+                        AND SrcPosID = @SrcPosID
+                        AND DiscCode = @DiscCode
+                  SET @SumCC_wt1 = @SumCC_wt + CASE WHEN ((@DiscSumCCReal - @DiscSumCC) + @DiscOffset) > @BonusAvailable THEN @BonusAvailable ELSE (@DiscSumCCReal - @DiscSumCC) + @DiscOffset END
                   IF @SumCC_wt1 < 0 SET @SumCC_wt1 = 0
                   SET @PriceCC_wt1 = dbo.zf_RoundPriceSale(@SumCC_wt1 / @Qty)
                   EXEC t_CorrectSalePrice @DocCode, @ChID, @ProdID, @RateMC, @Qty, @AllowZeroPrice, @PriceCC_wt1 OUTPUT

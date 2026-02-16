@@ -944,7 +944,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1012, 'TRel1_Ins_r_CRs', 'Обеспечение ссылочной целостности при создании (Справочник ЭККА)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1013, 'TRel1_Ins_b_SExpD', 'Обеспечение ссылочной целостности при создании (Основные средства: Списание (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1014, 'TAU2_UPD_t_IOExpSpends', 'Автоизменение при изменении (Заказ внутренний: Обработка: Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1015, 'TRel1_Ins_r_ProdC', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 1 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1015, 'TRel1_Ins_r_ProdC', 'Обеспечение ссылочной целостности при создании (Справочник товаров: категории)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1016, 'TRel3_Del_b_CRetD', 'Обеспечение ссылочной целостности при удалении (ТМЦ: Возврат поставщику (ТМЦ))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1017, 'TRel3_Del_z_WCopyFV', 'Обеспечение ссылочной целостности при удалении (Мастер Копирования - Поля источников - Варианты расчета)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1018, 'TRel2_Upd_r_DiscsT', 'Обеспечение ссылочной целостности при изменении (Справочник акций - Источники данных)', NULL, 'TR', 0);
@@ -959,7 +959,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1027, 'TRel2_Upd_r_CRs', 'Обеспечение ссылочной целостности при изменении (Справочник ЭККА)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1028, 'TRel2_Upd_b_SExpD', 'Обеспечение ссылочной целостности при изменении (Основные средства: Списание (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1029, 'TAU3_DEL_t_IOExpSpends', 'Автоизменение при удалении (Заказ внутренний: Обработка: Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1030, 'TRel2_Upd_r_ProdC', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 1 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1030, 'TRel2_Upd_r_ProdC', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: категории)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1031, 'TRel1_Ins_b_LExp', 'Обеспечение ссылочной целостности при создании (Зарплата: Выплата (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1032, 'TRel1_Ins_z_WCopyFVUF', 'Обеспечение ссылочной целостности при создании (Мастер Копирования - Фильтры пользователя для вариантов)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1033, 'TRel3_Del_r_DiscsT', 'Обеспечение ссылочной целостности при удалении (Справочник акций - Источники данных)', NULL, 'TR', 0);
@@ -972,7 +972,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1040, 'TRel3_Del_r_CRs', 'Обеспечение ссылочной целостности при удалении (Справочник ЭККА)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1041, 'TRel3_Del_b_SExpD', 'Обеспечение ссылочной целостности при удалении (Основные средства: Списание (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1042, 'TAU1_INS_t_IOExpRoutes', 'Автоизменение при создании (Заказ внутренний: Обработка: Маршрут)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1043, 'TRel3_Del_r_ProdC', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 1 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1043, 'TRel3_Del_r_ProdC', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: категории)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1044, 'TRel2_Upd_b_LExp', 'Обеспечение ссылочной целостности при изменении (Зарплата: Выплата (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1045, 'TRel2_Upd_z_WCopyFVUF', 'Обеспечение ссылочной целостности при изменении (Мастер Копирования - Фильтры пользователя для вариантов)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1046, 'TRel3_Del_b_ARec', 'Обеспечение ссылочной целостности при удалении (Акт приемки услуг)', NULL, 'TR', 0);
@@ -1049,7 +1049,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1117, 'TAU1_INS_t_SRecM', 'Автоизменение при создании (Комплектация товара: Общие Затраты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1119, 'TRel3_Del_t_CRRetD', 'Обеспечение ссылочной целостности при удалении (Возврат товара по чеку: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1120, 'TAU2_UPD_t_DisRoutes', 'Автоизменение при изменении (Распределение товара: Маршрут)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1121, 'TRel1_Ins_r_ProdG', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 2 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1121, 'TRel1_Ins_r_ProdG', 'Обеспечение ссылочной целостности при создании (Справочник товаров: группы)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1122, 'TRel2_Upd_z_WCopyU', 'Обеспечение ссылочной целостности при изменении (Мастер Копирования - Параметры пользователя)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1123, 'TRel2_Upd_r_DocShedD', 'Обеспечение ссылочной целостности при изменении (Шаблоны процессов: Детали)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1124, 'TRel3_Del_t_SPRecM', 'Обеспечение ссылочной целостности при удалении (Планирование: Комплектация: Общие Затраты)', NULL, 'TR', 0);
@@ -1057,7 +1057,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1126, 'TRel3_Del_t_IOExpD', 'Обеспечение ссылочной целостности при удалении (Заказ внутренний: Обработка: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1127, 'TAU2_UPD_t_SRecM', 'Автоизменение при изменении (Комплектация товара: Общие Затраты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1129, 'TAU3_DEL_t_DisRoutes', 'Автоизменение при удалении (Распределение товара: Маршрут)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1130, 'TRel2_Upd_r_ProdG', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 2 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1130, 'TRel2_Upd_r_ProdG', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: группы)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1131, 'TRel1_Ins_z_WCopyUV', 'Обеспечение ссылочной целостности при создании (Мастер Копирования - Журнал вариантов)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1133, 'TRel1_Ins_b_RepA', 'Обеспечение ссылочной целостности при создании (Авансовый отчет (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1134, 'TRel1_Ins_r_Carrs', 'Обеспечение ссылочной целостности при создании (Справочник транспорта)', NULL, 'TR', 0);
@@ -1066,7 +1066,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1137, 'TRel1_Ins_t_IOExpSpends', 'Обеспечение ссылочной целостности при создании (Заказ внутренний: Обработка: Затраты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1138, 'TAU3_DEL_t_SRecM', 'Автоизменение при удалении (Комплектация товара: Общие Затраты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1140, 'TAU1_INS_t_SPRecM', 'Автоизменение при создании (Планирование: Комплектация: Общие Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1141, 'TRel3_Del_r_ProdG', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 2 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1141, 'TRel3_Del_r_ProdG', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: группы)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1142, 'TRel2_Upd_z_WCopyUV', 'Обеспечение ссылочной целостности при изменении (Мастер Копирования - Журнал вариантов)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1143, 'TRel1_Ins_r_EmpAcc', 'Обеспечение ссылочной целостности при создании (Справочник служащих - Дополнительные периодические расходы)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1144, 'TRel2_Upd_b_RepA', 'Обеспечение ссылочной целостности при изменении (Авансовый отчет (Заголовок))', NULL, 'TR', 0);
@@ -1077,7 +1077,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1149, 'TAU1_INS_t_SRecA', 'Автоизменение при создании (Комплектация товара: Комплекты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1150, 'TRel1_Ins_b_SPutD', 'Обеспечение ссылочной целостности при создании (Основные средства: Ввод в эксплуатацию (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1151, 'TAU2_UPD_t_SPRecM', 'Автоизменение при изменении (Планирование: Комплектация: Общие Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1152, 'TRel1_Ins_r_ProdG1', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 3 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1152, 'TRel1_Ins_r_ProdG1', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 1 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1153, 'TRel3_Del_z_WCopyUV', 'Обеспечение ссылочной целостности при удалении (Мастер Копирования - Журнал вариантов)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1154, 'TRel2_Upd_r_EmpAcc', 'Обеспечение ссылочной целостности при изменении (Справочник служащих - Дополнительные периодические расходы)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1155, 'TRel3_Del_b_RepA', 'Обеспечение ссылочной целостности при удалении (Авансовый отчет (Заголовок))', NULL, 'TR', 0);
@@ -1087,7 +1087,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1159, 'TAU2_UPD_t_SRecA', 'Автоизменение при изменении (Комплектация товара: Комплекты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1161, 'TRel2_Upd_b_SPutD', 'Обеспечение ссылочной целостности при изменении (Основные средства: Ввод в эксплуатацию (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1162, 'TAU3_DEL_t_SPRecM', 'Автоизменение при удалении (Планирование: Комплектация: Общие Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1163, 'TRel2_Upd_r_ProdG1', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 3 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1163, 'TRel2_Upd_r_ProdG1', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 1 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1164, 'TRel1_Ins_b_ExpD', 'Обеспечение ссылочной целостности при создании (ТМЦ: Внутренний расход (ТМЦ))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1165, 'TAU1_INS_t_VenA', 'Автоизменение при создании (Инвентаризация товара: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1166, 'TRel3_Del_r_EmpAcc', 'Обеспечение ссылочной целостности при удалении (Справочник служащих - Дополнительные периодические расходы)', NULL, 'TR', 0);
@@ -1098,7 +1098,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1171, 'TRel1_Ins_t_EOExp', 'Обеспечение ссылочной целостности при создании (Заказ внешний: Формирование: Заголовок)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1173, 'TRel3_Del_b_SPutD', 'Обеспечение ссылочной целостности при удалении (Основные средства: Ввод в эксплуатацию (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1174, 'TAU1_INS_t_SExpM', 'Автоизменение при создании (Разукомплектация товара: Общие Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1175, 'TRel3_Del_r_ProdG1', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 3 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1175, 'TRel3_Del_r_ProdG1', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 1 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1176, 'TRel2_Upd_b_ExpD', 'Обеспечение ссылочной целостности при изменении (ТМЦ: Внутренний расход (ТМЦ))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1177, 'TAU2_UPD_t_VenA', 'Автоизменение при изменении (Инвентаризация товара: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1178, 'TRel1_Ins_r_EmpAct', 'Обеспечение ссылочной целостности при создании (Справочник служащих - Трудовая деятельность)', NULL, 'TR', 0);
@@ -1109,7 +1109,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1183, 'TAU1_INS_t_SRecE', 'Автоизменение при создании (Комплектация товара: Затраты на комплекты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1184, 'TRel2_Upd_t_EOExp', 'Обеспечение ссылочной целостности при изменении (Заказ внешний: Формирование: Заголовок)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1186, 'TAU2_UPD_t_SExpM', 'Автоизменение при изменении (Разукомплектация товара: Общие Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1187, 'TRel1_Ins_r_ProdG2', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 4 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1187, 'TRel1_Ins_r_ProdG2', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 2 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1188, 'TRel3_Del_b_ExpD', 'Обеспечение ссылочной целостности при удалении (ТМЦ: Внутренний расход (ТМЦ))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1189, 'TAU3_DEL_t_VenA', 'Автоизменение при удалении (Инвентаризация товара: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1190, 'TRel2_Upd_r_EmpAct', 'Обеспечение ссылочной целостности при изменении (Справочник служащих - Трудовая деятельность)', NULL, 'TR', 0);
@@ -1122,7 +1122,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1197, 'TAU2_UPD_t_SRecE', 'Автоизменение при изменении (Комплектация товара: Затраты на комплекты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1198, 'TRel3_Del_t_EOExp', 'Обеспечение ссылочной целостности при удалении (Заказ внешний: Формирование: Заголовок)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1199, 'TAU3_DEL_t_SExpM', 'Автоизменение при удалении (Разукомплектация товара: Общие Затраты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1200, 'TRel2_Upd_r_ProdG2', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 4 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1200, 'TRel2_Upd_r_ProdG2', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 2 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1201, 'TRel3_Del_r_EmpAct', 'Обеспечение ссылочной целостности при удалении (Справочник служащих - Трудовая деятельность)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1202, 'TRel2_Upd_b_CRepA', 'Обеспечение ссылочной целостности при изменении (Авансовый отчет с признаками (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1203, 'TRel1_Ins_t_SRecD', 'Обеспечение ссылочной целостности при создании (Комплектация товара: Составляющие)', NULL, 'TR', 0);
@@ -1130,7 +1130,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1205, 'TRel1_Ins_t_DisSpends', 'Обеспечение ссылочной целостности при создании (Распределение товара: Затраты)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1206, 'TRel2_Upd_c_Sal', 'Обеспечение ссылочной целостности при изменении (Начисление денег служащим (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1207, 'TAU3_DEL_t_SRecE', 'Автоизменение при удалении (Комплектация товара: Затраты на комплекты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1208, 'TRel3_Del_r_ProdG2', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 4 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1208, 'TRel3_Del_r_ProdG2', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 2 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1209, 'TRel1_Ins_r_EmpAdd', 'Обеспечение ссылочной целостности при создании (Справочник служащих - Прописка и место жительства)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1210, 'TRel3_Del_b_CRepA', 'Обеспечение ссылочной целостности при удалении (Авансовый отчет с признаками (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1211, 'TRel2_Upd_t_SRecD', 'Обеспечение ссылочной целостности при изменении (Комплектация товара: Составляющие)', NULL, 'TR', 0);
@@ -1138,7 +1138,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1213, 'TRel3_Del_c_Sal', 'Обеспечение ссылочной целостности при удалении (Начисление денег служащим (Заголовок))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1214, 'TAU1_INS_t_SRecD', 'Автоизменение при создании (Комплектация товара: Составляющие)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1215, 'TRel1_Ins_b_SRecD', 'Обеспечение ссылочной целостности при создании (Основные средства: Приход (Данные))', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1216, 'TRel1_Ins_r_ProdG3', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 5 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1216, 'TRel1_Ins_r_ProdG3', 'Обеспечение ссылочной целостности при создании (Справочник товаров: 3 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1217, 'TRel2_Upd_r_EmpAdd', 'Обеспечение ссылочной целостности при изменении (Справочник служащих - Прописка и место жительства)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1218, 'TRel3_Del_t_SRecD', 'Обеспечение ссылочной целостности при удалении (Комплектация товара: Составляющие)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1219, 'TRel3_Del_t_DisSpends', 'Обеспечение ссылочной целостности при удалении (Распределение товара: Затраты)', NULL, 'TR', 0);
@@ -1147,7 +1147,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1222, 'TRel1_Ins_t_EORec', 'Обеспечение ссылочной целостности при создании (Заказ внешний: Обработка: Заголовок)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1223, 'TRel1_Ins_t_CstD', 'Обеспечение ссылочной целостности при создании (Приход товара по ГТД: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1224, 'TRel2_Upd_b_SRecD', 'Обеспечение ссылочной целостности при изменении (Основные средства: Приход (Данные))', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1225, 'TRel2_Upd_r_ProdG3', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 5 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1225, 'TRel2_Upd_r_ProdG3', 'Обеспечение ссылочной целостности при изменении (Справочник товаров: 3 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1226, 'TRel1_Ins_b_GTranD', 'Обеспечение ссылочной целостности при создании (Таблица проводок (Проводки))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1227, 'TRel3_Del_r_EmpAdd', 'Обеспечение ссылочной целостности при удалении (Справочник служащих - Прописка и место жительства)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1228, 'TRel1_Ins_t_SRecE', 'Обеспечение ссылочной целостности при создании (Комплектация товара: Затраты на комплекты)', NULL, 'TR', 0);
@@ -1159,7 +1159,7 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1234, 'TRel2_Upd_t_CstD', 'Обеспечение ссылочной целостности при изменении (Приход товара по ГТД: Товар)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1235, 'TRel3_Del_b_SRecD', 'Обеспечение ссылочной целостности при удалении (Основные средства: Приход (Данные))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1236, 'TAU1_INS_t_SExpE', 'Автоизменение при создании (Разукомплектация товара: Затраты на комплекты)', NULL, 'TR', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1237, 'TRel3_Del_r_ProdG3', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 5 группа)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1237, 'TRel3_Del_r_ProdG3', 'Обеспечение ссылочной целостности при удалении (Справочник товаров: 3 группа)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1238, 'TRel2_Upd_b_GTranD', 'Обеспечение ссылочной целостности при изменении (Таблица проводок (Проводки))', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1239, 'TRel1_Ins_r_EmpInc', 'Обеспечение ссылочной целостности при создании (Справочник служащих - Дополнительные периодические доходы)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (1240, 'TRel1_Ins_b_ARepA', 'Обеспечение ссылочной целостности при создании (Авансовый отчет валютный (Заголовок))', NULL, 'TR', 0);
@@ -2433,7 +2433,6 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2677, 't_SaveCashRegInetCheque', 'Сохраняет чеки электронного РРО', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2678, 't_GetCashRegInetChequesOffline', 'Возвращает таблицу неотправленных чеков режима Офлайн', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2679, 't_GetCashRegInetSessionOffline', 'Возвращает параметры нулевого чека: DocTime, OfflineSessionID, OfflineSeed, NextLocalNum, OfflineNextLocalNum, OfflineLastHash, OfflineSessionDuration, OfflineSessionsMonthlyDuration, IsTesting', NULL, 'P', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2680, 'TRel3_Del_t_CRJournalText', 'Обеспечение ссылочной целостности при удалении (ЭКЛЗ - резервные копии документов в виде текста)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2681, 't_SaleCRPayComment', 'Возвращает комментарии после оплат к чеку', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2682, 't_SaleCRRetPayComment', 'Возвращает комментарии после оплат к возвратному чеку', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2683, 't_SaleGetAutocloseDocs', 'Возвращает документы для автоматического закрытия', NULL, 'P', 0);
@@ -2487,4 +2486,13 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2727, 'TRel1_Ins_t_POSPayJournal', 'Обеспечение ссылочной целостности при создании (POS Journal)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2728, 'TRel2_Upd_t_POSPayJournal', 'Обеспечение ссылочной целостности при изменении (POS Journal)', NULL, 'TR', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2729, 't_SaleSavePOSOperation', 't_SaleSavePOSOperation', NULL, 'P ', 0);
-INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2730, 't_SaleGetEReceiptComment', 'Возвращает комментари к чеку для поддержки программы єЧек', NULL, 'P', 0);
+
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2730, 'TRel2_Upd_z_Apps', 'Обеспечение ссылочной целостности при изменении (Приложения)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2731, 'TRel3_Del_z_Apps', 'Обеспечение ссылочной целостности при удалении (Приложения)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2732, 'TRel2_Upd_z_ToolRep', 'Обеспечение ссылочной целостности при изменении (Инструменты - Репозиторий)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2733, 'TRel3_Del_z_ToolRep', 'Обеспечение ссылочной целостности при удалении (Инструменты - Репозиторий)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2734, 'TRel1_Ins_z_Translations', 'Обеспечение ссылочной целостности при создании (Перевод)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2735, 'TRel2_Upd_z_Translations', 'Обеспечение ссылочной целостности при изменении (Перевод)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2736, 'TRel2_Upd_z_VarPages', 'Обеспечение ссылочной целостности при изменении (Системные переменные - Закладки)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2737, 'TRel3_Del_z_VarPages', 'Обеспечение ссылочной целостности при удалении (Системные переменные - Закладки)', NULL, 'TR', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2738, 't_SaleGetEReceiptComment', 'Возвращает комментари к чеку для поддержки программы єЧек', NULL, 'P', 0);

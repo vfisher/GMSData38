@@ -98,158 +98,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU1_INS_b_PVenA] ON [b_PVenA]
-FOR INSERT
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_b_PVenA] ON [b_PVenA]
+FOR DELETE AS
+/* b_PVenA - ТМЦ: Инвентаризация (Итоги) - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 119 - Обновление итогов в главной таблице */
-/* b_PVenA - ТМЦ: Инвентаризация (Итоги) */
-/* b_PVen - ТМЦ: Инвентаризация (Заголовок) */
-
-  UPDATE r
-  SET 
-    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt, 
-    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt
-  FROM b_PVen r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
-       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
-     FROM b_PVen WITH (NOLOCK), inserted m
-     WHERE b_PVen.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU2_UPD_b_PVenA] ON [b_PVenA]
-FOR UPDATE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 119 - Обновление итогов в главной таблице */
-/* b_PVenA - ТМЦ: Инвентаризация (Итоги) */
-/* b_PVen - ТМЦ: Инвентаризация (Заголовок) */
-
-IF UPDATE(TSumCC_nt) OR UPDATE(TTaxSum) OR UPDATE(TSumCC_wt) OR UPDATE(TNewSumCC_nt) OR UPDATE(TNewTaxSum) OR UPDATE(TNewSumCC_wt)
-BEGIN
-  UPDATE r
-  SET 
-    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt, 
-    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt
-  FROM b_PVen r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
-       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
-     FROM b_PVen WITH (NOLOCK), inserted m
-     WHERE b_PVen.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt, 
-    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt
-  FROM b_PVen r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
-       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
-     FROM b_PVen WITH (NOLOCK), deleted m
-     WHERE b_PVen.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_b_PVenA] ON [b_PVenA]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 119 - Обновление итогов в главной таблице */
-/* b_PVenA - ТМЦ: Инвентаризация (Итоги) */
-/* b_PVen - ТМЦ: Инвентаризация (Заголовок) */
-
-  UPDATE r
-  SET 
-    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt, 
-    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt
-  FROM b_PVen r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
-       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
-     FROM b_PVen WITH (NOLOCK), deleted m
-     WHERE b_PVen.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_b_PVenA] ON [b_PVenA]
-FOR INSERT AS
-/* b_PVenA - ТМЦ: Инвентаризация (Итоги) - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -269,68 +121,66 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_PVen a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_PVen a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_PVen a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_PVen a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM b_PVen a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14122, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM b_PVen a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14122, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''ТМЦ: Инвентаризация'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('ТМЦ: Инвентаризация'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* b_PVenA ^ b_PVen - Проверка в PARENT */
-/* ТМЦ: Инвентаризация (Итоги) ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM b_PVen))
-    BEGIN
-      EXEC z_RelationError 'b_PVen', 'b_PVenA', 0
-      RETURN
-    END
+/* Удаление проводок */
+  DELETE FROM b_GTran WHERE GTranID IN (SELECT GTranID FROM deleted)
 
-/* b_PVenA ^ r_GOpers - Проверка в PARENT */
-/* ТМЦ: Инвентаризация (Итоги) ^ Справочник проводок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.GOperID NOT IN (SELECT GOperID FROM r_GOpers))
-    BEGIN
-      EXEC z_RelationError 'r_GOpers', 'b_PVenA', 0
-      RETURN
-    END
+/* b_PVenA ^ b_PVenD - Удаление в CHILD */
+/* ТМЦ: Инвентаризация (Итоги) ^ ТМЦ: Инвентаризация (ТМЦ) - Удаление в CHILD */
+  DELETE b_PVenD FROM b_PVenD a, deleted d WHERE a.ChID = d.ChID AND a.DetProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
 
-/* b_PVenA ^ r_Prods - Проверка в PARENT */
-/* ТМЦ: Инвентаризация (Итоги) ^ Справочник товаров - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_PVenA', 0
-      RETURN
-    END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 14122002, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 14122002 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.ProdID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 14122002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.ProdID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 14122002, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.ProdID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_b_PVenA', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_b_PVenA', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -364,7 +214,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_PVen a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -373,7 +223,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_PVen a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -382,7 +232,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_PVen a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -391,7 +241,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_PVen a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -400,7 +250,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM b_PVen a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14122, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''ТМЦ: Инвентаризация'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('ТМЦ: Инвентаризация'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -466,6 +318,7 @@ BEGIN
           RETURN
         END
     END
+
 
 /* Регистрация изменения записи */
 
@@ -562,10 +415,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_b_PVenA] ON [b_PVenA]
-FOR DELETE AS
-/* b_PVenA - ТМЦ: Инвентаризация (Итоги) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_b_PVenA] ON [b_PVenA]
+FOR INSERT AS
+/* b_PVenA - ТМЦ: Инвентаризация (Итоги) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -585,61 +441,283 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_PVen a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_PVen a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_PVen a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_PVen a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'ТМЦ: Инвентаризация (Итоги) (b_PVenA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('ТМЦ: Инвентаризация (Итоги)'), 'b_PVenA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM b_PVen a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14122, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM b_PVen a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14122, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''ТМЦ: Инвентаризация'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('ТМЦ: Инвентаризация'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление проводок */
-  DELETE FROM b_GTran WHERE GTranID IN (SELECT GTranID FROM deleted)
+/* b_PVenA ^ b_PVen - Проверка в PARENT */
+/* ТМЦ: Инвентаризация (Итоги) ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM b_PVen))
+    BEGIN
+      EXEC z_RelationError 'b_PVen', 'b_PVenA', 0
+      RETURN
+    END
 
-/* b_PVenA ^ b_PVenD - Удаление в CHILD */
-/* ТМЦ: Инвентаризация (Итоги) ^ ТМЦ: Инвентаризация (ТМЦ) - Удаление в CHILD */
-  DELETE b_PVenD FROM b_PVenD a, deleted d WHERE a.ChID = d.ChID AND a.DetProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
+/* b_PVenA ^ r_GOpers - Проверка в PARENT */
+/* ТМЦ: Инвентаризация (Итоги) ^ Справочник проводок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.GOperID NOT IN (SELECT GOperID FROM r_GOpers))
+    BEGIN
+      EXEC z_RelationError 'r_GOpers', 'b_PVenA', 0
+      RETURN
+    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 14122002 AND m.PKValue = 
+/* b_PVenA ^ r_Prods - Проверка в PARENT */
+/* ТМЦ: Инвентаризация (Итоги) ^ Справочник товаров - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_PVenA', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 14122002, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.ProdID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 14122002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.ProdID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 14122002, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.ProdID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_b_PVenA', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_b_PVenA', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_b_PVenA] ON [b_PVenA]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 119 - Обновление итогов в главной таблице */
+/* b_PVenA - ТМЦ: Инвентаризация (Итоги) */
+/* b_PVen - ТМЦ: Инвентаризация (Заголовок) */
+
+  UPDATE r
+  SET 
+    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt, 
+    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt
+  FROM b_PVen r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
+       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
+     FROM b_PVen WITH (NOLOCK), deleted m
+     WHERE b_PVen.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_b_PVenA] ON [b_PVenA]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 119 - Обновление итогов в главной таблице */
+/* b_PVenA - ТМЦ: Инвентаризация (Итоги) */
+/* b_PVen - ТМЦ: Инвентаризация (Заголовок) */
+
+IF UPDATE(TSumCC_nt) OR UPDATE(TTaxSum) OR UPDATE(TSumCC_wt) OR UPDATE(TNewSumCC_nt) OR UPDATE(TNewTaxSum) OR UPDATE(TNewSumCC_wt)
+BEGIN
+  UPDATE r
+  SET 
+    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt, 
+    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt
+  FROM b_PVen r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
+       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
+     FROM b_PVen WITH (NOLOCK), inserted m
+     WHERE b_PVen.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt, 
+    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt
+  FROM b_PVen r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
+       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
+     FROM b_PVen WITH (NOLOCK), deleted m
+     WHERE b_PVen.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU1_INS_b_PVenA] ON [b_PVenA]
+FOR INSERT
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 119 - Обновление итогов в главной таблице */
+/* b_PVenA - ТМЦ: Инвентаризация (Итоги) */
+/* b_PVen - ТМЦ: Инвентаризация (Заголовок) */
+
+  UPDATE r
+  SET 
+    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt, 
+    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt
+  FROM b_PVen r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.TSumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TTaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.TSumCC_wt), 0) TSumCC_wt,
+       ISNULL(SUM(m.TNewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.TNewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.TNewSumCC_wt), 0) TNewSumCC_wt 
+     FROM b_PVen WITH (NOLOCK), inserted m
+     WHERE b_PVen.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

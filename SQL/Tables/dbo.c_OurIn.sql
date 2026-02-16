@@ -88,13 +88,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_c_OurIn] ON [c_OurIn]
-FOR INSERT AS
-/* c_OurIn - Входящий баланс: Касса (Финансы) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_c_OurIn] ON [c_OurIn]
+FOR DELETE AS
+/* c_OurIn - Входящий баланс: Касса (Финансы) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -114,99 +111,54 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* c_OurIn ^ r_Codes1 - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 1 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
-    BEGIN
-      EXEC z_RelationError 'r_Codes1', 'c_OurIn', 0
-      RETURN
-    END
+/* c_OurIn ^ z_DocShed - Удаление в CHILD */
+/* Входящий баланс: Касса (Финансы) ^ Документы - Процессы - Удаление в CHILD */
+  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 12901 AND a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* c_OurIn ^ r_Codes2 - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 2 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
-    BEGIN
-      EXEC z_RelationError 'r_Codes2', 'c_OurIn', 0
-      RETURN
-    END
 
-/* c_OurIn ^ r_Codes3 - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 3 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
-    BEGIN
-      EXEC z_RelationError 'r_Codes3', 'c_OurIn', 0
-      RETURN
-    END
-
-/* c_OurIn ^ r_Codes4 - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 4 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
-    BEGIN
-      EXEC z_RelationError 'r_Codes4', 'c_OurIn', 0
-      RETURN
-    END
-
-/* c_OurIn ^ r_Codes5 - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 5 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_OurIn', 0
-      RETURN
-    END
-
-/* c_OurIn ^ r_Currs - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник валют - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
-    BEGIN
-      EXEC z_RelationError 'r_Currs', 'c_OurIn', 0
-      RETURN
-    END
-
-/* c_OurIn ^ r_OursAC - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник внутренних фирм - Валютные счета - Проверка в PARENT */
-  IF (SELECT COUNT(*) FROM r_OursAC m WITH(NOLOCK), inserted i WHERE i.AccountAC = m.AccountAC AND i.OurID = m.OurID) <> @RCount
-    BEGIN
-      EXEC z_RelationError 'r_OursAC', 'c_OurIn', 0
-      RETURN
-    END
-
-/* c_OurIn ^ r_Stocks - Проверка в PARENT */
-/* Входящий баланс: Касса (Финансы) ^ Справочник складов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_OurIn', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 12901001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 12901001 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 12901001 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 12901001, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 12901 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_c_OurIn', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_c_OurIn', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -240,7 +192,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -249,7 +201,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -258,7 +210,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -267,7 +219,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -374,6 +326,7 @@ IF UPDATE(DocDate) OR UPDATE(DocID)
     FROM z_DocLinks l, inserted i WHERE l.ParentDocCode = 12901 AND l.ParentChID = i.ChID
   END
 
+
 /* Регистрация изменения записи */
 
 
@@ -430,10 +383,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_c_OurIn] ON [c_OurIn]
-FOR DELETE AS
-/* c_OurIn - Входящий баланс: Касса (Финансы) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_c_OurIn] ON [c_OurIn]
+FOR INSERT AS
+/* c_OurIn - Входящий баланс: Касса (Финансы) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -453,51 +409,139 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Входящий баланс: Касса (Финансы) (c_OurIn):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Входящий баланс: Касса (Финансы)'), 'c_OurIn', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* c_OurIn ^ z_DocShed - Удаление в CHILD */
-/* Входящий баланс: Касса (Финансы) ^ Документы - Процессы - Удаление в CHILD */
-  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 12901 AND a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
+/* c_OurIn ^ r_Codes1 - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 1 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
+    BEGIN
+      EXEC z_RelationError 'r_Codes1', 'c_OurIn', 0
+      RETURN
+    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 12901001 AND m.PKValue = 
+/* c_OurIn ^ r_Codes2 - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 2 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
+    BEGIN
+      EXEC z_RelationError 'r_Codes2', 'c_OurIn', 0
+      RETURN
+    END
+
+/* c_OurIn ^ r_Codes3 - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 3 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
+    BEGIN
+      EXEC z_RelationError 'r_Codes3', 'c_OurIn', 0
+      RETURN
+    END
+
+/* c_OurIn ^ r_Codes4 - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 4 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
+    BEGIN
+      EXEC z_RelationError 'r_Codes4', 'c_OurIn', 0
+      RETURN
+    END
+
+/* c_OurIn ^ r_Codes5 - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник признаков 5 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_OurIn', 0
+      RETURN
+    END
+
+/* c_OurIn ^ r_Currs - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник валют - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
+    BEGIN
+      EXEC z_RelationError 'r_Currs', 'c_OurIn', 0
+      RETURN
+    END
+
+/* c_OurIn ^ r_OursAC - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник внутренних фирм - Валютные счета - Проверка в PARENT */
+  IF (SELECT COUNT(*) FROM r_OursAC m WITH(NOLOCK), inserted i WHERE i.AccountAC = m.AccountAC AND i.OurID = m.OurID) <> @RCount
+    BEGIN
+      EXEC z_RelationError 'r_OursAC', 'c_OurIn', 0
+      RETURN
+    END
+
+/* c_OurIn ^ r_Stocks - Проверка в PARENT */
+/* Входящий баланс: Касса (Финансы) ^ Справочник складов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_OurIn', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 12901001, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 12901001 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 12901001, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 12901 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_c_OurIn', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_c_OurIn', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

@@ -330,35 +330,34 @@ GO
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SaleTemp', N'Last', N'INSERT'
 GO
 
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TGMSRel3_Del_t_SaleTemp] ON [t_SaleTemp]
-FOR DELETE AS
-/* t_SaleTemp - Временные данные продаж: Заголовок - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-  /* t_SaleTemp ^ t_Booking - Удаление в CHILD */
-  /* Временные данные продаж: Заголовок ^ Документы - Заявки - Удаление в CHILD */
-  DELETE t_Booking FROM t_Booking a, deleted d WHERE a.DocCode = 1011 AND a.DocChID = d.ChID
-END
-GO
+
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TGMSRel2_Upd_t_SaleTemp] ON [t_SaleTemp]
-FOR UPDATE AS
-/* t_SaleTemp - Временные данные продаж: Заголовок - UPDATE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
 
-  /* t_SaleTemp ^ t_Booking - Проверка в PARENT */
-  /* Временные данные продаж: Заголовок ^ Заявки - Проверка в PARENT */
-  IF UPDATE(ChID)
-    IF EXISTS(SELECT TOP 1 1 FROM t_Booking a, deleted d WHERE a.DocCode = 1011 AND a.DocChID = d.ChID)
-       EXEC z_RelationError 't_SaleTemp', 't_Booking', 2
 
-END
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
 
 
 

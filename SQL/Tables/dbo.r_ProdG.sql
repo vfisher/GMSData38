@@ -26,32 +26,57 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_ProdG] ON [r_ProdG]
-FOR INSERT AS
-/* r_ProdG - Справочник товаров: 2 группа - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_ProdG] ON [r_ProdG]
+FOR DELETE AS
+/* r_ProdG - Справочник товаров: группы - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10332001, ChID, 
+/* r_ProdG ^ r_Prods - Проверка в CHILD */
+/* Справочник товаров: группы ^ Справочник товаров - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_Prods a WITH(NOLOCK), deleted d WHERE a.PGrID = d.PGrID)
+    BEGIN
+      EXEC z_RelationError 'r_ProdG', 'r_Prods', 3
+      RETURN
+    END
+
+/* r_ProdG ^ z_UserProdG - Удаление в CHILD */
+/* Справочник товаров: группы ^ Доступные значения - Справочник товаров: 2 группа - Удаление в CHILD */
+  DELETE z_UserProdG FROM z_UserProdG a, deleted d WHERE a.PGrID = d.PGrID
+  IF @@ERROR > 0 RETURN
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10332001 AND m.PKValue = 
     '[' + cast(i.PGrID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10332001 AND m.PKValue = 
+    '[' + cast(i.PGrID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10332001, -ChID, 
+    '[' + cast(d.PGrID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10332 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_ProdG', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_ProdG', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
 CREATE TRIGGER [dbo].[TRel2_Upd_r_ProdG] ON [r_ProdG]
 FOR UPDATE AS
-/* r_ProdG - Справочник товаров: 2 группа - UPDATE TRIGGER */
+/* r_ProdG - Справочник товаров: группы - UPDATE TRIGGER */
 BEGIN
   DECLARE @RCount Int
   SELECT @RCount = @@RowCount
@@ -59,7 +84,7 @@ BEGIN
   SET NOCOUNT ON
 
 /* r_ProdG ^ r_Prods - Обновление CHILD */
-/* Справочник товаров: 2 группа ^ Справочник товаров - Обновление CHILD */
+/* Справочник товаров: группы ^ Справочник товаров - Обновление CHILD */
   IF UPDATE(PGrID)
     BEGIN
       IF @RCount = 1
@@ -70,7 +95,7 @@ BEGIN
         END
       ELSE IF EXISTS (SELECT * FROM r_Prods a, deleted d WHERE a.PGrID = d.PGrID)
         BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник товаров: 2 группа'' => ''Справочник товаров''.'
+          RAISERROR ('Каскадная операция невозможна ''Справочник товаров: группы'' => ''Справочник товаров''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -78,7 +103,7 @@ BEGIN
     END
 
 /* r_ProdG ^ z_UserProdG - Обновление CHILD */
-/* Справочник товаров: 2 группа ^ Доступные значения - Справочник товаров: 2 группа - Обновление CHILD */
+/* Справочник товаров: группы ^ Доступные значения - Справочник товаров: 2 группа - Обновление CHILD */
   IF UPDATE(PGrID)
     BEGIN
       IF @RCount = 1
@@ -89,12 +114,13 @@ BEGIN
         END
       ELSE IF EXISTS (SELECT * FROM z_UserProdG a, deleted d WHERE a.PGrID = d.PGrID)
         BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник товаров: 2 группа'' => ''Доступные значения - Справочник товаров: 2 группа''.'
+          RAISERROR ('Каскадная операция невозможна ''Справочник товаров: группы'' => ''Доступные значения - Справочник товаров: 2 группа''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
         END
     END
+
 
 /* Регистрация изменения записи */
 
@@ -177,47 +203,47 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_ProdG] ON [r_ProdG]
-FOR DELETE AS
-/* r_ProdG - Справочник товаров: 2 группа - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_ProdG] ON [r_ProdG]
+FOR INSERT AS
+/* r_ProdG - Справочник товаров: группы - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_ProdG ^ r_Prods - Проверка в CHILD */
-/* Справочник товаров: 2 группа ^ Справочник товаров - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Prods a WITH(NOLOCK), deleted d WHERE a.PGrID = d.PGrID)
-    BEGIN
-      EXEC z_RelationError 'r_ProdG', 'r_Prods', 3
-      RETURN
-    END
 
-/* r_ProdG ^ z_UserProdG - Удаление в CHILD */
-/* Справочник товаров: 2 группа ^ Доступные значения - Справочник товаров: 2 группа - Удаление в CHILD */
-  DELETE z_UserProdG FROM z_UserProdG a, deleted d WHERE a.PGrID = d.PGrID
-  IF @@ERROR > 0 RETURN
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10332001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10332001, ChID, 
     '[' + cast(i.PGrID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10332001 AND m.PKValue = 
-    '[' + cast(i.PGrID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10332001, -ChID, 
-    '[' + cast(d.PGrID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10332 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_ProdG', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_ProdG', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

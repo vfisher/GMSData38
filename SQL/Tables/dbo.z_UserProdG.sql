@@ -42,39 +42,6 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_z_UserProdG] ON [z_UserProdG]
-FOR INSERT AS
-/* z_UserProdG - Доступные значения - Справочник товаров: 2 группа - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
-
-/* z_UserProdG ^ r_ProdG - Проверка в PARENT */
-/* Доступные значения - Справочник товаров: 2 группа ^ Справочник товаров: 2 группа - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID NOT IN (SELECT PGrID FROM r_ProdG))
-    BEGIN
-      EXEC z_RelationError 'r_ProdG', 'z_UserProdG', 0
-      RETURN
-    END
-
-/* z_UserProdG ^ r_Users - Проверка в PARENT */
-/* Доступные значения - Справочник товаров: 2 группа ^ Справочник пользователей - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
-    BEGIN
-      EXEC z_RelationError 'r_Users', 'z_UserProdG', 0
-      RETURN
-    END
-
-END
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_z_UserProdG', N'Last', N'INSERT'
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
 CREATE TRIGGER [dbo].[TRel2_Upd_z_UserProdG] ON [z_UserProdG]
 FOR UPDATE AS
 /* z_UserProdG - Доступные значения - Справочник товаров: 2 группа - UPDATE TRIGGER */
@@ -85,7 +52,7 @@ BEGIN
   SET NOCOUNT ON
 
 /* z_UserProdG ^ r_ProdG - Проверка в PARENT */
-/* Доступные значения - Справочник товаров: 2 группа ^ Справочник товаров: 2 группа - Проверка в PARENT */
+/* Доступные значения - Справочник товаров: 2 группа ^ Справочник товаров: группы - Проверка в PARENT */
   IF UPDATE(PGrID)
     IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID NOT IN (SELECT PGrID FROM r_ProdG))
       BEGIN
@@ -106,4 +73,58 @@ END
 GO
 
 EXEC sp_settriggerorder N'dbo.TRel2_Upd_z_UserProdG', N'Last', N'UPDATE'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_z_UserProdG] ON [z_UserProdG]
+FOR INSERT AS
+/* z_UserProdG - Доступные значения - Справочник товаров: 2 группа - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* z_UserProdG ^ r_ProdG - Проверка в PARENT */
+/* Доступные значения - Справочник товаров: 2 группа ^ Справочник товаров: группы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID NOT IN (SELECT PGrID FROM r_ProdG))
+    BEGIN
+      EXEC z_RelationError 'r_ProdG', 'z_UserProdG', 0
+      RETURN
+    END
+
+/* z_UserProdG ^ r_Users - Проверка в PARENT */
+/* Доступные значения - Справочник товаров: 2 группа ^ Справочник пользователей - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.UserID NOT IN (SELECT UserID FROM r_Users))
+    BEGIN
+      EXEC z_RelationError 'r_Users', 'z_UserProdG', 0
+      RETURN
+    END
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_z_UserProdG', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

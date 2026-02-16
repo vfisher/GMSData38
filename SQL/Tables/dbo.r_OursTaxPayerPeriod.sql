@@ -10,26 +10,36 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_OursTaxPayerPeriod] ON [r_OursTaxPayerPeriod]
-FOR INSERT AS
-/* r_OursTaxPayerPeriod - Справочник внутренних фирм - Период налогообложения - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_OursTaxPayerPeriod] ON [r_OursTaxPayerPeriod]
+FOR DELETE AS
+/* r_OursTaxPayerPeriod - Справочник внутренних фирм - Период налогообложения - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10110005, 0, 
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10110005 AND m.PKValue = 
     '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.BDate as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10110005 AND m.PKValue = 
+    '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.BDate as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10110005, m.ChID, 
+    '[' + cast(d.OurID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.BDate as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d JOIN r_Ours m ON m.OurID = d.OurID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_OursTaxPayerPeriod', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_OursTaxPayerPeriod', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -42,6 +52,7 @@ BEGIN
   SELECT @RCount = @@RowCount
   IF @RCount = 0 RETURN
   SET NOCOUNT ON
+
 
 /* Регистрация изменения записи */
 
@@ -67,10 +78,10 @@ BEGIN
       ELSE
         BEGIN
           INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-          SELECT 10110005, 0, 
+          SELECT 10110005, m.ChID, 
           '[' + cast(d.OurID as varchar(200)) + ']' + ' \ ' + 
           '[' + cast(d.BDate as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM deleted d JOIN r_Ours m ON m.OurID = d.OurID
           DELETE FROM z_LogCreate WHERE TableCode = 10110005 AND PKValue IN (SELECT 
           '[' + cast(OurID as varchar(200)) + ']' + ' \ ' + 
           '[' + cast(BDate as varchar(200)) + ']' FROM deleted)
@@ -78,19 +89,19 @@ BEGIN
           '[' + cast(OurID as varchar(200)) + ']' + ' \ ' + 
           '[' + cast(BDate as varchar(200)) + ']' FROM deleted)
           INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-          SELECT 10110005, 0, 
+          SELECT 10110005, m.ChID, 
           '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
           '[' + cast(i.BDate as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+          , dbo.zf_GetUserCode() FROM inserted i JOIN r_Ours m ON m.OurID = i.OurID
 
         END
       END
 
   INSERT INTO z_LogUpdate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10110005, 0, 
+  SELECT 10110005, m.ChID, 
     '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.BDate as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+          , dbo.zf_GetUserCode() FROM inserted i JOIN r_Ours m ON m.OurID = i.OurID
 
 
 End
@@ -101,35 +112,27 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_OursTaxPayerPeriod] ON [r_OursTaxPayerPeriod]
-FOR DELETE AS
-/* r_OursTaxPayerPeriod - Справочник внутренних фирм - Период налогообложения - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_OursTaxPayerPeriod] ON [r_OursTaxPayerPeriod]
+FOR INSERT AS
+/* r_OursTaxPayerPeriod - Справочник внутренних фирм - Период налогообложения - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10110005 AND m.PKValue = 
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10110005, m.ChID, 
     '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.BDate as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10110005 AND m.PKValue = 
-    '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.BDate as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10110005, 0, 
-    '[' + cast(d.OurID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.BDate as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i JOIN r_Ours m ON m.OurID = i.OurID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_OursTaxPayerPeriod', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_OursTaxPayerPeriod', N'Last', N'INSERT'
 GO
 
 ALTER TABLE [dbo].[r_OursTaxPayerPeriod]

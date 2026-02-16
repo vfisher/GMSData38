@@ -16,13 +16,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_SpecD] ON [t_SpecD]
-FOR INSERT AS
-/* t_SpecD - Калькуляционная карта: Состав - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_t_SpecD] ON [t_SpecD]
+FOR DELETE AS
+/* t_SpecD - Калькуляционная карта: Состав - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -42,45 +39,38 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Spec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Spec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Spec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Spec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* t_SpecD ^ r_Prods - Проверка в PARENT */
-/* Калькуляционная карта: Состав ^ Справочник товаров - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Spec a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11330, a.ChID, a.StateCode) = 0)
     BEGIN
-      EXEC z_RelationError 'r_Prods', 't_SpecD', 0
-      RETURN
-    END
-
-/* t_SpecD ^ t_Spec - Проверка в PARENT */
-/* Калькуляционная карта: Состав ^ Калькуляционная карта: Заголовок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Spec))
-    BEGIN
-      EXEC z_RelationError 't_Spec', 't_SpecD', 0
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Калькуляционная карта'))
+      RAISERROR(@Err2, 18, 1)
+      ROLLBACK TRAN
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SpecD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_SpecD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -114,7 +104,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Spec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -123,7 +113,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Spec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -132,7 +122,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Spec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -141,8 +131,18 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Spec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Spec a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11330, a.ChID, a.StateCode) = 0)
+    BEGIN
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Калькуляционная карта'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -173,10 +173,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_SpecD] ON [t_SpecD]
-FOR DELETE AS
-/* t_SpecD - Калькуляционная карта: Состав - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_SpecD] ON [t_SpecD]
+FOR INSERT AS
+/* t_SpecD - Калькуляционная карта: Состав - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -196,26 +199,68 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Spec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Spec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Spec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Spec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Состав (t_SpecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Состав'), 't_SpecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Spec a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11330, a.ChID, a.StateCode) = 0)
+    BEGIN
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Калькуляционная карта'))
+      RAISERROR(@Err2, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* t_SpecD ^ r_Prods - Проверка в PARENT */
+/* Калькуляционная карта: Состав ^ Справочник товаров - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_SpecD', 0
+      RETURN
+    END
+
+/* t_SpecD ^ t_Spec - Проверка в PARENT */
+/* Калькуляционная карта: Состав ^ Калькуляционная карта: Заголовок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Spec))
+    BEGIN
+      EXEC z_RelationError 't_Spec', 't_SpecD', 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_SpecD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SpecD', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

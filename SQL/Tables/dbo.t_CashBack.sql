@@ -33,13 +33,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_CashBack] ON [t_CashBack]
-FOR INSERT AS
-/* t_CashBack - Выдача наличных держателям ЭПС - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_t_CashBack] ON [t_CashBack]
+FOR DELETE AS
+/* t_CashBack - Выдача наличных держателям ЭПС - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -59,37 +56,32 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* t_CashBack ^ t_Sale - Проверка в PARENT */
-/* Выдача наличных держателям ЭПС ^ Продажа товара оператором: Заголовок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SaleSrcDocID NOT IN (SELECT DocID FROM t_Sale))
-    BEGIN
-      EXEC z_RelationError 't_Sale', 't_CashBack', 0
-      RETURN
-    END
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 11036 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_CashBack', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_CashBack', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -123,7 +115,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -132,7 +124,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -141,7 +133,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -150,7 +142,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -183,10 +175,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_CashBack] ON [t_CashBack]
-FOR DELETE AS
-/* t_CashBack - Выдача наличных держателям ЭПС - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_CashBack] ON [t_CashBack]
+FOR INSERT AS
+/* t_CashBack - Выдача наличных держателям ЭПС - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -206,32 +201,37 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Выдача наличных держателям ЭПС (t_CashBack):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Выдача наличных держателям ЭПС'), 't_CashBack', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 11036 AND m.ChID = i.ChID
+/* t_CashBack ^ t_Sale - Проверка в PARENT */
+/* Выдача наличных держателям ЭПС ^ Продажа товара оператором: Заголовок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SaleSrcDocID NOT IN (SELECT DocID FROM t_Sale))
+    BEGIN
+      EXEC z_RelationError 't_Sale', 't_CashBack', 0
+      RETURN
+    END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_CashBack', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_CashBack', N'Last', N'INSERT'
 GO
 
 ALTER TABLE [dbo].[t_CashBack]

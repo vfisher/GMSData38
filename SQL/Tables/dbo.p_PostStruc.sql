@@ -70,13 +70,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_PostStruc] ON [p_PostStruc]
-FOR INSERT AS
-/* p_PostStruc - Структура должностей (Заголовок) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_PostStruc] ON [p_PostStruc]
+FOR DELETE AS
+/* p_PostStruc - Структура должностей (Заголовок) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -96,85 +93,37 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* p_PostStruc ^ r_Codes1 - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник признаков 1 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
-    BEGIN
-      EXEC z_RelationError 'r_Codes1', 'p_PostStruc', 0
-      RETURN
-    END
+/* p_PostStruc ^ p_PostStrucD - Удаление в CHILD */
+/* Структура должностей (Заголовок) ^ Структура должностей (Список) - Удаление в CHILD */
+  DELETE p_PostStrucD FROM p_PostStrucD a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* p_PostStruc ^ r_Codes2 - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник признаков 2 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
-    BEGIN
-      EXEC z_RelationError 'r_Codes2', 'p_PostStruc', 0
-      RETURN
-    END
-
-/* p_PostStruc ^ r_Codes3 - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник признаков 3 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
-    BEGIN
-      EXEC z_RelationError 'r_Codes3', 'p_PostStruc', 0
-      RETURN
-    END
-
-/* p_PostStruc ^ r_Codes4 - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник признаков 4 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
-    BEGIN
-      EXEC z_RelationError 'r_Codes4', 'p_PostStruc', 0
-      RETURN
-    END
-
-/* p_PostStruc ^ r_Codes5 - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник признаков 5 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_PostStruc', 0
-      RETURN
-    END
-
-/* p_PostStruc ^ r_Ours - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник внутренних фирм - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_PostStruc', 0
-      RETURN
-    END
-
-/* p_PostStruc ^ r_States - Проверка в PARENT */
-/* Структура должностей (Заголовок) ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_PostStruc', 0
-      RETURN
-    END
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 15092 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_PostStruc', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_PostStruc', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -208,7 +157,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -217,7 +166,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -226,7 +175,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -235,7 +184,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -341,10 +290,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_PostStruc] ON [p_PostStruc]
-FOR DELETE AS
-/* p_PostStruc - Структура должностей (Заголовок) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_PostStruc] ON [p_PostStruc]
+FOR INSERT AS
+/* p_PostStruc - Структура должностей (Заголовок) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -364,35 +316,118 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Структура должностей (Заголовок) (p_PostStruc):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Структура должностей (Заголовок)'), 'p_PostStruc', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* p_PostStruc ^ p_PostStrucD - Удаление в CHILD */
-/* Структура должностей (Заголовок) ^ Структура должностей (Список) - Удаление в CHILD */
-  DELETE p_PostStrucD FROM p_PostStrucD a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
+/* p_PostStruc ^ r_Codes1 - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник признаков 1 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
+    BEGIN
+      EXEC z_RelationError 'r_Codes1', 'p_PostStruc', 0
+      RETURN
+    END
 
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 15092 AND m.ChID = i.ChID
+/* p_PostStruc ^ r_Codes2 - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник признаков 2 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
+    BEGIN
+      EXEC z_RelationError 'r_Codes2', 'p_PostStruc', 0
+      RETURN
+    END
+
+/* p_PostStruc ^ r_Codes3 - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник признаков 3 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
+    BEGIN
+      EXEC z_RelationError 'r_Codes3', 'p_PostStruc', 0
+      RETURN
+    END
+
+/* p_PostStruc ^ r_Codes4 - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник признаков 4 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
+    BEGIN
+      EXEC z_RelationError 'r_Codes4', 'p_PostStruc', 0
+      RETURN
+    END
+
+/* p_PostStruc ^ r_Codes5 - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник признаков 5 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_PostStruc', 0
+      RETURN
+    END
+
+/* p_PostStruc ^ r_Ours - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_PostStruc', 0
+      RETURN
+    END
+
+/* p_PostStruc ^ r_States - Проверка в PARENT */
+/* Структура должностей (Заголовок) ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_PostStruc', 0
+      RETURN
+    END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_PostStruc', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_PostStruc', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

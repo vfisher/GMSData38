@@ -22,13 +22,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_LeaveSchedD] ON [p_LeaveSchedD]
-FOR INSERT AS
-/* p_LeaveSchedD - Отпуск: Лимиты по видам (Данные) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_LeaveSchedD] ON [p_LeaveSchedD]
+FOR DELETE AS
+/* p_LeaveSchedD - Отпуск: Лимиты по видам (Данные) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -48,45 +45,28 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LeaveSched a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LeaveSched a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LeaveSched a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LeaveSched a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
-      RETURN
-    END
-
-/* p_LeaveSchedD ^ p_LeaveSched - Проверка в PARENT */
-/* Отпуск: Лимиты по видам (Данные) ^ Отпуск: Лимиты по видам (Заголовок) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM p_LeaveSched))
-    BEGIN
-      EXEC z_RelationError 'p_LeaveSched', 'p_LeaveSchedD', 0
-      RETURN
-    END
-
-/* p_LeaveSchedD ^ r_Uni - Проверка в PARENT */
-/* Отпуск: Лимиты по видам (Данные) ^ Справочник универсальный - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.LeavType NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10051))
-    BEGIN
-      EXEC z_RelationErrorUni 'p_LeaveSchedD', 10051, 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_LeaveSchedD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_LeaveSchedD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -120,7 +100,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LeaveSched a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -129,7 +109,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LeaveSched a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -138,7 +118,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LeaveSched a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -147,7 +127,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LeaveSched a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -179,10 +159,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_LeaveSchedD] ON [p_LeaveSchedD]
-FOR DELETE AS
-/* p_LeaveSchedD - Отпуск: Лимиты по видам (Данные) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_LeaveSchedD] ON [p_LeaveSchedD]
+FOR INSERT AS
+/* p_LeaveSchedD - Отпуск: Лимиты по видам (Данные) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -202,26 +185,62 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LeaveSched a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LeaveSched a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LeaveSched a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LeaveSched a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Отпуск: Лимиты по видам (Данные) (p_LeaveSchedD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Отпуск: Лимиты по видам (Данные)'), 'p_LeaveSchedD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
+      RETURN
+    END
+
+/* p_LeaveSchedD ^ p_LeaveSched - Проверка в PARENT */
+/* Отпуск: Лимиты по видам (Данные) ^ Отпуск: Лимиты по видам (Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM p_LeaveSched))
+    BEGIN
+      EXEC z_RelationError 'p_LeaveSched', 'p_LeaveSchedD', 0
+      RETURN
+    END
+
+/* p_LeaveSchedD ^ r_Uni - Проверка в PARENT */
+/* Отпуск: Лимиты по видам (Данные) ^ Справочник универсальный - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.LeavType NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10051))
+    BEGIN
+      EXEC z_RelationErrorUni 'p_LeaveSchedD', 10051, 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_LeaveSchedD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_LeaveSchedD', N'Last', N'INSERT'
+GO
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

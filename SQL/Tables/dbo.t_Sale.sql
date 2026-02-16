@@ -405,27 +405,9 @@ BEGIN
     END
 
 /* Возможно ли редактирование документа */
-  DECLARE @StateCodePosID int
-  SELECT @StateCodePosID = colid FROM syscolumns WHERE id = object_id('t_Sale') AND name = 'StateCode'
-  DECLARE @BytePos int
-  DECLARE @UpdLen int
-  DECLARE @FieldsChanged bit
-  SET @FieldsChanged = 0
-  SET @BytePos = CAST(CEILING(@StateCodePosID / 8.0) AS int)
-  SET @UpdLen = LEN(COLUMNS_UPDATED())
-  WHILE (@UpdLen > 0 AND @FieldsChanged = 0)
-    BEGIN
-      IF @UpdLen = @BytePos
-        BEGIN
-         IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> POWER(2, @StateCodePosID - (CEILING(@StateCodePosID / 8.0) - 1) * 8 - 1)
-           SET @FieldsChanged = 1
-        END
-      ELSE
-        IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> 0
-          SET @FieldsChanged = 1
-      SET @UpdLen = @UpdLen - 1
-    END
-  IF @FieldsChanged = 1
+DECLARE @ColumnsUpdated VARBINARY(255)
+SET @ColumnsUpdated = COLUMNS_UPDATED()
+IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('t_Sale', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11035, a.ChID, a.StateCode) = 0)
       BEGIN
         DECLARE @Err2 varchar(200)
@@ -983,36 +965,6 @@ END
 GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_Sale', N'Last', N'INSERT'
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TGMSRel3_Del_t_Sale] ON [t_Sale]
-FOR DELETE AS
-/* t_Sale - Продажа товара оператором: Заголовок - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-  /* t_Sale ^ t_Booking - Удаление в CHILD */
-  /* Продажа товара оператором: Заголовок ^ Документы - Заявки - Удаление в CHILD */
-  DELETE t_Booking FROM t_Booking a, deleted d WHERE a.DocCode = 11035 AND a.DocChID = d.ChID
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TGMSRel2_Upd_t_Sale] ON [t_Sale]
-FOR UPDATE AS
-/* t_Sale - Продажа товара оператором: Заголовок - UPDATE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-  /* t_Sale ^ t_Booking - Проверка в PARENT */
-  /* Временные данные продаж: Заголовок ^ Заявки - Проверка в PARENT */
-  IF UPDATE(ChID)
-    IF EXISTS(SELECT TOP 1 1 FROM t_Booking a, deleted d WHERE a.DocCode = 11035 AND a.DocChID = d.ChID)
-      EXEC z_RelationError 't_Sale', 't_Booking', 2
-
-END
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON

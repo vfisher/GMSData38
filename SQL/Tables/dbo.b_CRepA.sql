@@ -79,112 +79,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU2_UPD_b_CRepA] ON [b_CRepA]
-FOR UPDATE
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_b_CRepA] ON [b_CRepA]
+FOR DELETE AS
+/* b_CRepA - Авансовый отчет с признаками (Заголовок) - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 141 - Текущие остатки товара */
-/* b_CRepA - Авансовый отчет с признаками (Заголовок) */
-/* b_Rem - ТМЦ: Текущие остатки (Данные) */
-
-IF UPDATE(OurID)
-BEGIN
-  INSERT INTO b_Rem (OurID, StockID, PPID, ProdID, Qty)
-  SELECT DISTINCT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 0
-  FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), inserted m
-  WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
-  AND (NOT EXISTS (SELECT TOP 1 1 FROM b_Rem r WITH (NOLOCK)
-       WHERE m.OurID = r.OurID AND b_CRepADP.StockID = r.StockID AND b_CRepADP.PPID = r.PPID AND b_CRepADP.ProdID = r.ProdID))
-  IF @@error > 0 Return
-
-  INSERT INTO b_Rem (OurID, StockID, PPID, ProdID, Qty)
-  SELECT DISTINCT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 0
-  FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
-  WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
-  AND (NOT EXISTS (SELECT TOP 1 1 FROM b_Rem r WITH (NOLOCK)
-       WHERE m.OurID = r.OurID AND b_CRepADP.StockID = r.StockID AND b_CRepADP.PPID = r.PPID AND b_CRepADP.ProdID = r.ProdID))
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.Qty = r.Qty + q.Qty
-  FROM b_Rem r, 
-    (SELECT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 
-       ISNULL(SUM(b_CRepADP.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), inserted m
-     WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
-     GROUP BY m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID) q
-  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.ProdID = r.ProdID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.Qty = r.Qty - q.Qty
-  FROM b_Rem r, 
-    (SELECT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 
-       ISNULL(SUM(b_CRepADP.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
-     WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
-     GROUP BY m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID) q
-  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.ProdID = r.ProdID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_b_CRepA] ON [b_CRepA]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 141 - Текущие остатки товара */
-/* b_CRepA - Авансовый отчет с признаками (Заголовок) */
-/* b_Rem - ТМЦ: Текущие остатки (Данные) */
-
-  INSERT INTO b_Rem (OurID, StockID, PPID, ProdID, Qty)
-  SELECT DISTINCT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 0
-  FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
-  WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
-  AND (NOT EXISTS (SELECT TOP 1 1 FROM b_Rem r WITH (NOLOCK)
-       WHERE m.OurID = r.OurID AND b_CRepADP.StockID = r.StockID AND b_CRepADP.PPID = r.PPID AND b_CRepADP.ProdID = r.ProdID))
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.Qty = r.Qty - q.Qty
-  FROM b_Rem r, 
-    (SELECT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 
-       ISNULL(SUM(b_CRepADP.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
-     WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
-     GROUP BY m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID) q
-  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.ProdID = r.ProdID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_b_CRepA] ON [b_CRepA]
-FOR INSERT AS
-/* b_CRepA - Авансовый отчет с признаками (Заголовок) - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -204,84 +102,96 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(14311, i.StateCode) = 0)
+/* Удаление регистрации изменения статуса */
+  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 14311 AND m.ChID = i.ChID
+
+/* Возможно ли редактирование документа */
+    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(14311, a.ChID, a.StateCode) = 0)
+      BEGIN
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Авансовый отчет с признаками'))
+        RAISERROR(@Err2, 18, 1)
+        ROLLBACK TRAN
+        RETURN
+      END
+
+/* b_CRepA ^ b_CRepADP - Удаление в CHILD */
+/* Авансовый отчет с признаками (Заголовок) ^ Авансовый отчет с признаками (ТМЦ) - Удаление в CHILD */
+  DELETE b_CRepADP FROM b_CRepADP a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* b_CRepA ^ b_CRepADS - Удаление в CHILD */
+/* Авансовый отчет с признаками (Заголовок) ^ Авансовый отчет с признаками (Основные средства) - Удаление в CHILD */
+  DELETE b_CRepADS FROM b_CRepADS a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* b_CRepA ^ b_CRepADV - Удаление в CHILD */
+/* Авансовый отчет с признаками (Заголовок) ^ Авансовый отчет с признаками (Общие) - Удаление в CHILD */
+  DELETE b_CRepADV FROM b_CRepADV a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* b_CRepA ^ z_DocLinks - Удаление в CHILD */
+/* Авансовый отчет с признаками (Заголовок) ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 14311 AND a.ChildChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* b_CRepA ^ z_DocLinks - Проверка в CHILD */
+/* Авансовый отчет с признаками (Заголовок) ^ Документы - Взаимосвязи - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 14311 AND a.ParentChID = d.ChID)
     BEGIN
-      RAISERROR ('Документ ''Авансовый отчет с признаками'' не может иметь указанный статус.', 18, 1)
-      ROLLBACK TRAN
+      EXEC z_RelationError 'b_CRepA', 'z_DocLinks', 3
       RETURN
     END
 
+/* b_CRepA ^ z_DocShed - Удаление в CHILD */
+/* Авансовый отчет с признаками (Заголовок) ^ Документы - Процессы - Удаление в CHILD */
+  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 14311 AND a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* b_CRepA ^ r_Comps - Проверка в PARENT */
-/* Авансовый отчет с признаками (Заголовок) ^ Справочник предприятий - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CompID NOT IN (SELECT CompID FROM r_Comps))
-    BEGIN
-      EXEC z_RelationError 'r_Comps', 'b_CRepA', 0
-      RETURN
-    END
 
-/* b_CRepA ^ r_Currs - Проверка в PARENT */
-/* Авансовый отчет с признаками (Заголовок) ^ Справочник валют - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
-    BEGIN
-      EXEC z_RelationError 'r_Currs', 'b_CRepA', 0
-      RETURN
-    END
-
-/* b_CRepA ^ r_Emps - Проверка в PARENT */
-/* Авансовый отчет с признаками (Заголовок) ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 'b_CRepA', 0
-      RETURN
-    END
-
-/* b_CRepA ^ r_Ours - Проверка в PARENT */
-/* Авансовый отчет с признаками (Заголовок) ^ Справочник внутренних фирм - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_CRepA', 0
-      RETURN
-    END
-
-/* b_CRepA ^ r_States - Проверка в PARENT */
-/* Авансовый отчет с признаками (Заголовок) ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_CRepA', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 14311001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 14311001 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 14311001 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 14311001, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 14311 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_b_CRepA', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_b_CRepA', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -315,7 +225,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -324,7 +234,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -333,7 +243,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -342,7 +252,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -356,7 +266,9 @@ BEGIN
       SELECT @OldTaxPercent = dbo.zf_GetTaxPercentByDate(0, (SELECT DocDate FROM deleted)), @NewTaxPercent = dbo.zf_GetTaxPercentByDate(0, (SELECT DocDate FROM inserted))
       IF @OldTaxPercent <> @NewTaxPercent
         BEGIN
-          RAISERROR ('Изменение даты документа невозможно (Различные налоговые ставки).', 18, 1)
+          DECLARE @Err3 varchar(max)
+          SELECT @Err3 = dbo.zf_Translate('Изменение даты документа невозможно (Различные налоговые ставки).')
+          RAISERROR (@Err3, 18, 1)
           ROLLBACK TRAN
           RETURN 
         END
@@ -365,7 +277,9 @@ BEGIN
 /* Обработка статуса */
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(14311, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Авансовый отчет с признаками).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Авансовый отчет с признаками'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -383,7 +297,9 @@ SET @ColumnsUpdated = COLUMNS_UPDATED()
 IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('b_CRepA', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(14311, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Авансовый отчет с признаками'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Авансовый отчет с признаками'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -557,6 +473,7 @@ IF UPDATE(DocDate) OR UPDATE(DocID)
     FROM z_DocLinks l, inserted i WHERE l.ParentDocCode = 14311 AND l.ParentChID = i.ChID
   END
 
+
 /* Регистрация изменения записи */
 
   IF NOT(UPDATE(ChID) OR UPDATE(OurID) OR UPDATE(DocID) OR UPDATE(IntDocID) OR UPDATE(DocDate) OR UPDATE(EmpID) OR UPDATE(CompID) OR UPDATE(KursMC) OR UPDATE(Notes) OR UPDATE(StateCode) OR UPDATE(CurrID) OR UPDATE(GPosID)) RETURN
@@ -614,10 +531,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_b_CRepA] ON [b_CRepA]
-FOR DELETE AS
-/* b_CRepA - Авансовый отчет с признаками (Заголовок) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_b_CRepA] ON [b_CRepA]
+FOR INSERT AS
+/* b_CRepA - Авансовый отчет с признаками (Заголовок) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -637,91 +557,235 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Авансовый отчет с признаками (Заголовок) (b_CRepA):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Авансовый отчет с признаками (Заголовок)'), 'b_CRepA', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-/* Удаление регистрации изменения статуса */
-  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 14311 AND m.ChID = i.ChID
-
-/* Возможно ли редактирование документа */
-    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(14311, a.ChID, a.StateCode) = 0)
-      BEGIN
-        RAISERROR ('Изменение документа ''Авансовый отчет с признаками'' в данном статусе запрещено.', 18, 1)
-        ROLLBACK TRAN
-        RETURN
-      END
-
-/* b_CRepA ^ b_CRepADP - Удаление в CHILD */
-/* Авансовый отчет с признаками (Заголовок) ^ Авансовый отчет с признаками (ТМЦ) - Удаление в CHILD */
-  DELETE b_CRepADP FROM b_CRepADP a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* b_CRepA ^ b_CRepADS - Удаление в CHILD */
-/* Авансовый отчет с признаками (Заголовок) ^ Авансовый отчет с признаками (Основные средства) - Удаление в CHILD */
-  DELETE b_CRepADS FROM b_CRepADS a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* b_CRepA ^ b_CRepADV - Удаление в CHILD */
-/* Авансовый отчет с признаками (Заголовок) ^ Авансовый отчет с признаками (Общие) - Удаление в CHILD */
-  DELETE b_CRepADV FROM b_CRepADV a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* b_CRepA ^ z_DocLinks - Удаление в CHILD */
-/* Авансовый отчет с признаками (Заголовок) ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 14311 AND a.ChildChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* b_CRepA ^ z_DocLinks - Проверка в CHILD */
-/* Авансовый отчет с признаками (Заголовок) ^ Документы - Взаимосвязи - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 14311 AND a.ParentChID = d.ChID)
+  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(14311, i.StateCode) = 0)
     BEGIN
-      EXEC z_RelationError 'b_CRepA', 'z_DocLinks', 3
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Авансовый отчет с признаками'))
+      RAISERROR(@Err1, 18, 1)
+      ROLLBACK TRAN
       RETURN
     END
 
-/* b_CRepA ^ z_DocShed - Удаление в CHILD */
-/* Авансовый отчет с признаками (Заголовок) ^ Документы - Процессы - Удаление в CHILD */
-  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 14311 AND a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 14311001 AND m.PKValue = 
+/* b_CRepA ^ r_Comps - Проверка в PARENT */
+/* Авансовый отчет с признаками (Заголовок) ^ Справочник предприятий - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CompID NOT IN (SELECT CompID FROM r_Comps))
+    BEGIN
+      EXEC z_RelationError 'r_Comps', 'b_CRepA', 0
+      RETURN
+    END
+
+/* b_CRepA ^ r_Currs - Проверка в PARENT */
+/* Авансовый отчет с признаками (Заголовок) ^ Справочник валют - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
+    BEGIN
+      EXEC z_RelationError 'r_Currs', 'b_CRepA', 0
+      RETURN
+    END
+
+/* b_CRepA ^ r_Emps - Проверка в PARENT */
+/* Авансовый отчет с признаками (Заголовок) ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 'b_CRepA', 0
+      RETURN
+    END
+
+/* b_CRepA ^ r_Ours - Проверка в PARENT */
+/* Авансовый отчет с признаками (Заголовок) ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_CRepA', 0
+      RETURN
+    END
+
+/* b_CRepA ^ r_States - Проверка в PARENT */
+/* Авансовый отчет с признаками (Заголовок) ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_CRepA', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 14311001, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 14311001 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 14311001, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 14311 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_b_CRepA', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_b_CRepA', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_b_CRepA] ON [b_CRepA]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 141 - Текущие остатки товара */
+/* b_CRepA - Авансовый отчет с признаками (Заголовок) */
+/* b_Rem - ТМЦ: Текущие остатки (Данные) */
+
+  INSERT INTO b_Rem (OurID, StockID, PPID, ProdID, Qty)
+  SELECT DISTINCT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 0
+  FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
+  WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
+  AND (NOT EXISTS (SELECT TOP 1 1 FROM b_Rem r WITH (NOLOCK)
+       WHERE m.OurID = r.OurID AND b_CRepADP.StockID = r.StockID AND b_CRepADP.PPID = r.PPID AND b_CRepADP.ProdID = r.ProdID))
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.Qty = r.Qty - q.Qty
+  FROM b_Rem r, 
+    (SELECT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 
+       ISNULL(SUM(b_CRepADP.Qty), 0) Qty 
+     FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
+     WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
+     GROUP BY m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID) q
+  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.ProdID = r.ProdID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_b_CRepA] ON [b_CRepA]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 141 - Текущие остатки товара */
+/* b_CRepA - Авансовый отчет с признаками (Заголовок) */
+/* b_Rem - ТМЦ: Текущие остатки (Данные) */
+
+IF UPDATE(OurID)
+BEGIN
+  INSERT INTO b_Rem (OurID, StockID, PPID, ProdID, Qty)
+  SELECT DISTINCT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 0
+  FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), inserted m
+  WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
+  AND (NOT EXISTS (SELECT TOP 1 1 FROM b_Rem r WITH (NOLOCK)
+       WHERE m.OurID = r.OurID AND b_CRepADP.StockID = r.StockID AND b_CRepADP.PPID = r.PPID AND b_CRepADP.ProdID = r.ProdID))
+  IF @@error > 0 Return
+
+  INSERT INTO b_Rem (OurID, StockID, PPID, ProdID, Qty)
+  SELECT DISTINCT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 0
+  FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
+  WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
+  AND (NOT EXISTS (SELECT TOP 1 1 FROM b_Rem r WITH (NOLOCK)
+       WHERE m.OurID = r.OurID AND b_CRepADP.StockID = r.StockID AND b_CRepADP.PPID = r.PPID AND b_CRepADP.ProdID = r.ProdID))
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.Qty = r.Qty + q.Qty
+  FROM b_Rem r, 
+    (SELECT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 
+       ISNULL(SUM(b_CRepADP.Qty), 0) Qty 
+     FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), inserted m
+     WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
+     GROUP BY m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID) q
+  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.ProdID = r.ProdID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.Qty = r.Qty - q.Qty
+  FROM b_Rem r, 
+    (SELECT m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID, 
+       ISNULL(SUM(b_CRepADP.Qty), 0) Qty 
+     FROM r_Prods WITH (NOLOCK), b_CRepADP WITH (NOLOCK), deleted m
+     WHERE b_CRepADP.ProdID = r_Prods.ProdID AND m.ChID = b_CRepADP.ChID AND (r_Prods.InRems <> 0)
+     GROUP BY m.OurID, b_CRepADP.StockID, b_CRepADP.PPID, b_CRepADP.ProdID) q
+  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.ProdID = r.ProdID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

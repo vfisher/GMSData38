@@ -172,112 +172,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU2_UPD_t_Cst] ON [t_Cst]
-FOR UPDATE
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_t_Cst] ON [t_Cst]
+FOR DELETE AS
+/* t_Cst - Приход товара по ГТД: Заголовок - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 174 - Текущие остатки товара */
-/* t_Cst - Приход товара по ГТД: Заголовок */
-/* t_Rem - Остатки товара (Таблица) */
-
-IF UPDATE(OurID) OR UPDATE(StockID)
-BEGIN
-  INSERT INTO t_Rem (OurID, StockID, PPID, SecID, ProdID, Qty, AccQty)
-  SELECT DISTINCT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 0, 0
-  FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), inserted m
-  WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
-  AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
-       WHERE m.OurID = r.OurID AND m.StockID = r.StockID AND t_CstD.PPID = r.PPID AND t_CstD.SecID = r.SecID AND t_CstD.ProdID = r.ProdID))
-  IF @@error > 0 Return
-
-  INSERT INTO t_Rem (OurID, StockID, PPID, SecID, ProdID, Qty, AccQty)
-  SELECT DISTINCT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 0, 0
-  FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
-  WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
-  AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
-       WHERE m.OurID = r.OurID AND m.StockID = r.StockID AND t_CstD.PPID = r.PPID AND t_CstD.SecID = r.SecID AND t_CstD.ProdID = r.ProdID))
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.Qty = r.Qty + q.Qty
-  FROM t_Rem r, 
-    (SELECT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 
-       ISNULL(SUM(t_CstD.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), inserted m
-     WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
-     GROUP BY m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID) q
-  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.SecID = r.SecID AND q.ProdID = r.ProdID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.Qty = r.Qty - q.Qty
-  FROM t_Rem r, 
-    (SELECT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 
-       ISNULL(SUM(t_CstD.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
-     WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
-     GROUP BY m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID) q
-  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.SecID = r.SecID AND q.ProdID = r.ProdID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_t_Cst] ON [t_Cst]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 174 - Текущие остатки товара */
-/* t_Cst - Приход товара по ГТД: Заголовок */
-/* t_Rem - Остатки товара (Таблица) */
-
-  INSERT INTO t_Rem (OurID, StockID, PPID, SecID, ProdID, Qty, AccQty)
-  SELECT DISTINCT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 0, 0
-  FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
-  WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
-  AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
-       WHERE m.OurID = r.OurID AND m.StockID = r.StockID AND t_CstD.PPID = r.PPID AND t_CstD.SecID = r.SecID AND t_CstD.ProdID = r.ProdID))
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.Qty = r.Qty - q.Qty
-  FROM t_Rem r, 
-    (SELECT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 
-       ISNULL(SUM(t_CstD.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
-     WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
-     GROUP BY m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID) q
-  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.SecID = r.SecID AND q.ProdID = r.ProdID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_Cst] ON [t_Cst]
-FOR INSERT AS
-/* t_Cst - Приход товара по ГТД: Заголовок - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -297,132 +195,96 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(11045, i.StateCode) = 0)
+/* Удаление регистрации изменения статуса */
+  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 11045 AND m.ChID = i.ChID
+
+/* Возможно ли редактирование документа */
+    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11045, a.ChID, a.StateCode) = 0)
+      BEGIN
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Приход товара по ГТД'))
+        RAISERROR(@Err2, 18, 1)
+        ROLLBACK TRAN
+        RETURN
+      END
+
+/* t_Cst ^ t_CstD - Удаление в CHILD */
+/* Приход товара по ГТД: Заголовок ^ Приход товара по ГТД: Товар - Удаление в CHILD */
+  DELETE t_CstD FROM t_CstD a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* t_Cst ^ t_CstRoutes - Удаление в CHILD */
+/* Приход товара по ГТД: Заголовок ^ Приход товара по ГТД: Маршрут - Удаление в CHILD */
+  DELETE t_CstRoutes FROM t_CstRoutes a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* t_Cst ^ t_CstSpends - Удаление в CHILD */
+/* Приход товара по ГТД: Заголовок ^ Приход товара по ГТД: Затраты - Удаление в CHILD */
+  DELETE t_CstSpends FROM t_CstSpends a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* t_Cst ^ z_DocLinks - Удаление в CHILD */
+/* Приход товара по ГТД: Заголовок ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 11045 AND a.ChildChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* t_Cst ^ z_DocLinks - Проверка в CHILD */
+/* Приход товара по ГТД: Заголовок ^ Документы - Взаимосвязи - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 11045 AND a.ParentChID = d.ChID)
     BEGIN
-      RAISERROR ('Документ ''Приход товара по ГТД'' не может иметь указанный статус.', 18, 1)
-      ROLLBACK TRAN
+      EXEC z_RelationError 't_Cst', 'z_DocLinks', 3
       RETURN
     END
 
+/* t_Cst ^ z_DocShed - Удаление в CHILD */
+/* Приход товара по ГТД: Заголовок ^ Документы - Процессы - Удаление в CHILD */
+  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 11045 AND a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* t_Cst ^ r_Codes1 - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник признаков 1 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
-    BEGIN
-      EXEC z_RelationError 'r_Codes1', 't_Cst', 0
-      RETURN
-    END
 
-/* t_Cst ^ r_Codes2 - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник признаков 2 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
-    BEGIN
-      EXEC z_RelationError 'r_Codes2', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Codes3 - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник признаков 3 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
-    BEGIN
-      EXEC z_RelationError 'r_Codes3', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Codes4 - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник признаков 4 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
-    BEGIN
-      EXEC z_RelationError 'r_Codes4', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Codes5 - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник признаков 5 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Comps - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник предприятий - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CompID NOT IN (SELECT CompID FROM r_Comps))
-    BEGIN
-      EXEC z_RelationError 'r_Comps', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Currs - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник валют - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
-    BEGIN
-      EXEC z_RelationError 'r_Currs', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Emps - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Ours - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник внутренних фирм - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_States - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Cst', 0
-      RETURN
-    END
-
-/* t_Cst ^ r_Stocks - Проверка в PARENT */
-/* Приход товара по ГТД: Заголовок ^ Справочник складов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Cst', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11045001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 11045001 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 11045001 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 11045001, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 11045 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_Cst', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_Cst', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -456,7 +318,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -465,7 +327,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -474,7 +336,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -483,7 +345,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -497,7 +359,9 @@ BEGIN
       SELECT @OldTaxPercent = dbo.zf_GetTaxPercentByDate(0, (SELECT DocDate FROM deleted)), @NewTaxPercent = dbo.zf_GetTaxPercentByDate(0, (SELECT DocDate FROM inserted))
       IF @OldTaxPercent <> @NewTaxPercent
         BEGIN
-          RAISERROR ('Изменение даты документа невозможно (Различные налоговые ставки).', 18, 1)
+          DECLARE @Err3 varchar(max)
+          SELECT @Err3 = dbo.zf_Translate('Изменение даты документа невозможно (Различные налоговые ставки).')
+          RAISERROR (@Err3, 18, 1)
           ROLLBACK TRAN
           RETURN 
         END
@@ -506,7 +370,9 @@ BEGIN
 /* Обработка статуса */
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(11045, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Приход товара по ГТД).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Приход товара по ГТД'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -524,7 +390,9 @@ SET @ColumnsUpdated = COLUMNS_UPDATED()
 IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('t_Cst', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11045, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Приход товара по ГТД'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Приход товара по ГТД'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -752,6 +620,7 @@ IF UPDATE(DocDate) OR UPDATE(DocID)
     FROM z_DocLinks l, inserted i WHERE l.ParentDocCode = 11045 AND l.ParentChID = i.ChID
   END
 
+
 /* Регистрация изменения записи */
 
   IF NOT(UPDATE(ChID) OR UPDATE(DocID) OR UPDATE(IntDocID) OR UPDATE(DocDate) OR UPDATE(KursAC) OR UPDATE(KursMC) OR UPDATE(KursCC) OR UPDATE(OurID) OR UPDATE(StockID) OR UPDATE(CompID) OR UPDATE(CodeID1) OR UPDATE(CodeID2) OR UPDATE(CodeID3) OR UPDATE(CodeID4) OR UPDATE(CodeID5) OR UPDATE(PayDelay) OR UPDATE(EmpID) OR UPDATE(Notes) OR UPDATE(CurrID) OR UPDATE(DelID) OR UPDATE(TSumAC_In) OR UPDATE(TTrtAC) OR UPDATE(TMoreCC) OR UPDATE(Note1) OR UPDATE(SrcDocID) OR UPDATE(SrcDocDate) OR UPDATE(StateCode)) RETURN
@@ -809,10 +678,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_Cst] ON [t_Cst]
-FOR DELETE AS
-/* t_Cst - Приход товара по ГТД: Заголовок - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_Cst] ON [t_Cst]
+FOR INSERT AS
+/* t_Cst - Приход товара по ГТД: Заголовок - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -832,91 +704,325 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Приход товара по ГТД: Заголовок (t_Cst):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приход товара по ГТД: Заголовок'), 't_Cst', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-/* Удаление регистрации изменения статуса */
-  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 11045 AND m.ChID = i.ChID
-
-/* Возможно ли редактирование документа */
-    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11045, a.ChID, a.StateCode) = 0)
-      BEGIN
-        RAISERROR ('Изменение документа ''Приход товара по ГТД'' в данном статусе запрещено.', 18, 1)
-        ROLLBACK TRAN
-        RETURN
-      END
-
-/* t_Cst ^ t_CstD - Удаление в CHILD */
-/* Приход товара по ГТД: Заголовок ^ Приход товара по ГТД: Товар - Удаление в CHILD */
-  DELETE t_CstD FROM t_CstD a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* t_Cst ^ t_CstRoutes - Удаление в CHILD */
-/* Приход товара по ГТД: Заголовок ^ Приход товара по ГТД: Маршрут - Удаление в CHILD */
-  DELETE t_CstRoutes FROM t_CstRoutes a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* t_Cst ^ t_CstSpends - Удаление в CHILD */
-/* Приход товара по ГТД: Заголовок ^ Приход товара по ГТД: Затраты - Удаление в CHILD */
-  DELETE t_CstSpends FROM t_CstSpends a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* t_Cst ^ z_DocLinks - Удаление в CHILD */
-/* Приход товара по ГТД: Заголовок ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 11045 AND a.ChildChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* t_Cst ^ z_DocLinks - Проверка в CHILD */
-/* Приход товара по ГТД: Заголовок ^ Документы - Взаимосвязи - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 11045 AND a.ParentChID = d.ChID)
+  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(11045, i.StateCode) = 0)
     BEGIN
-      EXEC z_RelationError 't_Cst', 'z_DocLinks', 3
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Приход товара по ГТД'))
+      RAISERROR(@Err1, 18, 1)
+      ROLLBACK TRAN
       RETURN
     END
 
-/* t_Cst ^ z_DocShed - Удаление в CHILD */
-/* Приход товара по ГТД: Заголовок ^ Документы - Процессы - Удаление в CHILD */
-  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 11045 AND a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 11045001 AND m.PKValue = 
+/* t_Cst ^ r_Codes1 - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник признаков 1 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
+    BEGIN
+      EXEC z_RelationError 'r_Codes1', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Codes2 - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник признаков 2 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
+    BEGIN
+      EXEC z_RelationError 'r_Codes2', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Codes3 - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник признаков 3 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
+    BEGIN
+      EXEC z_RelationError 'r_Codes3', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Codes4 - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник признаков 4 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
+    BEGIN
+      EXEC z_RelationError 'r_Codes4', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Codes5 - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник признаков 5 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Comps - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник предприятий - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CompID NOT IN (SELECT CompID FROM r_Comps))
+    BEGIN
+      EXEC z_RelationError 'r_Comps', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Currs - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник валют - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
+    BEGIN
+      EXEC z_RelationError 'r_Currs', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Emps - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Ours - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_States - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Cst', 0
+      RETURN
+    END
+
+/* t_Cst ^ r_Stocks - Проверка в PARENT */
+/* Приход товара по ГТД: Заголовок ^ Справочник складов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Cst', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 11045001, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 11045001 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 11045001, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 11045 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_Cst', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_Cst', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_t_Cst] ON [t_Cst]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 174 - Текущие остатки товара */
+/* t_Cst - Приход товара по ГТД: Заголовок */
+/* t_Rem - Остатки товара (Таблица) */
+
+  INSERT INTO t_Rem (OurID, StockID, PPID, SecID, ProdID, Qty, AccQty)
+  SELECT DISTINCT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 0, 0
+  FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
+  WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
+  AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
+       WHERE m.OurID = r.OurID AND m.StockID = r.StockID AND t_CstD.PPID = r.PPID AND t_CstD.SecID = r.SecID AND t_CstD.ProdID = r.ProdID))
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.Qty = r.Qty - q.Qty
+  FROM t_Rem r, 
+    (SELECT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 
+       ISNULL(SUM(t_CstD.Qty), 0) Qty 
+     FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
+     WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
+     GROUP BY m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID) q
+  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.SecID = r.SecID AND q.ProdID = r.ProdID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_t_Cst] ON [t_Cst]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 174 - Текущие остатки товара */
+/* t_Cst - Приход товара по ГТД: Заголовок */
+/* t_Rem - Остатки товара (Таблица) */
+
+IF UPDATE(OurID) OR UPDATE(StockID)
+BEGIN
+  INSERT INTO t_Rem (OurID, StockID, PPID, SecID, ProdID, Qty, AccQty)
+  SELECT DISTINCT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 0, 0
+  FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), inserted m
+  WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
+  AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
+       WHERE m.OurID = r.OurID AND m.StockID = r.StockID AND t_CstD.PPID = r.PPID AND t_CstD.SecID = r.SecID AND t_CstD.ProdID = r.ProdID))
+  IF @@error > 0 Return
+
+  INSERT INTO t_Rem (OurID, StockID, PPID, SecID, ProdID, Qty, AccQty)
+  SELECT DISTINCT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 0, 0
+  FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
+  WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
+  AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
+       WHERE m.OurID = r.OurID AND m.StockID = r.StockID AND t_CstD.PPID = r.PPID AND t_CstD.SecID = r.SecID AND t_CstD.ProdID = r.ProdID))
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.Qty = r.Qty + q.Qty
+  FROM t_Rem r, 
+    (SELECT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 
+       ISNULL(SUM(t_CstD.Qty), 0) Qty 
+     FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), inserted m
+     WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
+     GROUP BY m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID) q
+  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.SecID = r.SecID AND q.ProdID = r.ProdID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.Qty = r.Qty - q.Qty
+  FROM t_Rem r, 
+    (SELECT m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID, 
+       ISNULL(SUM(t_CstD.Qty), 0) Qty 
+     FROM r_Prods WITH (NOLOCK), t_CstD WITH (NOLOCK), deleted m
+     WHERE t_CstD.ProdID = r_Prods.ProdID AND m.ChID = t_CstD.ChID AND (r_Prods.InRems <> 0)
+     GROUP BY m.OurID, m.StockID, t_CstD.PPID, t_CstD.SecID, t_CstD.ProdID) q
+  WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.PPID = r.PPID AND q.SecID = r.SecID AND q.ProdID = r.ProdID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

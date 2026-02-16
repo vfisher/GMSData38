@@ -15,118 +15,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU1_INS_t_ExpSpends] ON [t_ExpSpends]
-FOR INSERT
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_t_ExpSpends] ON [t_ExpSpends]
+FOR DELETE AS
+/* t_ExpSpends - Расходный документ: Затраты - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 32 - Обновление итогов в главной таблице: Затраты */
-/* t_ExpSpends - Расходный документ: Затраты */
-/* t_Exp - Расходный документ: Заголовок */
-
-  UPDATE r
-  SET 
-    r.TSpendSumCC = r.TSpendSumCC + q.TSpendSumCC
-  FROM t_Exp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
-     FROM t_Exp WITH (NOLOCK), inserted m
-     WHERE t_Exp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU2_UPD_t_ExpSpends] ON [t_ExpSpends]
-FOR UPDATE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 32 - Обновление итогов в главной таблице: Затраты */
-/* t_ExpSpends - Расходный документ: Затраты */
-/* t_Exp - Расходный документ: Заголовок */
-
-IF UPDATE(SpendSumCC)
-BEGIN
-  UPDATE r
-  SET 
-    r.TSpendSumCC = r.TSpendSumCC + q.TSpendSumCC
-  FROM t_Exp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
-     FROM t_Exp WITH (NOLOCK), inserted m
-     WHERE t_Exp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.TSpendSumCC = r.TSpendSumCC - q.TSpendSumCC
-  FROM t_Exp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
-     FROM t_Exp WITH (NOLOCK), deleted m
-     WHERE t_Exp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_t_ExpSpends] ON [t_ExpSpends]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 32 - Обновление итогов в главной таблице: Затраты */
-/* t_ExpSpends - Расходный документ: Затраты */
-/* t_Exp - Расходный документ: Заголовок */
-
-  UPDATE r
-  SET 
-    r.TSpendSumCC = r.TSpendSumCC - q.TSpendSumCC
-  FROM t_Exp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
-     FROM t_Exp WITH (NOLOCK), deleted m
-     WHERE t_Exp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_ExpSpends] ON [t_ExpSpends]
-FOR INSERT AS
-/* t_ExpSpends - Расходный документ: Затраты - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -146,60 +38,58 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Exp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Exp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Exp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Exp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_Exp a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11015, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM t_Exp a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11015, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Расходный документ'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Расходный документ'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* t_ExpSpends ^ r_Spends - Проверка в PARENT */
-/* Расходный документ: Затраты ^ Справочник затрат - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SpendCode NOT IN (SELECT SpendCode FROM r_Spends))
-    BEGIN
-      EXEC z_RelationError 'r_Spends', 't_ExpSpends', 0
-      RETURN
-    END
 
-/* t_ExpSpends ^ t_Exp - Проверка в PARENT */
-/* Расходный документ: Затраты ^ Расходный документ: Заголовок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Exp))
-    BEGIN
-      EXEC z_RelationError 't_Exp', 't_ExpSpends', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11015003, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 11015003 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SpendCode as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 11015003 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SpendCode as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 11015003, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SpendCode as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_ExpSpends', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_ExpSpends', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -233,7 +123,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Exp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -242,7 +132,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Exp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -251,7 +141,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Exp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -260,7 +150,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Exp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -269,7 +159,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM t_Exp a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11015, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Расходный документ'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Расходный документ'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -291,6 +183,7 @@ BEGIN
         EXEC z_RelationError 't_Exp', 't_ExpSpends', 1
         RETURN
       END
+
 
 /* Регистрация изменения записи */
 
@@ -386,10 +279,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_ExpSpends] ON [t_ExpSpends]
-FOR DELETE AS
-/* t_ExpSpends - Расходный документ: Затраты - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_ExpSpends] ON [t_ExpSpends]
+FOR INSERT AS
+/* t_ExpSpends - Расходный документ: Затраты - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -409,53 +305,195 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Exp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Exp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Exp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Exp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Расходный документ: Затраты (t_ExpSpends):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Расходный документ: Затраты'), 't_ExpSpends', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_Exp a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11015, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM t_Exp a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11015, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Расходный документ'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Расходный документ'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 11015003 AND m.PKValue = 
+/* t_ExpSpends ^ r_Spends - Проверка в PARENT */
+/* Расходный документ: Затраты ^ Справочник затрат - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SpendCode NOT IN (SELECT SpendCode FROM r_Spends))
+    BEGIN
+      EXEC z_RelationError 'r_Spends', 't_ExpSpends', 0
+      RETURN
+    END
+
+/* t_ExpSpends ^ t_Exp - Проверка в PARENT */
+/* Расходный документ: Затраты ^ Расходный документ: Заголовок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Exp))
+    BEGIN
+      EXEC z_RelationError 't_Exp', 't_ExpSpends', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 11015003, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SpendCode as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 11015003 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SpendCode as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 11015003, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SpendCode as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_ExpSpends', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_ExpSpends', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_t_ExpSpends] ON [t_ExpSpends]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 32 - Обновление итогов в главной таблице: Затраты */
+/* t_ExpSpends - Расходный документ: Затраты */
+/* t_Exp - Расходный документ: Заголовок */
+
+  UPDATE r
+  SET 
+    r.TSpendSumCC = r.TSpendSumCC - q.TSpendSumCC
+  FROM t_Exp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
+     FROM t_Exp WITH (NOLOCK), deleted m
+     WHERE t_Exp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_t_ExpSpends] ON [t_ExpSpends]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 32 - Обновление итогов в главной таблице: Затраты */
+/* t_ExpSpends - Расходный документ: Затраты */
+/* t_Exp - Расходный документ: Заголовок */
+
+IF UPDATE(SpendSumCC)
+BEGIN
+  UPDATE r
+  SET 
+    r.TSpendSumCC = r.TSpendSumCC + q.TSpendSumCC
+  FROM t_Exp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
+     FROM t_Exp WITH (NOLOCK), inserted m
+     WHERE t_Exp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.TSpendSumCC = r.TSpendSumCC - q.TSpendSumCC
+  FROM t_Exp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
+     FROM t_Exp WITH (NOLOCK), deleted m
+     WHERE t_Exp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU1_INS_t_ExpSpends] ON [t_ExpSpends]
+FOR INSERT
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 32 - Обновление итогов в главной таблице: Затраты */
+/* t_ExpSpends - Расходный документ: Затраты */
+/* t_Exp - Расходный документ: Заголовок */
+
+  UPDATE r
+  SET 
+    r.TSpendSumCC = r.TSpendSumCC + q.TSpendSumCC
+  FROM t_Exp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SpendSumCC), 0) TSpendSumCC 
+     FROM t_Exp WITH (NOLOCK), inserted m
+     WHERE t_Exp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

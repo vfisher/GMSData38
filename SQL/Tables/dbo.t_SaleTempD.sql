@@ -40,82 +40,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TGMSRel2_Upd_t_SaleTempD] ON [t_SaleTempD]
-FOR UPDATE AS
-/* t_SaleTempD - Временные данные продаж: Товар - UPDATE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-  /* Временные данные продаж: Товар ^ Заявки: подробно - Обновление CHILD */
-  IF UPDATE(ChID) OR UPDATE(SrcPosID)
-    IF EXISTS(SELECT TOP 1 1 FROM t_Booking m ,t_BookingD a, deleted d WHERE m.ChID = a.ChID AND m.DocCode = 1011 AND m.DocChID = d.ChID AND a.DetSrcPosID = d.SrcPosID)
-      EXEC z_RelationError 't_SaleTempD', 't_BookingD', 2
-END
+CREATE TRIGGER [dbo].[TRel3_Del_t_SaleTempD] ON [t_SaleTempD]FOR DELETE AS/* t_SaleTempD - Временные данные продаж: Товар - DELETE TRIGGER */BEGIN  SET NOCOUNT ON/* t_SaleTempD ^ t_SaleTempM - Удаление в CHILD *//* Временные данные продаж: Товар ^ Временные данные продаж: Модификаторы - Удаление в CHILD */  DELETE t_SaleTempM FROM t_SaleTempM a, deleted d WHERE a.ChID = d.ChID AND a.SrcPosID = d.SrcPosID  IF @@ERROR > 0 RETURNEND
 GO
 
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TGMSRel3_Del_t_SaleTempD] ON [t_SaleTempD]
-FOR DELETE AS
-/* t_SaleTempD - Временные данные продаж: Товар - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-  /* t_SaleTempD ^ t_BookingD - Удаление в CHILD */
-  /* Временные данные продаж: Товар ^ Заявки: подробно - Удаление в CHILD */
-  DELETE t_BookingD FROM t_Booking m, t_BookingD a, deleted d 
-  WHERE m.DocChID = d.ChID AND m.DocCode = 1011 AND m.ChID = a.ChID AND a.DetSrcPosID = d.SrcPosID 
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_SaleTempD] ON [t_SaleTempD]
-FOR INSERT AS
-/* t_SaleTempD - Временные данные продаж: Товар - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
-
-/* t_SaleTempD ^ r_Emps - Проверка в PARENT */
-/* Временные данные продаж: Товар ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 't_SaleTempD', 0
-      RETURN
-    END
-
-/* t_SaleTempD ^ r_ProdMarks - Проверка в PARENT */
-/* Временные данные продаж: Товар ^ Справочник товаров: маркировки - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.MarkCode IS NOT NULL AND i.MarkCode NOT IN (SELECT MarkCode FROM r_ProdMarks))
-    BEGIN
-      EXEC z_RelationError 'r_ProdMarks', 't_SaleTempD', 0
-      RETURN
-    END
-
-/* t_SaleTempD ^ r_Taxes - Проверка в PARENT */
-/* Временные данные продаж: Товар ^ Справочник НДС - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.TaxTypeID NOT IN (SELECT TaxTypeID FROM r_Taxes))
-    BEGIN
-      EXEC z_RelationError 'r_Taxes', 't_SaleTempD', 0
-      RETURN
-    END
-
-/* t_SaleTempD ^ t_SaleTemp - Проверка в PARENT */
-/* Временные данные продаж: Товар ^ Временные данные продаж: Заголовок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_SaleTemp))
-    BEGIN
-      EXEC z_RelationError 't_SaleTemp', 't_SaleTempD', 0
-      RETURN
-    END
-
-END
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SaleTempD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_SaleTempD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -208,8 +136,74 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_SaleTempD] ON [t_SaleTempD]FOR DELETE AS/* t_SaleTempD - Временные данные продаж: Товар - DELETE TRIGGER */BEGIN  SET NOCOUNT ON/* t_SaleTempD ^ t_SaleTempM - Удаление в CHILD *//* Временные данные продаж: Товар ^ Временные данные продаж: Модификаторы - Удаление в CHILD */  DELETE t_SaleTempM FROM t_SaleTempM a, deleted d WHERE a.ChID = d.ChID AND a.SrcPosID = d.SrcPosID  IF @@ERROR > 0 RETURNEND
+CREATE TRIGGER [dbo].[TRel1_Ins_t_SaleTempD] ON [t_SaleTempD]
+FOR INSERT AS
+/* t_SaleTempD - Временные данные продаж: Товар - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* t_SaleTempD ^ r_Emps - Проверка в PARENT */
+/* Временные данные продаж: Товар ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 't_SaleTempD', 0
+      RETURN
+    END
+
+/* t_SaleTempD ^ r_ProdMarks - Проверка в PARENT */
+/* Временные данные продаж: Товар ^ Справочник товаров: маркировки - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.MarkCode IS NOT NULL AND i.MarkCode NOT IN (SELECT MarkCode FROM r_ProdMarks))
+    BEGIN
+      EXEC z_RelationError 'r_ProdMarks', 't_SaleTempD', 0
+      RETURN
+    END
+
+/* t_SaleTempD ^ r_Taxes - Проверка в PARENT */
+/* Временные данные продаж: Товар ^ Справочник НДС - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.TaxTypeID NOT IN (SELECT TaxTypeID FROM r_Taxes))
+    BEGIN
+      EXEC z_RelationError 'r_Taxes', 't_SaleTempD', 0
+      RETURN
+    END
+
+/* t_SaleTempD ^ t_SaleTemp - Проверка в PARENT */
+/* Временные данные продаж: Товар ^ Временные данные продаж: Заголовок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_SaleTemp))
+    BEGIN
+      EXEC z_RelationError 't_SaleTemp', 't_SaleTempD', 0
+      RETURN
+    END
+
+END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_SaleTempD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SaleTempD', N'Last', N'INSERT'
+GO
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

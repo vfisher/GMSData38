@@ -12,3 +12,5 @@ INSERT dbo.z_LogTools(ChID, DocDate, RepToolCode, Note1, Note2, Note3, UserCode,
 INSERT dbo.z_LogTools(ChID, DocDate, RepToolCode, Note1, Note2, Note3, UserCode, ExtraInfo, WPID) VALUES (100000014, '2017-03-23 16:36:00', 50121, '', '', '', 0, NULL, 0);
 INSERT dbo.z_LogTools(ChID, DocDate, RepToolCode, Note1, Note2, Note3, UserCode, ExtraInfo, WPID) VALUES (100000015, '2017-07-14 13:38:00', 50101, '', '', '', 0, NULL, 0);
 INSERT dbo.z_LogTools(ChID, DocDate, RepToolCode, Note1, Note2, Note3, UserCode, ExtraInfo, WPID) VALUES (100000016, '2017-07-14 13:42:00', 50121, '', '', '', 0, NULL, 0);
+
+INSERT dbo.z_LogTools(ChID, DocDate, RepToolCode, Note1, Note2, Note3, UserCode, ExtraInfo, WPID) VALUES (100000017, '2026-02-16 17:32:00', 50101, '', '', '', 0, NULL, 0);

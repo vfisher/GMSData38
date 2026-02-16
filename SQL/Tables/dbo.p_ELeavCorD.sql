@@ -76,13 +76,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_ELeavCorD] ON [p_ELeavCorD]
-FOR INSERT AS
-/* p_ELeavCorD - Приказ: Отпуск: Корректировка (Данные) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_ELeavCorD] ON [p_ELeavCorD]
+FOR DELETE AS
+/* p_ELeavCorD - Приказ: Отпуск: Корректировка (Данные) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -102,61 +99,28 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_ELeavCor a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_ELeavCor a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_ELeavCor a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_ELeavCor a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
-      RETURN
-    END
-
-/* p_ELeavCorD ^ p_ELeavCor - Проверка в PARENT */
-/* Приказ: Отпуск: Корректировка (Данные) ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM p_ELeavCor))
-    BEGIN
-      EXEC z_RelationError 'p_ELeavCor', 'p_ELeavCorD', 0
-      RETURN
-    END
-
-/* p_ELeavCorD ^ r_Emps - Проверка в PARENT */
-/* Приказ: Отпуск: Корректировка (Данные) ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 'p_ELeavCorD', 0
-      RETURN
-    END
-
-/* p_ELeavCorD ^ r_Uni - Проверка в PARENT */
-/* Приказ: Отпуск: Корректировка (Данные) ^ Справочник универсальный - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.LeavCorType NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10059))
-    BEGIN
-      EXEC z_RelationErrorUni 'p_ELeavCorD', 10059, 0
-      RETURN
-    END
-
-/* p_ELeavCorD ^ r_Uni - Проверка в PARENT */
-/* Приказ: Отпуск: Корректировка (Данные) ^ Справочник универсальный - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.LeavCorReason NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10060))
-    BEGIN
-      EXEC z_RelationErrorUni 'p_ELeavCorD', 10060, 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_ELeavCorD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_ELeavCorD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -190,7 +154,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_ELeavCor a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -199,7 +163,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_ELeavCor a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -208,7 +172,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_ELeavCor a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -217,7 +181,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_ELeavCor a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -267,10 +231,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_ELeavCorD] ON [p_ELeavCorD]
-FOR DELETE AS
-/* p_ELeavCorD - Приказ: Отпуск: Корректировка (Данные) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_ELeavCorD] ON [p_ELeavCorD]
+FOR INSERT AS
+/* p_ELeavCorD - Приказ: Отпуск: Корректировка (Данные) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -290,26 +257,96 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_ELeavCor a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_ELeavCor a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_ELeavCor a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_ELeavCor a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Приказ: Отпуск: Корректировка (Данные) (p_ELeavCorD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Приказ: Отпуск: Корректировка (Данные)'), 'p_ELeavCorD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
+      RETURN
+    END
+
+/* p_ELeavCorD ^ p_ELeavCor - Проверка в PARENT */
+/* Приказ: Отпуск: Корректировка (Данные) ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM p_ELeavCor))
+    BEGIN
+      EXEC z_RelationError 'p_ELeavCor', 'p_ELeavCorD', 0
+      RETURN
+    END
+
+/* p_ELeavCorD ^ r_Emps - Проверка в PARENT */
+/* Приказ: Отпуск: Корректировка (Данные) ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 'p_ELeavCorD', 0
+      RETURN
+    END
+
+/* p_ELeavCorD ^ r_Uni - Проверка в PARENT */
+/* Приказ: Отпуск: Корректировка (Данные) ^ Справочник универсальный - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.LeavCorType NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10059))
+    BEGIN
+      EXEC z_RelationErrorUni 'p_ELeavCorD', 10059, 0
+      RETURN
+    END
+
+/* p_ELeavCorD ^ r_Uni - Проверка в PARENT */
+/* Приказ: Отпуск: Корректировка (Данные) ^ Справочник универсальный - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.LeavCorReason NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10060))
+    BEGIN
+      EXEC z_RelationErrorUni 'p_ELeavCorD', 10060, 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_ELeavCorD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_ELeavCorD', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

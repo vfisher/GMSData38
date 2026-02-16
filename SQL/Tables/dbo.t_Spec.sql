@@ -33,56 +33,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TGMS_UpdCheck_t_Spec] ON [t_Spec]
-/* Обеспечивает автоматическое заполнение параметров Калькуляционной карты */
-AFTER INSERT, UPDATE
-AS
-  IF UPDATE(ProdID)
-  BEGIN
-    UPDATE m 
-    SET m.UM = p.UM 
-    FROM t_Spec m WITH (NOLOCK)  
-    INNER JOIN inserted i ON m.ChID = i.ChID  
-    INNER JOIN r_Prods p WITH (NOLOCK)  
-    ON i.ProdID = p.ProdID
-  END
-
-  INSERT INTO t_SpecParams (ChID, LayUM, LayQty, ProdDate, StockID)
-  SELECT
-    i.ChID, p.UM, 1, i.DocDate, dbo.zf_UserVar('t_StockID')  
-  FROM inserted i
-  INNER JOIN r_Prods p WITH (NOLOCK)
-  ON i.ProdID = p.ProdID
-  LEFT JOIN t_SpecParams sp WITH (NOLOCK)  
-  ON i.ChID = sp.ChID
-  WHERE sp.ChID IS NULL
-
-  IF UPDATE(ProdID) AND NOT UPDATE(ChID)
-  UPDATE sp
-  SET
-    sp.LayUM = m.UM  
-  FROM t_Spec m WITH (NOLOCK)
-  INNER JOIN deleted d ON m.ChID = d.ChID 
-  INNER JOIN t_SpecParams sp WITH (NOLOCK) ON m.ChID = sp.ChID AND d.UM = sp.LayUM
-
-  IF UPDATE(OutUM) AND NOT UPDATE(ChID)
-  UPDATE sp
-  SET
-    sp.LayUM = m.OutUM  
-  FROM t_Spec m WITH (NOLOCK)
-  INNER JOIN deleted d ON m.ChID = d.ChID
-  INNER JOIN t_SpecParams sp WITH (NOLOCK) ON m.ChID = sp.ChID AND d.OutUM = sp.LayUM
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_Spec] ON [t_Spec]
-FOR INSERT AS
-/* t_Spec - Калькуляционная карта: Заголовок - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_t_Spec] ON [t_Spec]
+FOR DELETE AS
+/* t_Spec - Калькуляционная карта: Заголовок - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -102,70 +56,66 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(11330, i.StateCode) = 0)
-    BEGIN
-      RAISERROR ('Документ ''Калькуляционная карта'' не может иметь указанный статус.', 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
+/* Удаление регистрации изменения статуса */
+  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 11330 AND m.ChID = i.ChID
 
+/* Возможно ли редактирование документа */
+    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11330, a.ChID, a.StateCode) = 0)
+      BEGIN
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Калькуляционная карта'))
+        RAISERROR(@Err2, 18, 1)
+        ROLLBACK TRAN
+        RETURN
+      END
 
-/* t_Spec ^ r_Emps - Проверка в PARENT */
-/* Калькуляционная карта: Заголовок ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 't_Spec', 0
-      RETURN
-    END
+/* t_Spec ^ t_SpecD - Удаление в CHILD */
+/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Состав - Удаление в CHILD */
+  DELETE t_SpecD FROM t_SpecD a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* t_Spec ^ r_Ours - Проверка в PARENT */
-/* Калькуляционная карта: Заголовок ^ Справочник внутренних фирм - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Spec', 0
-      RETURN
-    END
+/* t_Spec ^ t_SpecDesc - Удаление в CHILD */
+/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Характеристика - Удаление в CHILD */
+  DELETE t_SpecDesc FROM t_SpecDesc a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* t_Spec ^ r_Prods - Проверка в PARENT */
-/* Калькуляционная карта: Заголовок ^ Справочник товаров - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_Spec', 0
-      RETURN
-    END
+/* t_Spec ^ t_SpecParams - Удаление в CHILD */
+/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Настройки - Удаление в CHILD */
+  DELETE t_SpecParams FROM t_SpecParams a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* t_Spec ^ r_States - Проверка в PARENT */
-/* Калькуляционная карта: Заголовок ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Spec', 0
-      RETURN
-    END
+/* t_Spec ^ t_SpecT - Удаление в CHILD */
+/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Технология - Удаление в CHILD */
+  DELETE t_SpecT FROM t_SpecT a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 11330 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_Spec', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_Spec', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -199,7 +149,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -208,7 +158,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -217,7 +167,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -226,7 +176,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -235,7 +185,9 @@ BEGIN
 /* Обработка статуса */
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(11330, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Калькуляционная карта).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Калькуляционная карта'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -248,30 +200,14 @@ BEGIN
     END
 
 /* Возможно ли редактирование документа */
-  DECLARE @StateCodePosID int
-  SELECT @StateCodePosID = colid FROM syscolumns WHERE id = object_id('t_Spec') AND name = 'StateCode'
-  DECLARE @BytePos int
-  DECLARE @UpdLen int
-  DECLARE @FieldsChanged bit
-  SET @FieldsChanged = 0
-  SET @BytePos = CAST(CEILING(@StateCodePosID / 8.0) AS int)
-  SET @UpdLen = LEN(COLUMNS_UPDATED())
-  WHILE (@UpdLen > 0 AND @FieldsChanged = 0)
-    BEGIN
-      IF @UpdLen = @BytePos
-        BEGIN
-         IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> POWER(2, @StateCodePosID - (CEILING(@StateCodePosID / 8.0) - 1) * 8 - 1)
-           SET @FieldsChanged = 1
-        END
-      ELSE
-        IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> 0
-          SET @FieldsChanged = 1
-      SET @UpdLen = @UpdLen - 1
-    END
-  IF @FieldsChanged = 1
+DECLARE @ColumnsUpdated VARBINARY(255)
+SET @ColumnsUpdated = COLUMNS_UPDATED()
+IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('t_Spec', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11330, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Калькуляционная карта'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Калькуляционная карта'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -406,10 +342,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_Spec] ON [t_Spec]
-FOR DELETE AS
-/* t_Spec - Калькуляционная карта: Заголовок - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_Spec] ON [t_Spec]
+FOR INSERT AS
+/* t_Spec - Калькуляционная карта: Заголовок - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -429,62 +368,138 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Калькуляционная карта: Заголовок (t_Spec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Калькуляционная карта: Заголовок'), 't_Spec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-/* Удаление регистрации изменения статуса */
-  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 11330 AND m.ChID = i.ChID
+  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(11330, i.StateCode) = 0)
+    BEGIN
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Калькуляционная карта'))
+      RAISERROR(@Err1, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
 
-/* Возможно ли редактирование документа */
-    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11330, a.ChID, a.StateCode) = 0)
-      BEGIN
-        RAISERROR ('Изменение документа ''Калькуляционная карта'' в данном статусе запрещено.', 18, 1)
-        ROLLBACK TRAN
-        RETURN
-      END
 
-/* t_Spec ^ t_SpecD - Удаление в CHILD */
-/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Состав - Удаление в CHILD */
-  DELETE t_SpecD FROM t_SpecD a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
+/* t_Spec ^ r_Emps - Проверка в PARENT */
+/* Калькуляционная карта: Заголовок ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 't_Spec', 0
+      RETURN
+    END
 
-/* t_Spec ^ t_SpecDesc - Удаление в CHILD */
-/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Характеристика - Удаление в CHILD */
-  DELETE t_SpecDesc FROM t_SpecDesc a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
+/* t_Spec ^ r_Ours - Проверка в PARENT */
+/* Калькуляционная карта: Заголовок ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Spec', 0
+      RETURN
+    END
 
-/* t_Spec ^ t_SpecParams - Удаление в CHILD */
-/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Настройки - Удаление в CHILD */
-  DELETE t_SpecParams FROM t_SpecParams a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
+/* t_Spec ^ r_Prods - Проверка в PARENT */
+/* Калькуляционная карта: Заголовок ^ Справочник товаров - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_Spec', 0
+      RETURN
+    END
 
-/* t_Spec ^ t_SpecT - Удаление в CHILD */
-/* Калькуляционная карта: Заголовок ^ Калькуляционная карта: Технология - Удаление в CHILD */
-  DELETE t_SpecT FROM t_SpecT a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 11330 AND m.ChID = i.ChID
+/* t_Spec ^ r_States - Проверка в PARENT */
+/* Калькуляционная карта: Заголовок ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Spec', 0
+      RETURN
+    END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_Spec', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_Spec', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TGMS_UpdCheck_t_Spec] ON [t_Spec]
+/* Обеспечивает автоматическое заполнение параметров Калькуляционной карты */
+AFTER INSERT, UPDATE
+AS
+  IF UPDATE(ProdID)
+  BEGIN
+    UPDATE m 
+    SET m.UM = p.UM 
+    FROM t_Spec m WITH (NOLOCK)  
+    INNER JOIN inserted i ON m.ChID = i.ChID  
+    INNER JOIN r_Prods p WITH (NOLOCK)  
+    ON i.ProdID = p.ProdID
+  END
+
+  INSERT INTO t_SpecParams (ChID, LayUM, LayQty, ProdDate, StockID)
+  SELECT
+    i.ChID, p.UM, 1, i.DocDate, dbo.zf_UserVar('t_StockID')  
+  FROM inserted i
+  INNER JOIN r_Prods p WITH (NOLOCK)
+  ON i.ProdID = p.ProdID
+  LEFT JOIN t_SpecParams sp WITH (NOLOCK)  
+  ON i.ChID = sp.ChID
+  WHERE sp.ChID IS NULL
+
+  IF UPDATE(ProdID) AND NOT UPDATE(ChID)
+  UPDATE sp
+  SET
+    sp.LayUM = m.UM  
+  FROM t_Spec m WITH (NOLOCK)
+  INNER JOIN deleted d ON m.ChID = d.ChID 
+  INNER JOIN t_SpecParams sp WITH (NOLOCK) ON m.ChID = sp.ChID AND d.UM = sp.LayUM
+
+  IF UPDATE(OutUM) AND NOT UPDATE(ChID)
+  UPDATE sp
+  SET
+    sp.LayUM = m.OutUM  
+  FROM t_Spec m WITH (NOLOCK)
+  INNER JOIN deleted d ON m.ChID = d.ChID
+  INNER JOIN t_SpecParams sp WITH (NOLOCK) ON m.ChID = sp.ChID AND d.OutUM = sp.LayUM
+GO
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

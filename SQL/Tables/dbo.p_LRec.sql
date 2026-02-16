@@ -102,13 +102,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_LRec] ON [p_LRec]
-FOR INSERT AS
-/* p_LRec - Заработная плата: Начисление (Заголовок) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_LRec] ON [p_LRec]
+FOR DELETE AS
+/* p_LRec - Заработная плата: Начисление (Заголовок) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -128,101 +125,89 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(15061, i.StateCode) = 0)
+/* Удаление регистрации изменения статуса */
+  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 15061 AND m.ChID = i.ChID
+
+/* Возможно ли редактирование документа */
+    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(15061, a.ChID, a.StateCode) = 0)
+      BEGIN
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Заработная плата: Начисление'))
+        RAISERROR(@Err2, 18, 1)
+        ROLLBACK TRAN
+        RETURN
+      END
+
+/* p_LRec ^ p_LRecD - Удаление в CHILD */
+/* Заработная плата: Начисление (Заголовок) ^ Заработная плата: Начисление (Данные) - Удаление в CHILD */
+  DELETE p_LRecD FROM p_LRecD a, deleted d WHERE a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* p_LRec ^ z_DocLinks - Удаление в CHILD */
+/* Заработная плата: Начисление (Заголовок) ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 15061 AND a.ChildChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* p_LRec ^ z_DocLinks - Проверка в CHILD */
+/* Заработная плата: Начисление (Заголовок) ^ Документы - Взаимосвязи - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 15061 AND a.ParentChID = d.ChID)
     BEGIN
-      RAISERROR ('Документ ''Заработная плата: Начисление'' не может иметь указанный статус.', 18, 1)
-      ROLLBACK TRAN
+      EXEC z_RelationError 'p_LRec', 'z_DocLinks', 3
       RETURN
     END
 
+/* p_LRec ^ z_DocShed - Удаление в CHILD */
+/* Заработная плата: Начисление (Заголовок) ^ Документы - Процессы - Удаление в CHILD */
+  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 15061 AND a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* p_LRec ^ r_Codes1 - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 1 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
-    BEGIN
-      EXEC z_RelationError 'r_Codes1', 'p_LRec', 0
-      RETURN
-    END
 
-/* p_LRec ^ r_Codes2 - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 2 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
-    BEGIN
-      EXEC z_RelationError 'r_Codes2', 'p_LRec', 0
-      RETURN
-    END
-
-/* p_LRec ^ r_Codes3 - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 3 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
-    BEGIN
-      EXEC z_RelationError 'r_Codes3', 'p_LRec', 0
-      RETURN
-    END
-
-/* p_LRec ^ r_Codes4 - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 4 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
-    BEGIN
-      EXEC z_RelationError 'r_Codes4', 'p_LRec', 0
-      RETURN
-    END
-
-/* p_LRec ^ r_Codes5 - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 5 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LRec', 0
-      RETURN
-    END
-
-/* p_LRec ^ r_Ours - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник внутренних фирм - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LRec', 0
-      RETURN
-    END
-
-/* p_LRec ^ r_States - Проверка в PARENT */
-/* Заработная плата: Начисление (Заголовок) ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_LRec', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 15061001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 15061001 AND m.PKValue = 
     '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.DocID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 15061001 AND m.PKValue = 
+    '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.DocID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 15061001, -ChID, 
+    '[' + cast(d.OurID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.DocID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 15061 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_LRec', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_LRec', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -256,7 +241,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -265,7 +250,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -274,7 +259,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -283,7 +268,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -292,7 +277,9 @@ BEGIN
 /* Обработка статуса */
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(15061, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Заработная плата: Начисление).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Заработная плата: Начисление'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -310,7 +297,9 @@ SET @ColumnsUpdated = COLUMNS_UPDATED()
 IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('p_LRec', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(15061, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Заработная плата: Начисление'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Заработная плата: Начисление'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -464,6 +453,7 @@ IF UPDATE(DocDate) OR UPDATE(DocID)
     FROM z_DocLinks l, inserted i WHERE l.ParentDocCode = 15061 AND l.ParentChID = i.ChID
   END
 
+
 /* Регистрация изменения записи */
 
 
@@ -558,10 +548,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_LRec] ON [p_LRec]
-FOR DELETE AS
-/* p_LRec - Заработная плата: Начисление (Заголовок) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_LRec] ON [p_LRec]
+FOR INSERT AS
+/* p_LRec - Заработная плата: Начисление (Заголовок) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -581,84 +574,157 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Заработная плата: Начисление (Заголовок) (p_LRec):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заработная плата: Начисление (Заголовок)'), 'p_LRec', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-/* Удаление регистрации изменения статуса */
-  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 15061 AND m.ChID = i.ChID
-
-/* Возможно ли редактирование документа */
-    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(15061, a.ChID, a.StateCode) = 0)
-      BEGIN
-        RAISERROR ('Изменение документа ''Заработная плата: Начисление'' в данном статусе запрещено.', 18, 1)
-        ROLLBACK TRAN
-        RETURN
-      END
-
-/* p_LRec ^ p_LRecD - Удаление в CHILD */
-/* Заработная плата: Начисление (Заголовок) ^ Заработная плата: Начисление (Данные) - Удаление в CHILD */
-  DELETE p_LRecD FROM p_LRecD a, deleted d WHERE a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* p_LRec ^ z_DocLinks - Удаление в CHILD */
-/* Заработная плата: Начисление (Заголовок) ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 15061 AND a.ChildChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* p_LRec ^ z_DocLinks - Проверка в CHILD */
-/* Заработная плата: Начисление (Заголовок) ^ Документы - Взаимосвязи - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 15061 AND a.ParentChID = d.ChID)
+  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(15061, i.StateCode) = 0)
     BEGIN
-      EXEC z_RelationError 'p_LRec', 'z_DocLinks', 3
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Заработная плата: Начисление'))
+      RAISERROR(@Err1, 18, 1)
+      ROLLBACK TRAN
       RETURN
     END
 
-/* p_LRec ^ z_DocShed - Удаление в CHILD */
-/* Заработная плата: Начисление (Заголовок) ^ Документы - Процессы - Удаление в CHILD */
-  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 15061 AND a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 15061001 AND m.PKValue = 
+/* p_LRec ^ r_Codes1 - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 1 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
+    BEGIN
+      EXEC z_RelationError 'r_Codes1', 'p_LRec', 0
+      RETURN
+    END
+
+/* p_LRec ^ r_Codes2 - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 2 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
+    BEGIN
+      EXEC z_RelationError 'r_Codes2', 'p_LRec', 0
+      RETURN
+    END
+
+/* p_LRec ^ r_Codes3 - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 3 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
+    BEGIN
+      EXEC z_RelationError 'r_Codes3', 'p_LRec', 0
+      RETURN
+    END
+
+/* p_LRec ^ r_Codes4 - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 4 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
+    BEGIN
+      EXEC z_RelationError 'r_Codes4', 'p_LRec', 0
+      RETURN
+    END
+
+/* p_LRec ^ r_Codes5 - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник признаков 5 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LRec', 0
+      RETURN
+    END
+
+/* p_LRec ^ r_Ours - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LRec', 0
+      RETURN
+    END
+
+/* p_LRec ^ r_States - Проверка в PARENT */
+/* Заработная плата: Начисление (Заголовок) ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_LRec', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 15061001, ChID, 
     '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.DocID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 15061001 AND m.PKValue = 
-    '[' + cast(i.OurID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.DocID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 15061001, -ChID, 
-    '[' + cast(d.OurID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.DocID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 15061 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_LRec', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_LRec', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
