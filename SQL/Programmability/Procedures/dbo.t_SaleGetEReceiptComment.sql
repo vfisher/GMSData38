@@ -13,7 +13,8 @@ BEGIN
         @ChequeComment nvarchar(500),
         @TIN varchar(10),
         @mcr nchar(2) = CHAR(13) + CHAR(10),
-        @CRComment nvarchar(1024)
+        @CRComment nvarchar(1024),
+        @CashType int
 
   /* SET @ParamsIn = '{"OurID":7,"ChequeComment":"ЧЕК:100000009 ПРРО GMS ТЕСТ (касса 1)","DocCode":1011,"DocID":100000009,"ChID":100000117,"CRID":25}' */
   /* 
@@ -25,6 +26,8 @@ BEGIN
     RWR=2312 балів
     BTX=Замовлення №12345, дякуємо за покупку!</COMMENT>
   */
+    DROP TABLE IF EXISTS #CRComment
+    CREATE TABLE #CRComment(SrcPosID int, CRComment nvarchar(1024)) 
 
     SELECT
         @CRID          = JSON_VALUE(@ParamsIn, '$.CRID'),
@@ -35,6 +38,7 @@ BEGIN
         @ChequeComment = JSON_VALUE(@ParamsIn, '$.ChequeComment')
 
     SELECT @TIN = Code FROM r_Ours WITH (NOLOCK) WHERE OurID = @OurID
+    SELECT @CashType = CashType FROM r_Crs WITH (NOLOCK) WHERE CrID = @CrID
 
     SELECT
         @CRComment = STUFF((
@@ -73,5 +77,21 @@ BEGIN
         CASE WHEN @ChequeComment <> '' 
           THEN @ChequeComment + @mcr 
         ELSE '' END + ISNULL(@CRComment,'') AS CRComment
+
+  IF @CashType = 39
+   BEGIN
+     INSERT INTO #CRComment
+     SELECT 1, ISNULL(@CRComment,'') + CASE WHEN @ChequeComment <> '' THEN @mcr + @ChequeComment ELSE '' END
+   END
+ ELSE
+   BEGIN
+     INSERT INTO #CRComment
+     SELECT 1, 'ERECEIPT' /* ISNULL(@CRComment,'') */
+     UNION ALL
+     SELECT 2, @ChequeComment
+   END
+
+  SELECT SrcPosID, CRComment FROM #CRComment
+  ORDER BY SrcPosID ASC
 END
 GO
