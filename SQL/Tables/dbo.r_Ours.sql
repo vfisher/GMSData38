@@ -106,25 +106,1084 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_Ours] ON [r_Ours]
-FOR INSERT AS
-/* r_Ours - Справочник внутренних фирм - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_Ours] ON [r_Ours]
+FOR DELETE AS
+/* r_Ours - Справочник внутренних фирм - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10110001, ChID, 
+/* r_Ours ^ r_CRSrvs - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Справочник торговых серверов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRSrvs a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'r_CRSrvs', 3
+      RETURN
+    END
+
+/* r_Ours ^ r_EmpMO - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Справочник служащих - Внутренние фирмы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_EmpMO a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'r_EmpMO', 3
+      RETURN
+    END
+
+/* r_Ours ^ r_Assets - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Справочник основных средств - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_Assets a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'r_Assets', 3
+      RETURN
+    END
+
+/* r_Ours ^ r_OursAC - Удаление в CHILD */
+/* Справочник внутренних фирм ^ Справочник внутренних фирм - Валютные счета - Удаление в CHILD */
+  DELETE r_OursAC FROM r_OursAC a, deleted d WHERE a.OurID = d.OurID
+  IF @@ERROR > 0 RETURN
+
+/* r_Ours ^ r_OursCC - Удаление в CHILD */
+/* Справочник внутренних фирм ^ Справочник внутренних фирм - Расчетные счета - Удаление в CHILD */
+  DELETE r_OursCC FROM r_OursCC a, deleted d WHERE a.OurID = d.OurID
+  IF @@ERROR > 0 RETURN
+
+/* r_Ours ^ r_OurValues - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Справочник внутренних фирм - Значения - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_OurValues a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'r_OurValues', 3
+      RETURN
+    END
+
+/* r_Ours ^ r_DBIs - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Справочник баз данных - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DBIs a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'r_DBIs', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Acc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Счет на оплату (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Acc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Acc', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_AExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Акт сдачи услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_AExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_AExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_ARec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Акт приемки услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_ARec', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_ARepA - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Авансовый отчет валютный (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARepA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_ARepA', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_CExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Кассовый ордер: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_CExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_CInv - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_CInv', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_CRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Кассовый ордер: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_CRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_CRepA - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Авансовый отчет с признаками (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRepA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_CRepA', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_CRet - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_CRet', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Cst - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Cst', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_DStack - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Суммовой учет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_DStack', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Exp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Exp', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_GTran - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Таблица проводок (Общие данные) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTran a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_GTran', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Inv - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Inv', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_LExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Зарплата: Выплата (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_LExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_LExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_LRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Зарплата: Начисление (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_LRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_LRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_PAcc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_PAcc', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_PCost - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_PCost', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_PEst - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_PEst', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_PExc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_PExc', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_PVen - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_PVen', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Rec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Rec', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Rem - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Текущие остатки (Данные) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Rem a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Rem', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_RemD - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Остатки на дату (Данные) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_RemD a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_RemD', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_RepA - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Авансовый отчет (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_RepA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_RepA', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_Ret - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_Ret', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SDep - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Амортизация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SDep a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SDep', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SExc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SExc', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Списание (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SInv - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Продажа (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SInv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SInv', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SPut - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Ввод в эксплуатацию (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SPut a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SPut', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Приход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SRep - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Ремонт (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRep a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SRep', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SVen - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Инвентаризация - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SVen a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SVen', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_SWer - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Износ (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SWer a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_SWer', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Налоговые накладные: Исходящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TranC - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Проводка по предприятию - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranC a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TranC', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TranE - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Проводка по служащему - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranE a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TranE', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TranH - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TranP - Проверка в CHILD */
+/* Справочник внутренних фирм ^ ТМЦ: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TranP', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TranS - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Основные средства: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranS a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TranS', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TranV - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Проводка общая - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranV a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TranV', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_TRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Налоговые накладные: Входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_TRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_WBill - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Путевой лист - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_WBill a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_WBill', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInC - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий баланс: Предприятия - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInC a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInC', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInCA - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий баланс: Касса - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInCA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInCA', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInE - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий баланс: Служащие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInE a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInE', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInH - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInP - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий баланс: ТМЦ - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInP a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInP', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInS - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий баланс: Основные средства - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInS a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInS', 3
+      RETURN
+    END
+
+/* r_Ours ^ b_zInV - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий баланс: Общие данные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInV a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'b_zInV', 3
+      RETURN
+    END
+
+/* r_Ours ^ c_Sal - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'c_Sal', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_CommunalTax - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Коммунальный налог - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CommunalTax a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_CommunalTax', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_CWTime - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Табель учета рабочего времени (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CWTime a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_CWTime', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_CWTimeCor - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Табель учета рабочего времени: Корректировка: Список - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CWTimeCor a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_CWTimeCor', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_DTran - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Перенос рабочих дней - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_DTran a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_DTran', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EDis - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Увольнение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EDis a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EDis', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EExc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Кадровое перемещение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EExc', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EGiv - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Прием на работу - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EGiv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EGiv', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_ELeav - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Отпуск (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ELeav a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_ELeav', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_ELeavCor - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ELeavCor a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_ELeavCor', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EmpIn - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящие данные по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EmpIn a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EmpIn', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EmpSchedExt - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Дополнительный график работы (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EmpSchedExt a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EmpSchedExt', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_ESic - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Больничный лист (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ESic a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_ESic', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_ETrp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Командировка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ETrp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_ETrp', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EWri - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Исполнительный лист - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EWri a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EWri', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_EWrk - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Выполнение работ (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EWrk a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_EWrk', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_LeaveSched - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Отпуск: Лимиты по видам (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LeaveSched a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LeaveSched', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_LExc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Кадровое перемещение списком (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LExc', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_LExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Заработная плата: Выплата (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_LMem - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Штатное расписание (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LMem a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LMem', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_LRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Заработная плата: Начисление (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_LStr - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Штатная численность сотрудников (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LStr a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_LStr', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_OPWrk - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приказ: Производственный (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_OPWrk a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_OPWrk', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_PostStruc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Структура должностей (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_PostStruc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_PostStruc', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_SubStruc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Структура предприятия (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_SubStruc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_SubStruc', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_TSer - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Командировочное удостоверение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_TSer a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_TSer', 3
+      RETURN
+    END
+
+/* r_Ours ^ p_WExc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Привлечение на другую работу - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_WExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_WExc', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Acc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Acc', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Cos - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Cos', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_CRet - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_CRet', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_CRRet - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_CRRet', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Cst - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Cst', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Cst2 - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Cst2', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Dis - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Распределение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Dis', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_DisDD - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Распределение товара: Подробно - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_DisDD a WITH(NOLOCK), deleted d WHERE a.DetOurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_DisDD', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_EOExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_EOExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_EOExpDD - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Заказ внешний: Формирование: Подробно - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExpDD a WITH(NOLOCK), deleted d WHERE a.DetOurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_EOExpDD', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Epp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Epp', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Est - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Est', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Exc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Перемещение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Exc', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Exp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Расходный документ: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Exp', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Inv - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Расходная накладная: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Inv', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_IORec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_IORec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_MonIntExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Служебный расход денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonIntExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_MonIntExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_MonIntRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Служебный приход денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonIntRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_MonIntRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_MonRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Прием наличных денег на склад - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_MonRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Rec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Приход товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Rec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Rem - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Остатки товара (Таблица) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Rem a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Rem', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_RemD - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Остатки товара на дату (Таблица) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_RemD a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_RemD', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Ret - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Ret', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Sale - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Sale', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_SEst - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Переоценка цен продажи: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SEst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_SEst', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_SExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_SExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Spec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Калькуляционная карта: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Spec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Spec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_SPExp - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_SPExp', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_SPRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_SPRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_SRec - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Комплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_SRec', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_Ven - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_Ven', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_zInP - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящие остатки товара - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_zInP a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_zInP', 3
+      RETURN
+    END
+
+/* r_Ours ^ t_ZRepT - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Z-отчеты плат. терминалов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_ZRepT a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 't_ZRepT', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_Contracts - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Договор - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Contracts a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_Contracts', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_InAcc - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Входящий счет на оплату - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_InAcc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_InAcc', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_OpenAge - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Открытый период: Фирмы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_OpenAge a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_OpenAge', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_OpenAgeH - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Открытый период: Фирмы: История - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_OpenAgeH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_OpenAgeH', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_UserOpenAge - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Открытый период: Пользователи - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserOpenAge a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_UserOpenAge', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_UserOpenAgeH - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Открытый период: Пользователи: История - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserOpenAgeH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_UserOpenAgeH', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_UserOurs - Удаление в CHILD */
+/* Справочник внутренних фирм ^ Доступные значения - Справочник внутренних фирм - Удаление в CHILD */
+  DELETE z_UserOurs FROM z_UserOurs a, deleted d WHERE a.OurID = d.OurID
+  IF @@ERROR > 0 RETURN
+
+/* r_Ours ^ z_UserVars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Пользователи - Переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_OurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_UserVars', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_UserVars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Пользователи - Переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_OurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_UserVars', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_UserVars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Пользователи - Переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_OurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_UserVars', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_Vars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_OurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_Vars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'OT_MainOurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_Vars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_OurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
+      RETURN
+    END
+
+/* r_Ours ^ z_Vars - Проверка в CHILD */
+/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_OurID' AND a.VarValue = d.OurID)
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10110001 AND m.PKValue = 
     '[' + cast(i.OurID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10110001 AND m.PKValue = 
+    '[' + cast(i.OurID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10110001, -ChID, 
+    '[' + cast(d.OurID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10110 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Ours', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Ours', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -1867,25 +2926,6 @@ BEGIN
         END
     END
 
-/* r_Ours ^ t_DeskRes - Обновление CHILD */
-/* Справочник внутренних фирм ^ Ресторан: Резервирование столиков - Обновление CHILD */
-  IF UPDATE(OurID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.OurID = i.OurID
-          FROM t_DeskRes a, inserted i, deleted d WHERE a.OurID = d.OurID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_DeskRes a, deleted d WHERE a.OurID = d.OurID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник внутренних фирм'' => ''Ресторан: Резервирование столиков''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_Ours ^ t_Dis - Обновление CHILD */
 /* Справочник внутренних фирм ^ Распределение товара: Заголовок - Обновление CHILD */
   IF UPDATE(OurID)
@@ -2184,25 +3224,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM t_RemD a, deleted d WHERE a.OurID = d.OurID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник внутренних фирм'' => ''Остатки товара на дату (Таблица)''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Ours ^ t_RestShift - Обновление CHILD */
-/* Справочник внутренних фирм ^ Ресторан: Смена: Заголовок - Обновление CHILD */
-  IF UPDATE(OurID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.OurID = i.OurID
-          FROM t_RestShift a, inserted i, deleted d WHERE a.OurID = d.OurID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_RestShift a, deleted d WHERE a.OurID = d.OurID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник внутренних фирм'' => ''Ресторан: Смена: Заголовок''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -2684,6 +3705,7 @@ BEGIN
         END
     END
 
+
 /* Регистрация изменения записи */
 
 
@@ -2765,1097 +3787,65 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_Ours] ON [r_Ours]
-FOR DELETE AS
-/* r_Ours - Справочник внутренних фирм - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_Ours] ON [r_Ours]
+FOR INSERT AS
+/* r_Ours - Справочник внутренних фирм - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Ours ^ r_CRSrvs - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Справочник торговых серверов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRSrvs a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'r_CRSrvs', 3
-      RETURN
-    END
 
-/* r_Ours ^ r_EmpMO - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Справочник служащих - Внутренние фирмы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_EmpMO a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'r_EmpMO', 3
-      RETURN
-    END
-
-/* r_Ours ^ r_Assets - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Справочник основных средств - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Assets a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'r_Assets', 3
-      RETURN
-    END
-
-/* r_Ours ^ r_OursAC - Удаление в CHILD */
-/* Справочник внутренних фирм ^ Справочник внутренних фирм - Валютные счета - Удаление в CHILD */
-  DELETE r_OursAC FROM r_OursAC a, deleted d WHERE a.OurID = d.OurID
-  IF @@ERROR > 0 RETURN
-
-/* r_Ours ^ r_OursCC - Удаление в CHILD */
-/* Справочник внутренних фирм ^ Справочник внутренних фирм - Расчетные счета - Удаление в CHILD */
-  DELETE r_OursCC FROM r_OursCC a, deleted d WHERE a.OurID = d.OurID
-  IF @@ERROR > 0 RETURN
-
-/* r_Ours ^ r_OurValues - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Справочник внутренних фирм - Значения - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_OurValues a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'r_OurValues', 3
-      RETURN
-    END
-
-/* r_Ours ^ r_DBIs - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Справочник баз данных - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DBIs a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'r_DBIs', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Acc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Счет на оплату (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Acc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Acc', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_AExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Акт сдачи услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_AExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_AExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_ARec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Акт приемки услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_ARec', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_ARepA - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Авансовый отчет валютный (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARepA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_ARepA', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_CExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Кассовый ордер: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_CExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_CInv - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_CInv', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_CRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Кассовый ордер: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_CRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_CRepA - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Авансовый отчет с признаками (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRepA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_CRepA', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_CRet - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_CRet', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Cst - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Cst', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_DStack - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Суммовой учет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_DStack', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Exp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Exp', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_GTran - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Таблица проводок (Общие данные) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTran a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_GTran', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Inv - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Inv', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_LExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Зарплата: Выплата (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_LExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_LExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_LRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Зарплата: Начисление (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_LRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_LRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_PAcc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_PAcc', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_PCost - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_PCost', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_PEst - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_PEst', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_PExc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_PExc', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_PVen - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_PVen', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Rec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Rec', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Rem - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Текущие остатки (Данные) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Rem a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Rem', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_RemD - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Остатки на дату (Данные) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_RemD a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_RemD', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_RepA - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Авансовый отчет (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_RepA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_RepA', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_Ret - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_Ret', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SDep - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Амортизация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SDep a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SDep', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SExc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SExc', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Списание (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SInv - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Продажа (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SInv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SInv', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SPut - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Ввод в эксплуатацию (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SPut a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SPut', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Приход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SRep - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Ремонт (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRep a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SRep', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SVen - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Инвентаризация - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SVen a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SVen', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_SWer - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Износ (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SWer a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_SWer', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Налоговые накладные: Исходящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TranC - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Проводка по предприятию - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranC a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TranC', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TranE - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Проводка по служащему - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranE a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TranE', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TranH - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TranP - Проверка в CHILD */
-/* Справочник внутренних фирм ^ ТМЦ: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TranP', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TranS - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Основные средства: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranS a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TranS', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TranV - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Проводка общая - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranV a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TranV', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_TRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Налоговые накладные: Входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_TRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_WBill - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Путевой лист - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_WBill a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_WBill', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInC - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий баланс: Предприятия - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInC a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInC', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInCA - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий баланс: Касса - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInCA a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInCA', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInE - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий баланс: Служащие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInE a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInE', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInH - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInP - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий баланс: ТМЦ - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInP a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInP', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInS - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий баланс: Основные средства - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInS a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInS', 3
-      RETURN
-    END
-
-/* r_Ours ^ b_zInV - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий баланс: Общие данные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInV a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'b_zInV', 3
-      RETURN
-    END
-
-/* r_Ours ^ c_Sal - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'c_Sal', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_CommunalTax - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Коммунальный налог - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CommunalTax a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_CommunalTax', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_CWTime - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Табель учета рабочего времени (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CWTime a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_CWTime', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_CWTimeCor - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Табель учета рабочего времени: Корректировка: Список - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CWTimeCor a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_CWTimeCor', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_DTran - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Перенос рабочих дней - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_DTran a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_DTran', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EDis - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Увольнение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EDis a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EDis', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EExc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Кадровое перемещение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EExc', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EGiv - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Прием на работу - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EGiv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EGiv', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_ELeav - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Отпуск (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ELeav a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_ELeav', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_ELeavCor - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ELeavCor a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_ELeavCor', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EmpIn - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящие данные по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EmpIn a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EmpIn', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EmpSchedExt - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Дополнительный график работы (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EmpSchedExt a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EmpSchedExt', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_ESic - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Больничный лист (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ESic a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_ESic', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_ETrp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Командировка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ETrp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_ETrp', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EWri - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Исполнительный лист - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EWri a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EWri', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_EWrk - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Выполнение работ (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EWrk a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_EWrk', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_LeaveSched - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Отпуск: Лимиты по видам (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LeaveSched a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LeaveSched', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_LExc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Кадровое перемещение списком (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LExc', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_LExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Заработная плата: Выплата (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_LMem - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Штатное расписание (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LMem a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LMem', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_LRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Заработная плата: Начисление (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_LStr - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Штатная численность сотрудников (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LStr a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_LStr', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_OPWrk - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приказ: Производственный (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_OPWrk a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_OPWrk', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_PostStruc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Структура должностей (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_PostStruc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_PostStruc', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_SubStruc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Структура предприятия (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_SubStruc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_SubStruc', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_TSer - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Командировочное удостоверение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_TSer a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_TSer', 3
-      RETURN
-    END
-
-/* r_Ours ^ p_WExc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Привлечение на другую работу - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_WExc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_WExc', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Acc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Acc', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Cos - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Cos', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_CRet - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_CRet', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_CRRet - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_CRRet', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Cst - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Cst', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Cst2 - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Cst2', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_DeskRes - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Ресторан: Резервирование столиков - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DeskRes a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_DeskRes', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Dis - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Распределение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Dis', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_DisDD - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Распределение товара: Подробно - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DisDD a WITH(NOLOCK), deleted d WHERE a.DetOurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_DisDD', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_EOExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_EOExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_EOExpDD - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Заказ внешний: Формирование: Подробно - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExpDD a WITH(NOLOCK), deleted d WHERE a.DetOurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_EOExpDD', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Epp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Epp', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Est - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Est', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Exc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Перемещение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Exc', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Exp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Расходный документ: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Exp', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Inv - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Расходная накладная: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Inv', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_IORec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_IORec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_MonIntExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Служебный расход денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonIntExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_MonIntExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_MonIntRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Служебный приход денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonIntRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_MonIntRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_MonRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Прием наличных денег на склад - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_MonRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Rec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Приход товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Rec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Rem - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Остатки товара (Таблица) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Rem a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Rem', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_RemD - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Остатки товара на дату (Таблица) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RemD a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_RemD', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_RestShift - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Ресторан: Смена: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RestShift a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_RestShift', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Ret - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Ret', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Sale - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Sale', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_SEst - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Переоценка цен продажи: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SEst a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_SEst', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_SExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_SExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Spec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Калькуляционная карта: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Spec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Spec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_SPExp - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_SPExp', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_SPRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_SPRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_SRec - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Комплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_SRec', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_Ven - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_Ven', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_zInP - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящие остатки товара - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_zInP a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_zInP', 3
-      RETURN
-    END
-
-/* r_Ours ^ t_ZRepT - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Z-отчеты плат. терминалов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_ZRepT a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 't_ZRepT', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_Contracts - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Договор - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Contracts a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_Contracts', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_InAcc - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Входящий счет на оплату - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_InAcc a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_InAcc', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_OpenAge - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Открытый период: Фирмы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_OpenAge a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_OpenAge', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_OpenAgeH - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Открытый период: Фирмы: История - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_OpenAgeH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_OpenAgeH', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_UserOpenAge - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Открытый период: Пользователи - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserOpenAge a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_UserOpenAge', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_UserOpenAgeH - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Открытый период: Пользователи: История - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserOpenAgeH a WITH(NOLOCK), deleted d WHERE a.OurID = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_UserOpenAgeH', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_UserOurs - Удаление в CHILD */
-/* Справочник внутренних фирм ^ Доступные значения - Справочник внутренних фирм - Удаление в CHILD */
-  DELETE z_UserOurs FROM z_UserOurs a, deleted d WHERE a.OurID = d.OurID
-  IF @@ERROR > 0 RETURN
-
-/* r_Ours ^ z_UserVars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Пользователи - Переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_OurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_UserVars', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_UserVars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Пользователи - Переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_OurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_UserVars', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_UserVars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Пользователи - Переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_OurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_UserVars', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_Vars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_OurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_Vars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'OT_MainOurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_Vars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_OurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
-      RETURN
-    END
-
-/* r_Ours ^ z_Vars - Проверка в CHILD */
-/* Справочник внутренних фирм ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_OurID' AND a.VarValue = d.OurID)
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'z_Vars', 3
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10110001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10110001, ChID, 
     '[' + cast(i.OurID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10110001 AND m.PKValue = 
-    '[' + cast(i.OurID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10110001, -ChID, 
-    '[' + cast(d.OurID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10110 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Ours', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Ours', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

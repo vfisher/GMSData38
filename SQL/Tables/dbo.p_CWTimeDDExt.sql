@@ -22,13 +22,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_CWTimeDDExt] ON [p_CWTimeDDExt]
-FOR INSERT AS
-/* p_CWTimeDDExt - Табель учета рабочего времени: Подробно: Графики - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_CWTimeDDExt] ON [p_CWTimeDDExt]
+FOR DELETE AS
+/* p_CWTimeDDExt - Табель учета рабочего времени: Подробно: Графики - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -48,61 +45,38 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_CWTime a, p_CWTimeD b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_CWTime a, p_CWTimeD b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_CWTime a, p_CWTimeD b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_CWTime a, p_CWTimeD b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM p_CWTime a, p_CWTimeD b, inserted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(15051, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM p_CWTime a, p_CWTimeD b, deleted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(15051, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Табель учета рабочего времени'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Табель учета рабочего времени'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
-      RETURN
-    END
-
-/* p_CWTimeDDExt ^ p_CWTimeD - Проверка в PARENT */
-/* Табель учета рабочего времени: Подробно: Графики ^ Табель учета рабочего времени (Данные) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.AChID NOT IN (SELECT AChID FROM p_CWTimeD))
-    BEGIN
-      EXEC z_RelationError 'p_CWTimeD', 'p_CWTimeDDExt', 0
-      RETURN
-    END
-
-/* p_CWTimeDDExt ^ r_Sheds - Проверка в PARENT */
-/* Табель учета рабочего времени: Подробно: Графики ^ Справочник работ: графики - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ShedID NOT IN (SELECT ShedID FROM r_Sheds))
-    BEGIN
-      EXEC z_RelationError 'r_Sheds', 'p_CWTimeDDExt', 0
-      RETURN
-    END
-
-/* p_CWTimeDDExt ^ r_WTSigns - Проверка в PARENT */
-/* Табель учета рабочего времени: Подробно: Графики ^ Справочник работ: обозначения времени - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.WTSignID NOT IN (SELECT WTSignID FROM r_WTSigns))
-    BEGIN
-      EXEC z_RelationError 'r_WTSigns', 'p_CWTimeDDExt', 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_CWTimeDDExt', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_CWTimeDDExt', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -136,7 +110,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_CWTime a, p_CWTimeD b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -145,7 +119,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_CWTime a, p_CWTimeD b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -154,7 +128,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_CWTime a, p_CWTimeD b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -163,7 +137,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_CWTime a, p_CWTimeD b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -172,7 +146,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM p_CWTime a, p_CWTimeD b, deleted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(15051, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Табель учета рабочего времени'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Табель учета рабочего времени'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -212,10 +188,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_CWTimeDDExt] ON [p_CWTimeDDExt]
-FOR DELETE AS
-/* p_CWTimeDDExt - Табель учета рабочего времени: Подробно: Графики - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_CWTimeDDExt] ON [p_CWTimeDDExt]
+FOR INSERT AS
+/* p_CWTimeDDExt - Табель учета рабочего времени: Подробно: Графики - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -235,34 +214,76 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_CWTime a, p_CWTimeD b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_CWTime a, p_CWTimeD b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_CWTime a, p_CWTimeD b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_CWTime a, p_CWTimeD b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Табель учета рабочего времени: Подробно: Графики (p_CWTimeDDExt):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Табель учета рабочего времени: Подробно: Графики'), 'p_CWTimeDDExt', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM p_CWTime a, p_CWTimeD b, deleted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(15051, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM p_CWTime a, p_CWTimeD b, inserted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(15051, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Табель учета рабочего времени'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Табель учета рабочего времени'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
+      RETURN
+    END
+
+/* p_CWTimeDDExt ^ p_CWTimeD - Проверка в PARENT */
+/* Табель учета рабочего времени: Подробно: Графики ^ Табель учета рабочего времени (Данные) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.AChID NOT IN (SELECT AChID FROM p_CWTimeD))
+    BEGIN
+      EXEC z_RelationError 'p_CWTimeD', 'p_CWTimeDDExt', 0
+      RETURN
+    END
+
+/* p_CWTimeDDExt ^ r_Sheds - Проверка в PARENT */
+/* Табель учета рабочего времени: Подробно: Графики ^ Справочник работ: графики - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ShedID NOT IN (SELECT ShedID FROM r_Sheds))
+    BEGIN
+      EXEC z_RelationError 'r_Sheds', 'p_CWTimeDDExt', 0
+      RETURN
+    END
+
+/* p_CWTimeDDExt ^ r_WTSigns - Проверка в PARENT */
+/* Табель учета рабочего времени: Подробно: Графики ^ Справочник работ: обозначения времени - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.WTSignID NOT IN (SELECT WTSignID FROM r_WTSigns))
+    BEGIN
+      EXEC z_RelationError 'r_WTSigns', 'p_CWTimeDDExt', 0
       RETURN
     END
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_CWTimeDDExt', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_CWTimeDDExt', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

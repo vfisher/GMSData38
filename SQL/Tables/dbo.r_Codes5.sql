@@ -26,25 +26,1247 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_Codes5] ON [r_Codes5]
-FOR INSERT AS
-/* r_Codes5 - Справочник признаков 5 - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_Codes5] ON [r_Codes5]
+FOR DELETE AS
+/* r_Codes5 - Справочник признаков 5 - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10155001, ChID, 
+/* r_Codes5 ^ r_CRMM - Проверка в CHILD */
+/* Справочник признаков 5 ^ Справочник ЭККА - Виды служебных операций - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRMM a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'r_CRMM', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ r_ProdME - Проверка в CHILD */
+/* Справочник признаков 5 ^ Справочник товаров - Затраты на комплекты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdME a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'r_ProdME', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ r_GOperD - Проверка в CHILD */
+/* Справочник признаков 5 ^ Справочник проводок - Проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'r_GOperD', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ r_GOperD - Проверка в CHILD */
+/* Справочник признаков 5 ^ Справочник проводок - Проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'r_GOperD', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ r_Comps - Проверка в CHILD */
+/* Справочник признаков 5 ^ Справочник предприятий - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_Comps a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'r_Comps', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ r_GAccs - Проверка в CHILD */
+/* Справочник признаков 5 ^ План счетов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GAccs a WITH(NOLOCK), deleted d WHERE a.A_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'r_GAccs', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_AExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Акт сдачи услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_AExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_AExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_ARec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Акт приемки услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_ARec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_ARepADP - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет валютный (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARepADP a WITH(NOLOCK), deleted d WHERE a.PCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_ARepADP', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_ARepADS - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет валютный (Основные средства) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARepADS a WITH(NOLOCK), deleted d WHERE a.ACodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_ARepADS', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_ARepADV - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет валютный (Общие) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARepADV a WITH(NOLOCK), deleted d WHERE a.VCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_ARepADV', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_BankExpAC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Валютный счет: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankExpAC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_BankExpAC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_BankExpCC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расчетный счет: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankExpCC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_BankExpCC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_BankPayAC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Валютное платежное поручение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankPayAC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_BankPayAC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_BankPayCC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Платежное поручение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankPayCC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_BankPayCC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_BankRecAC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Валютный счет: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankRecAC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_BankRecAC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_BankRecCC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расчетный счет: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankRecCC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_BankRecCC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Кассовый ордер: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CInv - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CInv', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Кассовый ордер: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CRepADP - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет с признаками (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRepADP a WITH(NOLOCK), deleted d WHERE a.PCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CRepADP', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CRepADS - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет с признаками (Основные средства) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRepADS a WITH(NOLOCK), deleted d WHERE a.ACodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CRepADS', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CRepADV - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет с признаками (Общие) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRepADV a WITH(NOLOCK), deleted d WHERE a.VCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CRepADV', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_CRet - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_CRet', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_Cst - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_Cst', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_DStack - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Суммовой учет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_DStack', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_Exp - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_Exp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_GTranD - Проверка в CHILD */
+/* Справочник признаков 5 ^ Таблица проводок (Проводки) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_GTranD', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_GTranD - Проверка в CHILD */
+/* Справочник признаков 5 ^ Таблица проводок (Проводки) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_GTranD', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_Inv - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_Inv', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_LExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Зарплата: Выплата (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_LExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_LExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_LRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Зарплата: Начисление (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_LRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_LRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_PAcc - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_PAcc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_PCost - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_PCost', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_PEst - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_PEst', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_PExc - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_PExc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_PVen - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_PVen', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_Rec - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_Rec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_RepA - Проверка в CHILD */
+/* Справочник признаков 5 ^ Авансовый отчет (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_RepA a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_RepA', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_Ret - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_Ret', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SDep - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Амортизация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SDep a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SDep', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SExc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SExc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Списание (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SInv - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Продажа (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SInv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SInv', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SPut - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Ввод в эксплуатацию (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SPut a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SPut', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Приход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SRepDP - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Ремонт (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRepDP a WITH(NOLOCK), deleted d WHERE a.PCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SRepDP', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SRepDV - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Ремонт (Общие затраты) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRepDV a WITH(NOLOCK), deleted d WHERE a.VCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SRepDV', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SVen - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Инвентаризация - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SVen a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SVen', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_SWer - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Износ (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SWer a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_SWer', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Налоговые накладные: Исходящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Проводка по предприятию - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranE - Проверка в CHILD */
+/* Справочник признаков 5 ^ Проводка по служащему - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranE a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranE', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranH - Проверка в CHILD */
+/* Справочник признаков 5 ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranH - Проверка в CHILD */
+/* Справочник признаков 5 ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranP - Проверка в CHILD */
+/* Справочник признаков 5 ^ ТМЦ: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranP', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranS - Проверка в CHILD */
+/* Справочник признаков 5 ^ Основные средства: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranS a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranS', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TranV - Проверка в CHILD */
+/* Справочник признаков 5 ^ Проводка общая - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranV a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TranV', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_TRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Налоговые накладные: Входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_TRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_WBill - Проверка в CHILD */
+/* Справочник признаков 5 ^ Путевой лист - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_WBill a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_WBill', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInBA - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Валютный счет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInBA a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInBA', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInBC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Расчетный счет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInBC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInBC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInC - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Предприятия - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInC', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInCA - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Касса - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInCA a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInCA', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInE - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Служащие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInE a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInE', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInH - Проверка в CHILD */
+/* Справочник признаков 5 ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInH - Проверка в CHILD */
+/* Справочник признаков 5 ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInP - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: ТМЦ - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInP a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInP', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInS - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Основные средства - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInS a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInS', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ b_zInV - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Общие данные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInV a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'b_zInV', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_CompCor - Проверка в CHILD */
+/* Справочник признаков 5 ^ Корректировка баланса предприятия - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_CompCor', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_CompCurr - Проверка в CHILD */
+/* Справочник признаков 5 ^ Обмен валюты по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompCurr a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_CompCurr', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_CompExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расход денег по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_CompExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_CompIn - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Предприятия (Финансы) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompIn a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_CompIn', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_CompRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приход денег по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_CompRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpCor - Проверка в CHILD */
+/* Справочник признаков 5 ^ Корректировка баланса служащего - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpCor', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpCurr - Проверка в CHILD */
+/* Справочник признаков 5 ^ Обмен валюты по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpCurr a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpCurr', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpExc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Перемещение денег между служащими - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpExc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расход денег по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpIn - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Служащие (Финансы) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpIn a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpIn', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приход денег по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_EmpRep - Проверка в CHILD */
+/* Справочник признаков 5 ^ Отчет служащего - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpRep a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_EmpRep', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_OurCor - Проверка в CHILD */
+/* Справочник признаков 5 ^ Корректировка баланса денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_OurCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_OurCor', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_OurIn - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий баланс: Касса (Финансы) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_OurIn a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_OurIn', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_PlanExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Расходы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_PlanExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_PlanExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_PlanRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Доходы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_PlanRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_PlanRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ c_Sal - Проверка в CHILD */
+/* Справочник признаков 5 ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_Sal', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_CommunalTax - Проверка в CHILD */
+/* Справочник признаков 5 ^ Коммунальный налог - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CommunalTax a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_CommunalTax', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_CWTime - Проверка в CHILD */
+/* Справочник признаков 5 ^ Табель учета рабочего времени (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CWTime a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_CWTime', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_CWTimeCor - Проверка в CHILD */
+/* Справочник признаков 5 ^ Табель учета рабочего времени: Корректировка: Список - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CWTimeCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_CWTimeCor', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_EDis - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Увольнение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EDis a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_EDis', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_EExc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Кадровое перемещение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_EExc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_EGiv - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Прием на работу - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EGiv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_EGiv', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_ELeav - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Отпуск (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ELeav a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_ELeav', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_ELeavCor - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ELeavCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_ELeavCor', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_EmpSchedExt - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Дополнительный график работы (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EmpSchedExt a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_EmpSchedExt', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_ESic - Проверка в CHILD */
+/* Справочник признаков 5 ^ Больничный лист (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ESic a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_ESic', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_ETrp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Командировка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ETrp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_ETrp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_EWri - Проверка в CHILD */
+/* Справочник признаков 5 ^ Исполнительный лист - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EWri a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_EWri', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_EWrk - Проверка в CHILD */
+/* Справочник признаков 5 ^ Выполнение работ (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EWrk a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_EWrk', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_LeaveSched - Проверка в CHILD */
+/* Справочник признаков 5 ^ Отпуск: Лимиты по видам (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LeaveSched a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LeaveSched', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_LExc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Кадровое перемещение списком (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LExc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_LExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Заработная плата: Выплата (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_LMem - Проверка в CHILD */
+/* Справочник признаков 5 ^ Штатное расписание (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LMem a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LMem', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_LRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Заработная плата: Начисление (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_LStr - Проверка в CHILD */
+/* Справочник признаков 5 ^ Штатная численность сотрудников (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LStr a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_LStr', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_OPWrk - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приказ: Производственный (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_OPWrk a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_OPWrk', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_PostStruc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Структура должностей (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_PostStruc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_PostStruc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_SubStruc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Структура предприятия (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_SubStruc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_SubStruc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_TSer - Проверка в CHILD */
+/* Справочник признаков 5 ^ Командировочное удостоверение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_TSer a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_TSer', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ p_WExc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Привлечение на другую работу - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_WExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'p_WExc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Acc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Acc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Cos - Проверка в CHILD */
+/* Справочник признаков 5 ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Cos', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_CRet - Проверка в CHILD */
+/* Справочник признаков 5 ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_CRet', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_CRRet - Проверка в CHILD */
+/* Справочник признаков 5 ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_CRRet', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Cst - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Cst', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Cst2 - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Cst2', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Dis - Проверка в CHILD */
+/* Справочник признаков 5 ^ Распределение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Dis', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_EOExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_EOExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_EORec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Заказ внешний: Обработка: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EORec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_EORec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Epp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Epp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Est - Проверка в CHILD */
+/* Справочник признаков 5 ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Est', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Exc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Перемещение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Exc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Exp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расходный документ: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Exp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Inv - Проверка в CHILD */
+/* Справочник признаков 5 ^ Расходная накладная: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Inv', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_IOExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Заказ внутренний: Обработка: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IOExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_IOExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_IORec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_IORec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_MonIntExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Служебный расход денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonIntExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_MonIntExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_MonIntRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Служебный приход денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonIntRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_MonIntRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_MonRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Прием наличных денег на склад - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_MonRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Rec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Приход товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Rec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Ret - Проверка в CHILD */
+/* Справочник признаков 5 ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Ret', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Sale - Проверка в CHILD */
+/* Справочник признаков 5 ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Sale', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SaleTemp - Удаление в CHILD */
+/* Справочник признаков 5 ^ Временные данные продаж: Заголовок - Удаление в CHILD */
+  DELETE t_SaleTemp FROM t_SaleTemp a, deleted d WHERE a.CodeID5 = d.CodeID5
+  IF @@ERROR > 0 RETURN
+
+/* r_Codes5 ^ t_SEst - Проверка в CHILD */
+/* Справочник признаков 5 ^ Переоценка цен продажи: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SEst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SEst', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SExpE - Проверка в CHILD */
+/* Справочник признаков 5 ^ Разукомплектация товара: Затраты на комплекты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExpE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SExpE', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SExpM - Проверка в CHILD */
+/* Справочник признаков 5 ^ Разукомплектация товара: Общие Затраты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExpM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SExpM', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SPExp - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPExp', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SPExpE - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Разукомплектация: Затраты на комплекты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExpE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPExpE', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SPExpM - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Разукомплектация: Общие Затраты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExpM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPExpM', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SPRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SPRecE - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Комплектация: Затраты на комплекты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRecE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPRecE', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SPRecM - Проверка в CHILD */
+/* Справочник признаков 5 ^ Планирование: Комплектация: Общие Затраты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRecM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPRecM', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SRec - Проверка в CHILD */
+/* Справочник признаков 5 ^ Комплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SRec', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SRecE - Проверка в CHILD */
+/* Справочник признаков 5 ^ Комплектация товара: Затраты на комплекты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRecE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SRecE', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_SRecM - Проверка в CHILD */
+/* Справочник признаков 5 ^ Комплектация товара: Общие Затраты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRecM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SRecM', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_Ven - Проверка в CHILD */
+/* Справочник признаков 5 ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_Ven', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ t_zInP - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящие остатки товара - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_zInP a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_zInP', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ z_Contracts - Проверка в CHILD */
+/* Справочник признаков 5 ^ Договор - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Contracts a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'z_Contracts', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ z_InAcc - Проверка в CHILD */
+/* Справочник признаков 5 ^ Входящий счет на оплату - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_InAcc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'z_InAcc', 3
+      RETURN
+    END
+
+/* r_Codes5 ^ z_UserCodes5 - Удаление в CHILD */
+/* Справочник признаков 5 ^ Доступные значения - Справочник признаков 5 - Удаление в CHILD */
+  DELETE z_UserCodes5 FROM z_UserCodes5 a, deleted d WHERE a.CodeID5 = d.CodeID5
+  IF @@ERROR > 0 RETURN
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10155001 AND m.PKValue = 
     '[' + cast(i.CodeID5 as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10155001 AND m.PKValue = 
+    '[' + cast(i.CodeID5 as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10155001, -ChID, 
+    '[' + cast(d.CodeID5 as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10155 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Codes5', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Codes5', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -2281,25 +3503,6 @@ BEGIN
         END
     END
 
-/* r_Codes5 ^ t_DeskRes - Обновление CHILD */
-/* Справочник признаков 5 ^ Ресторан: Резервирование столиков - Обновление CHILD */
-  IF UPDATE(CodeID5)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.CodeID5 = i.CodeID5
-          FROM t_DeskRes a, inserted i, deleted d WHERE a.CodeID5 = d.CodeID5
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_DeskRes a, deleted d WHERE a.CodeID5 = d.CodeID5)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник признаков 5'' => ''Ресторан: Резервирование столиков''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_Codes5 ^ t_Dis - Обновление CHILD */
 /* Справочник признаков 5 ^ Распределение товара: Заголовок - Обновление CHILD */
   IF UPDATE(CodeID5)
@@ -2560,25 +3763,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM t_Rec a, deleted d WHERE a.CodeID5 = d.CodeID5)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник признаков 5'' => ''Приход товара: Заголовок''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Codes5 ^ t_RestShift - Обновление CHILD */
-/* Справочник признаков 5 ^ Ресторан: Смена: Заголовок - Обновление CHILD */
-  IF UPDATE(CodeID5)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.CodeID5 = i.CodeID5
-          FROM t_RestShift a, inserted i, deleted d WHERE a.CodeID5 = d.CodeID5
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_RestShift a, deleted d WHERE a.CodeID5 = d.CodeID5)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник признаков 5'' => ''Ресторан: Смена: Заголовок''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -2973,6 +4157,7 @@ BEGIN
         END
     END
 
+
 /* Регистрация изменения записи */
 
 
@@ -3054,1260 +4239,47 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_Codes5] ON [r_Codes5]
-FOR DELETE AS
-/* r_Codes5 - Справочник признаков 5 - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_Codes5] ON [r_Codes5]
+FOR INSERT AS
+/* r_Codes5 - Справочник признаков 5 - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Codes5 ^ r_CRMM - Проверка в CHILD */
-/* Справочник признаков 5 ^ Справочник ЭККА - Виды служебных операций - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRMM a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'r_CRMM', 3
-      RETURN
-    END
 
-/* r_Codes5 ^ r_ProdME - Проверка в CHILD */
-/* Справочник признаков 5 ^ Справочник товаров - Затраты на комплекты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdME a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'r_ProdME', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ r_GOperD - Проверка в CHILD */
-/* Справочник признаков 5 ^ Справочник проводок - Проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'r_GOperD', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ r_GOperD - Проверка в CHILD */
-/* Справочник признаков 5 ^ Справочник проводок - Проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'r_GOperD', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ r_Comps - Проверка в CHILD */
-/* Справочник признаков 5 ^ Справочник предприятий - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Comps a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'r_Comps', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ r_GAccs - Проверка в CHILD */
-/* Справочник признаков 5 ^ План счетов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GAccs a WITH(NOLOCK), deleted d WHERE a.A_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'r_GAccs', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_AExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Акт сдачи услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_AExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_AExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_ARec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Акт приемки услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_ARec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_ARepADP - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет валютный (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARepADP a WITH(NOLOCK), deleted d WHERE a.PCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_ARepADP', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_ARepADS - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет валютный (Основные средства) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARepADS a WITH(NOLOCK), deleted d WHERE a.ACodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_ARepADS', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_ARepADV - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет валютный (Общие) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARepADV a WITH(NOLOCK), deleted d WHERE a.VCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_ARepADV', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_BankExpAC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Валютный счет: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankExpAC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_BankExpAC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_BankExpCC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расчетный счет: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankExpCC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_BankExpCC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_BankPayAC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Валютное платежное поручение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankPayAC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_BankPayAC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_BankPayCC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Платежное поручение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankPayCC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_BankPayCC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_BankRecAC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Валютный счет: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankRecAC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_BankRecAC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_BankRecCC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расчетный счет: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankRecCC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_BankRecCC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Кассовый ордер: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CInv - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CInv', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Кассовый ордер: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CRepADP - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет с признаками (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRepADP a WITH(NOLOCK), deleted d WHERE a.PCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CRepADP', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CRepADS - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет с признаками (Основные средства) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRepADS a WITH(NOLOCK), deleted d WHERE a.ACodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CRepADS', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CRepADV - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет с признаками (Общие) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRepADV a WITH(NOLOCK), deleted d WHERE a.VCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CRepADV', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_CRet - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_CRet', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_Cst - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_Cst', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_DStack - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Суммовой учет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_DStack', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_Exp - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_Exp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_GTranD - Проверка в CHILD */
-/* Справочник признаков 5 ^ Таблица проводок (Проводки) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_GTranD', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_GTranD - Проверка в CHILD */
-/* Справочник признаков 5 ^ Таблица проводок (Проводки) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_GTranD', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_Inv - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_Inv', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_LExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Зарплата: Выплата (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_LExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_LExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_LRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Зарплата: Начисление (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_LRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_LRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_PAcc - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_PAcc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_PCost - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_PCost', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_PEst - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_PEst', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_PExc - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_PExc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_PVen - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_PVen', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_Rec - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_Rec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_RepA - Проверка в CHILD */
-/* Справочник признаков 5 ^ Авансовый отчет (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_RepA a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_RepA', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_Ret - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_Ret', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SDep - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Амортизация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SDep a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SDep', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SExc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SExc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Списание (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SInv - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Продажа (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SInv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SInv', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SPut - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Ввод в эксплуатацию (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SPut a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SPut', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Приход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SRepDP - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Ремонт (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRepDP a WITH(NOLOCK), deleted d WHERE a.PCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SRepDP', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SRepDV - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Ремонт (Общие затраты) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRepDV a WITH(NOLOCK), deleted d WHERE a.VCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SRepDV', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SVen - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Инвентаризация - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SVen a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SVen', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_SWer - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Износ (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SWer a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_SWer', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Налоговые накладные: Исходящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Проводка по предприятию - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranE - Проверка в CHILD */
-/* Справочник признаков 5 ^ Проводка по служащему - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranE a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranE', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranH - Проверка в CHILD */
-/* Справочник признаков 5 ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranH - Проверка в CHILD */
-/* Справочник признаков 5 ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranP - Проверка в CHILD */
-/* Справочник признаков 5 ^ ТМЦ: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranP', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranS - Проверка в CHILD */
-/* Справочник признаков 5 ^ Основные средства: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranS a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranS', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TranV - Проверка в CHILD */
-/* Справочник признаков 5 ^ Проводка общая - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranV a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TranV', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_TRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Налоговые накладные: Входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_TRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_WBill - Проверка в CHILD */
-/* Справочник признаков 5 ^ Путевой лист - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_WBill a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_WBill', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInBA - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Валютный счет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInBA a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInBA', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInBC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Расчетный счет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInBC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInBC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInC - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Предприятия - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInC a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInC', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInCA - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Касса - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInCA a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInCA', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInE - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Служащие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInE a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInE', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInH - Проверка в CHILD */
-/* Справочник признаков 5 ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.C_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInH - Проверка в CHILD */
-/* Справочник признаков 5 ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.D_CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInP - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: ТМЦ - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInP a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInP', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInS - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Основные средства - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInS a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInS', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ b_zInV - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Общие данные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInV a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'b_zInV', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_CompCor - Проверка в CHILD */
-/* Справочник признаков 5 ^ Корректировка баланса предприятия - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_CompCor', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_CompCurr - Проверка в CHILD */
-/* Справочник признаков 5 ^ Обмен валюты по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompCurr a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_CompCurr', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_CompExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расход денег по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_CompExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_CompIn - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Предприятия (Финансы) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompIn a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_CompIn', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_CompRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приход денег по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_CompRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpCor - Проверка в CHILD */
-/* Справочник признаков 5 ^ Корректировка баланса служащего - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpCor', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpCurr - Проверка в CHILD */
-/* Справочник признаков 5 ^ Обмен валюты по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpCurr a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpCurr', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpExc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Перемещение денег между служащими - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpExc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расход денег по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpIn - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Служащие (Финансы) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpIn a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpIn', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приход денег по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_EmpRep - Проверка в CHILD */
-/* Справочник признаков 5 ^ Отчет служащего - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpRep a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_EmpRep', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_OurCor - Проверка в CHILD */
-/* Справочник признаков 5 ^ Корректировка баланса денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_OurCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_OurCor', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_OurIn - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий баланс: Касса (Финансы) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_OurIn a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_OurIn', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_PlanExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Расходы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_PlanExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_PlanExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_PlanRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Доходы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_PlanRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_PlanRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ c_Sal - Проверка в CHILD */
-/* Справочник признаков 5 ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_Sal', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_CommunalTax - Проверка в CHILD */
-/* Справочник признаков 5 ^ Коммунальный налог - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CommunalTax a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_CommunalTax', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_CWTime - Проверка в CHILD */
-/* Справочник признаков 5 ^ Табель учета рабочего времени (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CWTime a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_CWTime', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_CWTimeCor - Проверка в CHILD */
-/* Справочник признаков 5 ^ Табель учета рабочего времени: Корректировка: Список - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CWTimeCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_CWTimeCor', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_EDis - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Увольнение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EDis a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_EDis', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_EExc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Кадровое перемещение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_EExc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_EGiv - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Прием на работу - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EGiv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_EGiv', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_ELeav - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Отпуск (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ELeav a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_ELeav', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_ELeavCor - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ELeavCor a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_ELeavCor', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_EmpSchedExt - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Дополнительный график работы (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EmpSchedExt a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_EmpSchedExt', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_ESic - Проверка в CHILD */
-/* Справочник признаков 5 ^ Больничный лист (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ESic a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_ESic', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_ETrp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Командировка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ETrp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_ETrp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_EWri - Проверка в CHILD */
-/* Справочник признаков 5 ^ Исполнительный лист - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EWri a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_EWri', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_EWrk - Проверка в CHILD */
-/* Справочник признаков 5 ^ Выполнение работ (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EWrk a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_EWrk', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_LeaveSched - Проверка в CHILD */
-/* Справочник признаков 5 ^ Отпуск: Лимиты по видам (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LeaveSched a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LeaveSched', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_LExc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Кадровое перемещение списком (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LExc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_LExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Заработная плата: Выплата (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_LMem - Проверка в CHILD */
-/* Справочник признаков 5 ^ Штатное расписание (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LMem a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LMem', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_LRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Заработная плата: Начисление (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_LStr - Проверка в CHILD */
-/* Справочник признаков 5 ^ Штатная численность сотрудников (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LStr a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_LStr', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_OPWrk - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приказ: Производственный (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_OPWrk a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_OPWrk', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_PostStruc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Структура должностей (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_PostStruc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_PostStruc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_SubStruc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Структура предприятия (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_SubStruc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_SubStruc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_TSer - Проверка в CHILD */
-/* Справочник признаков 5 ^ Командировочное удостоверение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_TSer a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_TSer', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ p_WExc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Привлечение на другую работу - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_WExc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'p_WExc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Acc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Acc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Cos - Проверка в CHILD */
-/* Справочник признаков 5 ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Cos', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_CRet - Проверка в CHILD */
-/* Справочник признаков 5 ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_CRet', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_CRRet - Проверка в CHILD */
-/* Справочник признаков 5 ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_CRRet', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Cst - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Cst', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Cst2 - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Cst2', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_DeskRes - Проверка в CHILD */
-/* Справочник признаков 5 ^ Ресторан: Резервирование столиков - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DeskRes a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_DeskRes', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Dis - Проверка в CHILD */
-/* Справочник признаков 5 ^ Распределение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Dis', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_EOExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_EOExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_EORec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Заказ внешний: Обработка: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EORec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_EORec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Epp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Epp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Est - Проверка в CHILD */
-/* Справочник признаков 5 ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Est', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Exc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Перемещение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Exc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Exp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расходный документ: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Exp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Inv - Проверка в CHILD */
-/* Справочник признаков 5 ^ Расходная накладная: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Inv', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_IOExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Заказ внутренний: Обработка: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IOExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_IOExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_IORec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_IORec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_MonIntExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Служебный расход денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonIntExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_MonIntExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_MonIntRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Служебный приход денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonIntRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_MonIntRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_MonRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Прием наличных денег на склад - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_MonRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Rec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Приход товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Rec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_RestShift - Проверка в CHILD */
-/* Справочник признаков 5 ^ Ресторан: Смена: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RestShift a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_RestShift', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Ret - Проверка в CHILD */
-/* Справочник признаков 5 ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Ret', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Sale - Проверка в CHILD */
-/* Справочник признаков 5 ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Sale', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SaleTemp - Удаление в CHILD */
-/* Справочник признаков 5 ^ Временные данные продаж: Заголовок - Удаление в CHILD */
-  DELETE t_SaleTemp FROM t_SaleTemp a, deleted d WHERE a.CodeID5 = d.CodeID5
-  IF @@ERROR > 0 RETURN
-
-/* r_Codes5 ^ t_SEst - Проверка в CHILD */
-/* Справочник признаков 5 ^ Переоценка цен продажи: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SEst a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SEst', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SExpE - Проверка в CHILD */
-/* Справочник признаков 5 ^ Разукомплектация товара: Затраты на комплекты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExpE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SExpE', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SExpM - Проверка в CHILD */
-/* Справочник признаков 5 ^ Разукомплектация товара: Общие Затраты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExpM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SExpM', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SPExp - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPExp', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SPExpE - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Разукомплектация: Затраты на комплекты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExpE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPExpE', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SPExpM - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Разукомплектация: Общие Затраты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExpM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPExpM', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SPRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SPRecE - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Комплектация: Затраты на комплекты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRecE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPRecE', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SPRecM - Проверка в CHILD */
-/* Справочник признаков 5 ^ Планирование: Комплектация: Общие Затраты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRecM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPRecM', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SRec - Проверка в CHILD */
-/* Справочник признаков 5 ^ Комплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SRec', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SRecE - Проверка в CHILD */
-/* Справочник признаков 5 ^ Комплектация товара: Затраты на комплекты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRecE a WITH(NOLOCK), deleted d WHERE a.SetCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SRecE', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_SRecM - Проверка в CHILD */
-/* Справочник признаков 5 ^ Комплектация товара: Общие Затраты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRecM a WITH(NOLOCK), deleted d WHERE a.CostCodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SRecM', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_Ven - Проверка в CHILD */
-/* Справочник признаков 5 ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_Ven', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ t_zInP - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящие остатки товара - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_zInP a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_zInP', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ z_Contracts - Проверка в CHILD */
-/* Справочник признаков 5 ^ Договор - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Contracts a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'z_Contracts', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ z_InAcc - Проверка в CHILD */
-/* Справочник признаков 5 ^ Входящий счет на оплату - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_InAcc a WITH(NOLOCK), deleted d WHERE a.CodeID5 = d.CodeID5)
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'z_InAcc', 3
-      RETURN
-    END
-
-/* r_Codes5 ^ z_UserCodes5 - Удаление в CHILD */
-/* Справочник признаков 5 ^ Доступные значения - Справочник признаков 5 - Удаление в CHILD */
-  DELETE z_UserCodes5 FROM z_UserCodes5 a, deleted d WHERE a.CodeID5 = d.CodeID5
-  IF @@ERROR > 0 RETURN
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10155001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10155001, ChID, 
     '[' + cast(i.CodeID5 as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10155001 AND m.PKValue = 
-    '[' + cast(i.CodeID5 as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10155001, -ChID, 
-    '[' + cast(d.CodeID5 as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10155 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Codes5', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Codes5', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

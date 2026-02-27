@@ -120,7 +120,9 @@ BEGIN
 /* Возможно ли редактирование документа */
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11052, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Служебный расход денег'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Служебный расход денег'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -171,7 +173,9 @@ BEGIN
 
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(11052, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Служебный расход денег).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Служебный расход денег'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -184,30 +188,14 @@ BEGIN
     END
 
 /* Возможно ли редактирование документа */
-  DECLARE @StateCodePosID int
-  SELECT @StateCodePosID = colid FROM syscolumns WHERE id = object_id('t_MonIntExp') AND name = 'StateCode'
-  DECLARE @BytePos int
-  DECLARE @UpdLen int
-  DECLARE @FieldsChanged bit
-  SET @FieldsChanged = 0
-  SET @BytePos = CAST(CEILING(@StateCodePosID / 8.0) AS int)
-  SET @UpdLen = LEN(COLUMNS_UPDATED())
-  WHILE (@UpdLen > 0 AND @FieldsChanged = 0)
-    BEGIN
-      IF @UpdLen = @BytePos
-        BEGIN
-         IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> POWER(2, @StateCodePosID - (CEILING(@StateCodePosID / 8.0) - 1) * 8 - 1)
-           SET @FieldsChanged = 1
-        END
-      ELSE
-        IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> 0
-          SET @FieldsChanged = 1
-      SET @UpdLen = @UpdLen - 1
-    END
-  IF @FieldsChanged = 1
+DECLARE @ColumnsUpdated VARBINARY(255)
+SET @ColumnsUpdated = COLUMNS_UPDATED()
+IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('t_MonIntExp', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(11052, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Служебный расход денег'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Служебный расход денег'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -389,7 +377,9 @@ BEGIN
 
   IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(11052, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Документ ''Служебный расход денег'' не может иметь указанный статус.', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Служебный расход денег'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -464,6 +454,67 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_MonIntExp', N'Last', N'INSERT'
 GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
 
 
 

@@ -21,24 +21,6 @@ CREATE INDEX [CRID_SerialID_CRDocID]
   ON [PRIMARY]
 GO
 
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_CRJournalText] ON [t_CRJournalText]
-FOR DELETE AS
-/* t_CRJournalText - ЭКЛЗ - резервные копии документов в виде текста - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 1011 AND m.ChID = i.ChID
-
-END
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_CRJournalText', N'Last', N'DELETE'
-GO
-
 ALTER TABLE [dbo].[t_CRJournalText]
   ADD CONSTRAINT [FK_t_CRJournalText_t_CRJournalDocSubtypes] FOREIGN KEY ([DocSubtypeID]) REFERENCES [dbo].[t_CRJournalDocSubtypes] ([DocSubtypeID]) ON UPDATE CASCADE
 GO

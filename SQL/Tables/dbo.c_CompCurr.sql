@@ -144,53 +144,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[T_Upd_c_CompCurr] 
-ON [dbo].[c_CompCurr] 
-FOR UPDATE 
-AS 
-BEGIN 
-  DECLARE @RCount int  
-  SET @RCount = @@RowCount  
-  SET NOCOUNT ON  
-  IF @RCount > 1 AND (UPDATE(NewAccountAC) OR UPDATE(NewCompAccountAC)) 
-    BEGIN  
-      RAISERROR('Пакетное обновление, изменяющее поля ключа невозможно.', 16, 1)  
-      ROLLBACK TRANSACTION  
-      RETURN  
-    END 
-       
-    IF UPDATE(NewCompAccountAC)    
-      UPDATE oc 
-      SET    oc.OldNewCompAccountAC = CASE  
-                                    WHEN i.NewCompAccountAC LIKE '[a-Z][a-Z]%' AND d.NewCompAccountAC NOT LIKE '[a-Z][a-Z]%' THEN d.NewCompAccountAC 
-                                    ELSE i.OldNewCompAccountAC 
-                               END 
-      FROM   DELETED d 
-            ,c_CompCurr oc 
-             INNER JOIN INSERTED i 
-                  ON  (oc.OurID=i.OurID AND oc.NewCompAccountAC=i.NewCompAccountAC) 
-    IF UPDATE(NewAccountAC)    
-      UPDATE oc 
-      SET    oc.OldNewAccountAC = CASE  
-                                    WHEN i.NewAccountAC LIKE '[a-Z][a-Z]%' AND d.NewAccountAC NOT LIKE '[a-Z][a-Z]%' THEN d.NewAccountAC 
-                                    ELSE i.OldNewAccountAC 
-                               END 
-      FROM   DELETED d 
-            ,c_CompCurr oc 
-             INNER JOIN INSERTED i 
-                  ON  (oc.OurID=i.OurID AND oc.NewAccountAC=i.NewAccountAC) 
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_c_CompCurr] ON [c_CompCurr]
-FOR INSERT AS
-/* c_CompCurr - Обмен валюты по предприятиям - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_c_CompCurr] ON [c_CompCurr]
+FOR DELETE AS
+/* c_CompCurr - Обмен валюты по предприятиям - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -210,148 +167,81 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(12003, i.StateCode) = 0)
+/* Удаление регистрации изменения статуса */
+  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 12003 AND m.ChID = i.ChID
+
+/* Возможно ли редактирование документа */
+    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(12003, a.ChID, a.StateCode) = 0)
+      BEGIN
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Обмен валюты по предприятиям'))
+        RAISERROR(@Err2, 18, 1)
+        ROLLBACK TRAN
+        RETURN
+      END
+
+/* c_CompCurr ^ z_DocLinks - Удаление в CHILD */
+/* Обмен валюты по предприятиям ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 12003 AND a.ChildChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* c_CompCurr ^ z_DocLinks - Проверка в CHILD */
+/* Обмен валюты по предприятиям ^ Документы - Взаимосвязи - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 12003 AND a.ParentChID = d.ChID)
     BEGIN
-      RAISERROR ('Документ ''Обмен валюты по предприятиям'' не может иметь указанный статус.', 18, 1)
-      ROLLBACK TRAN
+      EXEC z_RelationError 'c_CompCurr', 'z_DocLinks', 3
       RETURN
     END
 
+/* c_CompCurr ^ z_DocShed - Удаление в CHILD */
+/* Обмен валюты по предприятиям ^ Документы - Процессы - Удаление в CHILD */
+  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 12003 AND a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* c_CompCurr ^ r_Codes1 - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник признаков 1 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
-    BEGIN
-      EXEC z_RelationError 'r_Codes1', 'c_CompCurr', 0
-      RETURN
-    END
 
-/* c_CompCurr ^ r_Codes2 - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник признаков 2 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
-    BEGIN
-      EXEC z_RelationError 'r_Codes2', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_Codes3 - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник признаков 3 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
-    BEGIN
-      EXEC z_RelationError 'r_Codes3', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_Codes4 - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник признаков 4 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
-    BEGIN
-      EXEC z_RelationError 'r_Codes4', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_Codes5 - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник признаков 5 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_CompsAC - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник предприятий - Валютные счета - Проверка в PARENT */
-  IF (SELECT COUNT(*) FROM r_CompsAC m WITH(NOLOCK), inserted i WHERE i.CompAccountAC = m.CompAccountAC AND i.CompID = m.CompID) <> @RCount
-    BEGIN
-      EXEC z_RelationError 'r_CompsAC', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_CompsAC - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник предприятий - Валютные счета - Проверка в PARENT */
-  IF (SELECT COUNT(*) FROM r_CompsAC m WITH(NOLOCK), inserted i WHERE i.NewCompAccountAC = m.CompAccountAC AND i.CompID = m.CompID) <> @RCount
-    BEGIN
-      EXEC z_RelationError 'r_CompsAC', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_Currs - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник валют - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.NewCurrID NOT IN (SELECT CurrID FROM r_Currs))
-    BEGIN
-      EXEC z_RelationError 'r_Currs', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_Currs - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник валют - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
-    BEGIN
-      EXEC z_RelationError 'r_Currs', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_OursAC - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник внутренних фирм - Валютные счета - Проверка в PARENT */
-  IF (SELECT COUNT(*) FROM r_OursAC m WITH(NOLOCK), inserted i WHERE i.NewAccountAC = m.AccountAC AND i.OurID = m.OurID) <> @RCount
-    BEGIN
-      EXEC z_RelationError 'r_OursAC', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_OursAC - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник внутренних фирм - Валютные счета - Проверка в PARENT */
-  IF (SELECT COUNT(*) FROM r_OursAC m WITH(NOLOCK), inserted i WHERE i.AccountAC = m.AccountAC AND i.OurID = m.OurID) <> @RCount
-    BEGIN
-      EXEC z_RelationError 'r_OursAC', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_States - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* c_CompCurr ^ r_Stocks - Проверка в PARENT */
-/* Обмен валюты по предприятиям ^ Справочник складов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_CompCurr', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 12003001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 12003001 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 12003001 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 12003001, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 12003 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_c_CompCurr', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_c_CompCurr', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -385,7 +275,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -394,7 +284,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -403,7 +293,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -412,7 +302,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -421,7 +311,9 @@ BEGIN
 /* Обработка статуса */
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(12003, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Обмен валюты по предприятиям).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Обмен валюты по предприятиям'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -434,30 +326,14 @@ BEGIN
     END
 
 /* Возможно ли редактирование документа */
-  DECLARE @StateCodePosID int
-  SELECT @StateCodePosID = colid FROM syscolumns WHERE id = object_id('c_CompCurr') AND name = 'StateCode'
-  DECLARE @BytePos int
-  DECLARE @UpdLen int
-  DECLARE @FieldsChanged bit
-  SET @FieldsChanged = 0
-  SET @BytePos = CAST(CEILING(@StateCodePosID / 8.0) AS int)
-  SET @UpdLen = LEN(COLUMNS_UPDATED())
-  WHILE (@UpdLen > 0 AND @FieldsChanged = 0)
-    BEGIN
-      IF @UpdLen = @BytePos
-        BEGIN
-         IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> POWER(2, @StateCodePosID - (CEILING(@StateCodePosID / 8.0) - 1) * 8 - 1)
-           SET @FieldsChanged = 1
-        END
-      ELSE
-        IF CAST(SUBSTRING(COLUMNS_UPDATED(), @UpdLen, 1) AS Int) <> 0
-          SET @FieldsChanged = 1
-      SET @UpdLen = @UpdLen - 1
-    END
-  IF @FieldsChanged = 1
+DECLARE @ColumnsUpdated VARBINARY(255)
+SET @ColumnsUpdated = COLUMNS_UPDATED()
+IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('c_CompCurr', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(12003, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Обмен валюты по предприятиям'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Обмен валюты по предприятиям'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -646,6 +522,7 @@ IF UPDATE(DocDate) OR UPDATE(DocID)
     FROM z_DocLinks l, inserted i WHERE l.ParentDocCode = 12003 AND l.ParentChID = i.ChID
   END
 
+
 /* Регистрация изменения записи */
 
 
@@ -702,10 +579,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_c_CompCurr] ON [c_CompCurr]
-FOR DELETE AS
-/* c_CompCurr - Обмен валюты по предприятиям - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_c_CompCurr] ON [c_CompCurr]
+FOR INSERT AS
+/* c_CompCurr - Обмен валюты по предприятиям - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -725,76 +605,252 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM deleted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM inserted a , @OpenAges AS t WHERE t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Обмен валюты по предприятиям (c_CompCurr):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Обмен валюты по предприятиям'), 'c_CompCurr', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Обработка статуса */
-/* Удаление регистрации изменения статуса */
-  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 12003 AND m.ChID = i.ChID
-
-/* Возможно ли редактирование документа */
-    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(12003, a.ChID, a.StateCode) = 0)
-      BEGIN
-        RAISERROR ('Изменение документа ''Обмен валюты по предприятиям'' в данном статусе запрещено.', 18, 1)
-        ROLLBACK TRAN
-        RETURN
-      END
-
-/* c_CompCurr ^ z_DocLinks - Удаление в CHILD */
-/* Обмен валюты по предприятиям ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 12003 AND a.ChildChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* c_CompCurr ^ z_DocLinks - Проверка в CHILD */
-/* Обмен валюты по предприятиям ^ Документы - Взаимосвязи - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 12003 AND a.ParentChID = d.ChID)
+  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(12003, i.StateCode) = 0)
     BEGIN
-      EXEC z_RelationError 'c_CompCurr', 'z_DocLinks', 3
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Обмен валюты по предприятиям'))
+      RAISERROR(@Err1, 18, 1)
+      ROLLBACK TRAN
       RETURN
     END
 
-/* c_CompCurr ^ z_DocShed - Удаление в CHILD */
-/* Обмен валюты по предприятиям ^ Документы - Процессы - Удаление в CHILD */
-  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 12003 AND a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 12003001 AND m.PKValue = 
+/* c_CompCurr ^ r_Codes1 - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник признаков 1 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
+    BEGIN
+      EXEC z_RelationError 'r_Codes1', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Codes2 - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник признаков 2 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
+    BEGIN
+      EXEC z_RelationError 'r_Codes2', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Codes3 - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник признаков 3 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
+    BEGIN
+      EXEC z_RelationError 'r_Codes3', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Codes4 - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник признаков 4 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
+    BEGIN
+      EXEC z_RelationError 'r_Codes4', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Codes5 - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник признаков 5 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_CompsAC - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник предприятий - Валютные счета - Проверка в PARENT */
+  IF (SELECT COUNT(*) FROM r_CompsAC m WITH(NOLOCK), inserted i WHERE i.CompAccountAC = m.CompAccountAC AND i.CompID = m.CompID) <> @RCount
+    BEGIN
+      EXEC z_RelationError 'r_CompsAC', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_CompsAC - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник предприятий - Валютные счета - Проверка в PARENT */
+  IF (SELECT COUNT(*) FROM r_CompsAC m WITH(NOLOCK), inserted i WHERE i.NewCompAccountAC = m.CompAccountAC AND i.CompID = m.CompID) <> @RCount
+    BEGIN
+      EXEC z_RelationError 'r_CompsAC', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Currs - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник валют - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.NewCurrID NOT IN (SELECT CurrID FROM r_Currs))
+    BEGIN
+      EXEC z_RelationError 'r_Currs', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Currs - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник валют - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
+    BEGIN
+      EXEC z_RelationError 'r_Currs', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_OursAC - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник внутренних фирм - Валютные счета - Проверка в PARENT */
+  IF (SELECT COUNT(*) FROM r_OursAC m WITH(NOLOCK), inserted i WHERE i.NewAccountAC = m.AccountAC AND i.OurID = m.OurID) <> @RCount
+    BEGIN
+      EXEC z_RelationError 'r_OursAC', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_OursAC - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник внутренних фирм - Валютные счета - Проверка в PARENT */
+  IF (SELECT COUNT(*) FROM r_OursAC m WITH(NOLOCK), inserted i WHERE i.AccountAC = m.AccountAC AND i.OurID = m.OurID) <> @RCount
+    BEGIN
+      EXEC z_RelationError 'r_OursAC', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_States - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_CompCurr', 0
+      RETURN
+    END
+
+/* c_CompCurr ^ r_Stocks - Проверка в PARENT */
+/* Обмен валюты по предприятиям ^ Справочник складов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StockID NOT IN (SELECT StockID FROM r_Stocks))
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_CompCurr', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 12003001, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 12003001 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 12003001, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 12003 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_c_CompCurr', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_c_CompCurr', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[T_Upd_c_CompCurr] 
+ON [dbo].[c_CompCurr] 
+FOR UPDATE 
+AS 
+BEGIN 
+  DECLARE @RCount int  
+  SET @RCount = @@RowCount  
+  SET NOCOUNT ON  
+  IF @RCount > 1 AND (UPDATE(NewAccountAC) OR UPDATE(NewCompAccountAC)) 
+    BEGIN  
+      RAISERROR('Пакетное обновление, изменяющее поля ключа невозможно.', 16, 1)  
+      ROLLBACK TRANSACTION  
+      RETURN  
+    END 
+       
+    IF UPDATE(NewCompAccountAC)    
+      UPDATE oc 
+      SET    oc.OldNewCompAccountAC = CASE  
+                                    WHEN i.NewCompAccountAC LIKE '[a-Z][a-Z]%' AND d.NewCompAccountAC NOT LIKE '[a-Z][a-Z]%' THEN d.NewCompAccountAC 
+                                    ELSE i.OldNewCompAccountAC 
+                               END 
+      FROM   DELETED d 
+            ,c_CompCurr oc 
+             INNER JOIN INSERTED i 
+                  ON  (oc.OurID=i.OurID AND oc.NewCompAccountAC=i.NewCompAccountAC) 
+    IF UPDATE(NewAccountAC)    
+      UPDATE oc 
+      SET    oc.OldNewAccountAC = CASE  
+                                    WHEN i.NewAccountAC LIKE '[a-Z][a-Z]%' AND d.NewAccountAC NOT LIKE '[a-Z][a-Z]%' THEN d.NewAccountAC 
+                                    ELSE i.OldNewAccountAC 
+                               END 
+      FROM   DELETED d 
+            ,c_CompCurr oc 
+             INNER JOIN INSERTED i 
+                  ON  (oc.OurID=i.OurID AND oc.NewAccountAC=i.NewAccountAC) 
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

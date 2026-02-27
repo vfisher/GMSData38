@@ -754,9 +754,6 @@ INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggr
 INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (186, 'TSubSumCC_nt', 1, 'TSubSumCC_nt', 't_SPExpD.SubSumCC_nt', 'Планирование Разукомплектации: Заголовок.Сумма составляющей без НДС ВС', 2);
 INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (186, 'TSubSumCC_wt', 3, 'TSubSumCC_wt', 't_SPExpD.SubSumCC_wt', 'Планирование Разукомплектации: Заголовок.Сумма составляющей', 2);
 INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (186, 'TSubTaxSum', 2, 'TSubTaxSum', 't_SPExpD.SubTaxSum', 'Планирование Разукомплектации: Заголовок.Сумма НДС составляющей', 2);
-INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (187, 'TSumCC_nt', 1, 'Итого без НДС', 't_DeskResD.SumCC_nt', 'Ресторан: Резервирование столиков.Сумма без НДС', 2);
-INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (187, 'TSumCC_wt', 3, 'Итого с НДС', 't_DeskResD.SumCC_wt', 'Ресторан: Резервирование столиков.Сумма с НДС', 2);
-INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (187, 'TTaxSum', 2, 'Итого НДС', 't_DeskResD.TaxSum', 'Ресторан: Резервирование столиков.Сумма НДС', 2);
 INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (188, 'OurID', 1, 'Фирма', 'b_PCost.OurID', 'ТМЦ: Формирование себестоимости (Заголовок).Фирма', 1);
 INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (188, 'PPID', 3, 'Партия', 'b_PCostD.NewPPID', 'ТМЦ: Формирование себестоимости (ТМЦ).Нов Партия', 1);
 INSERT dbo.z_AUFields(AUID, AUFieldName, SrcPosID, AUFieldDesc, EExp, LExp, Aggregate) VALUES (188, 'ProdID', 4, 'Товар', 'b_PCostD.ProdID', 'ТМЦ: Формирование себестоимости (ТМЦ).Товар', 1);

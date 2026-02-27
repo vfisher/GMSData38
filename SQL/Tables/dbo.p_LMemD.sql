@@ -50,13 +50,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_LMemD] ON [p_LMemD]
-FOR INSERT AS
-/* p_LMemD - Штатное расписание (Данные) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_LMemD] ON [p_LMemD]
+FOR DELETE AS
+/* p_LMemD - Штатное расписание (Данные) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -76,76 +73,58 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LMem a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LMem a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LMem a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LMem a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM p_LMem a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(15011, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM p_LMem a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(15011, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Штатное расписание'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Штатное расписание'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* p_LMemD ^ p_LMem - Проверка в PARENT */
-/* Штатное расписание (Данные) ^ Штатное расписание (Заголовок) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM p_LMem))
-    BEGIN
-      EXEC z_RelationError 'p_LMem', 'p_LMemD', 0
-      RETURN
-    END
 
-/* p_LMemD ^ r_Deps - Проверка в PARENT */
-/* Штатное расписание (Данные) ^ Справочник отделов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.DepID NOT IN (SELECT DepID FROM r_Deps))
-    BEGIN
-      EXEC z_RelationError 'r_Deps', 'p_LMemD', 0
-      RETURN
-    END
-
-/* p_LMemD ^ r_Posts - Проверка в PARENT */
-/* Штатное расписание (Данные) ^ Справочник должностей - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PostID NOT IN (SELECT PostID FROM r_Posts))
-    BEGIN
-      EXEC z_RelationError 'r_Posts', 'p_LMemD', 0
-      RETURN
-    END
-
-/* p_LMemD ^ r_Subs - Проверка в PARENT */
-/* Штатное расписание (Данные) ^ Справочник работ: подразделения - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SubID NOT IN (SELECT SubID FROM r_Subs))
-    BEGIN
-      EXEC z_RelationError 'r_Subs', 'p_LMemD', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 15011002, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 15011002 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 15011002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SrcPosID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 15011002, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_LMemD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_LMemD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -179,7 +158,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LMem a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -188,7 +167,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LMem a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -197,7 +176,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LMem a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -206,7 +185,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LMem a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -215,7 +194,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM p_LMem a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(15011, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Штатное расписание'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Штатное расписание'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -255,6 +236,7 @@ BEGIN
         EXEC z_RelationError 'r_Subs', 'p_LMemD', 1
         RETURN
       END
+
 
 /* Регистрация изменения записи */
 
@@ -350,10 +332,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_LMemD] ON [p_LMemD]
-FOR DELETE AS
-/* p_LMemD - Штатное расписание (Данные) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_LMemD] ON [p_LMemD]
+FOR INSERT AS
+/* p_LMemD - Штатное расписание (Данные) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -373,53 +358,110 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LMem a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  p_LMem a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LMem a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  p_LMem a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Штатное расписание (Данные) (p_LMemD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Штатное расписание (Данные)'), 'p_LMemD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM p_LMem a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(15011, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM p_LMem a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(15011, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Штатное расписание'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Штатное расписание'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 15011002 AND m.PKValue = 
+/* p_LMemD ^ p_LMem - Проверка в PARENT */
+/* Штатное расписание (Данные) ^ Штатное расписание (Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM p_LMem))
+    BEGIN
+      EXEC z_RelationError 'p_LMem', 'p_LMemD', 0
+      RETURN
+    END
+
+/* p_LMemD ^ r_Deps - Проверка в PARENT */
+/* Штатное расписание (Данные) ^ Справочник отделов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DepID NOT IN (SELECT DepID FROM r_Deps))
+    BEGIN
+      EXEC z_RelationError 'r_Deps', 'p_LMemD', 0
+      RETURN
+    END
+
+/* p_LMemD ^ r_Posts - Проверка в PARENT */
+/* Штатное расписание (Данные) ^ Справочник должностей - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PostID NOT IN (SELECT PostID FROM r_Posts))
+    BEGIN
+      EXEC z_RelationError 'r_Posts', 'p_LMemD', 0
+      RETURN
+    END
+
+/* p_LMemD ^ r_Subs - Проверка в PARENT */
+/* Штатное расписание (Данные) ^ Справочник работ: подразделения - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SubID NOT IN (SELECT SubID FROM r_Subs))
+    BEGIN
+      EXEC z_RelationError 'r_Subs', 'p_LMemD', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 15011002, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SrcPosID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 15011002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SrcPosID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 15011002, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_LMemD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_LMemD', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

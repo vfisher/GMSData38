@@ -35,13 +35,11 @@
     <StaticDataLink>dbo.r_CompsCC</StaticDataLink>
     <StaticDataLink>dbo.r_CompValues</StaticDataLink>
     <StaticDataLink>dbo.r_Countries</StaticDataLink>
-    <StaticDataLink>dbo.r_CRDeskG</StaticDataLink>
     <StaticDataLink>dbo.r_CRMM</StaticDataLink>
     <StaticDataLink>dbo.r_CRMO</StaticDataLink>
     <StaticDataLink>dbo.r_CRMP</StaticDataLink>
     <StaticDataLink>dbo.r_CRPOSPays</StaticDataLink>
     <StaticDataLink>dbo.r_CRs</StaticDataLink>
-    <StaticDataLink>dbo.r_CRShed</StaticDataLink>
     <StaticDataLink>dbo.r_CRSrvs</StaticDataLink>
     <StaticDataLink>dbo.r_CRUniInput</StaticDataLink>
     <StaticDataLink>dbo.r_CurrD</StaticDataLink>
@@ -53,8 +51,6 @@
     <StaticDataLink>dbo.r_DCTypeP</StaticDataLink>
     <StaticDataLink>dbo.r_DCTypes</StaticDataLink>
     <StaticDataLink>dbo.r_Deps</StaticDataLink>
-    <StaticDataLink>dbo.r_DeskG</StaticDataLink>
-    <StaticDataLink>dbo.r_Desks</StaticDataLink>
     <StaticDataLink>dbo.r_DeviceTypes</StaticDataLink>
     <StaticDataLink>dbo.r_DiscChargeD</StaticDataLink>
     <StaticDataLink>dbo.r_DiscChargeDT</StaticDataLink>
@@ -83,9 +79,6 @@
     <StaticDataLink>dbo.r_EmpMPst</StaticDataLink>
     <StaticDataLink>dbo.r_EmpNames</StaticDataLink>
     <StaticDataLink>dbo.r_Emps</StaticDataLink>
-    <StaticDataLink>dbo.r_Executors</StaticDataLink>
-    <StaticDataLink>dbo.r_ExecutorServices</StaticDataLink>
-    <StaticDataLink>dbo.r_ExecutorShifts</StaticDataLink>
     <StaticDataLink>dbo.r_ExtFiles</StaticDataLink>
     <StaticDataLink>dbo.r_GAccFA</StaticDataLink>
     <StaticDataLink>dbo.r_GAccs</StaticDataLink>
@@ -121,10 +114,7 @@
     <StaticDataLink>dbo.r_PayTypes</StaticDataLink>
     <StaticDataLink>dbo.r_PCs</StaticDataLink>
     <StaticDataLink>dbo.r_PersonDC</StaticDataLink>
-    <StaticDataLink>dbo.r_PersonExecutorsBL</StaticDataLink>
     <StaticDataLink>dbo.r_PersonKin</StaticDataLink>
-    <StaticDataLink>dbo.r_PersonPreferences</StaticDataLink>
-    <StaticDataLink>dbo.r_PersonResourcesBL</StaticDataLink>
     <StaticDataLink>dbo.r_Persons</StaticDataLink>
     <StaticDataLink>dbo.r_PLs</StaticDataLink>
     <StaticDataLink>dbo.r_POSPays</StaticDataLink>
@@ -156,18 +146,12 @@
     <StaticDataLink>dbo.r_ProdOpers</StaticDataLink>
     <StaticDataLink>dbo.r_Prods</StaticDataLink>
     <StaticDataLink>dbo.r_ProdValues</StaticDataLink>
-    <StaticDataLink>dbo.r_Resources</StaticDataLink>
-    <StaticDataLink>dbo.r_ResourceSched</StaticDataLink>
-    <StaticDataLink>dbo.r_ResourceTypes</StaticDataLink>
     <StaticDataLink>dbo.r_ScaleDefKeys</StaticDataLink>
     <StaticDataLink>dbo.r_ScaleDefs</StaticDataLink>
     <StaticDataLink>dbo.r_ScaleGrMW</StaticDataLink>
     <StaticDataLink>dbo.r_ScaleGrs</StaticDataLink>
     <StaticDataLink>dbo.r_Scales</StaticDataLink>
     <StaticDataLink>dbo.r_Secs</StaticDataLink>
-    <StaticDataLink>dbo.r_ServiceCompatibility</StaticDataLink>
-    <StaticDataLink>dbo.r_ServiceResources</StaticDataLink>
-    <StaticDataLink>dbo.r_Services</StaticDataLink>
     <StaticDataLink>dbo.r_ShedMD</StaticDataLink>
     <StaticDataLink>dbo.r_ShedMS</StaticDataLink>
     <StaticDataLink>dbo.r_Sheds</StaticDataLink>
@@ -265,7 +249,6 @@
     <StaticDataLink>dbo.z_InAcc</StaticDataLink>
     <StaticDataLink>dbo.z_Licenses</StaticDataLink>
     <StaticDataLink>dbo.z_LogAU</StaticDataLink>
-    <StaticDataLink>dbo.z_LogCashReg</StaticDataLink>
     <StaticDataLink>dbo.z_LogCreate</StaticDataLink>
     <StaticDataLink>dbo.z_LogDelete</StaticDataLink>
     <StaticDataLink>dbo.z_LogDiscExp</StaticDataLink>

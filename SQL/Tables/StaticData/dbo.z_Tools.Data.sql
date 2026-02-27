@@ -50,13 +50,6 @@ DECLARE @NEXT_ID int  SELECT @NEXT_ID=ISNULL(MAX(LogID), 0)+1 FROM z_LogDiscRec 
 INSERT INTO z_LogDiscRec(LogID, DCardChID, TempBonus, DocCode, ChID, SrcPosID, DiscCode, SumBonus, LogDate, DBiID)
 VALUES (@NEXT_ID, #Параметр_Код регистрации#, 0, #Параметр_Код документа#, #Параметр_Код регистрации#, NULL, 0, #Параметр_Сумма:Дробное#, GETDATE(), dbo.zf_var(''OT_DBiID''))
 SET NOCOUNT OFF', '', '', 1, NULL);
-INSERT dbo.z_Tools(ToolCode, RepToolCode, ToolName, DocCode, ExecStr, ConfirmText, CompleteText, RefreshOnComplete, ShortCut) VALUES (1044, 10952, 'Сформировать имена и примечания столиков', 10601, 'UPDATE r_Desks SET DeskName = g.DeskGName + '' - '' + 
-CAST((SELECT COUNT(d2.DeskCode) FROM r_Desks d2 
-WHERE d2.DeskCode <> 0 AND d2.DeskCode < d1.DeskCode AND d1.DeskGCode = d2.DeskGCode) + 1 AS varchar(10)),     
-Notes = #Параметр_Префикс примечания:Строка# + CAST((SELECT COUNT(d2.DeskCode) 
-FROM r_Desks d2 WHERE d2.DeskCode <> 0 AND d2.DeskCode < d1.DeskCode 
-AND d1.DeskGCode = d2.DeskGCode) + 1 AS varchar(10)) FROM r_Desks d1, r_DeskG g WHERE d1.DeskCode <> 0 AND d1.DeskGCode = g.DeskGCode AND 
-d1.DeskGCode = CASE #Параметр_Группа столиков:Целое# WHEN '''' THEN 0 ELSE #Параметр_Группа столиков:Целое# END', '', '', 1, NULL);
 INSERT dbo.z_Tools(ToolCode, RepToolCode, ToolName, DocCode, ExecStr, ConfirmText, CompleteText, RefreshOnComplete, ShortCut) VALUES (1045, 10106, 'Выбор из справочника дисконтных карт', 10400, '', '', '', 0, NULL);
 INSERT dbo.z_Tools(ToolCode, RepToolCode, ToolName, DocCode, ExecStr, ConfirmText, CompleteText, RefreshOnComplete, ShortCut) VALUES (1046, 10107, 'Поиск в справочнике дисконтных карт', 10400, '', '', '', 0, NULL);
 INSERT dbo.z_Tools(ToolCode, RepToolCode, ToolName, DocCode, ExecStr, ConfirmText, CompleteText, RefreshOnComplete, ShortCut) VALUES (1047, 11011, 'Отложить чек', 0, 'act_Suspend', '', '', 0, 'Ctrl + S');

@@ -111,158 +111,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU1_INS_t_IORecD] ON [t_IORecD]
-FOR INSERT
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_t_IORecD] ON [t_IORecD]
+FOR DELETE AS
+/* t_IORecD - Заказ внутренний: Формирование: Товар - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 71 - Обновление итогов в главной таблице */
-/* t_IORecD - Заказ внутренний: Формирование: Товар */
-/* t_IORec - Заказ внутренний: Формирование: Заголовок */
-
-  UPDATE r
-  SET 
-    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt, 
-    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt
-  FROM t_IORec r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
-       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
-     FROM t_IORec WITH (NOLOCK), inserted m
-     WHERE t_IORec.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU2_UPD_t_IORecD] ON [t_IORecD]
-FOR UPDATE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 71 - Обновление итогов в главной таблице */
-/* t_IORecD - Заказ внутренний: Формирование: Товар */
-/* t_IORec - Заказ внутренний: Формирование: Заголовок */
-
-IF UPDATE(NewSumCC_nt) OR UPDATE(NewTaxSum) OR UPDATE(NewSumCC_wt) OR UPDATE(SumCC_nt) OR UPDATE(TaxSum) OR UPDATE(SumCC_wt)
-BEGIN
-  UPDATE r
-  SET 
-    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt, 
-    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt
-  FROM t_IORec r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
-       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
-     FROM t_IORec WITH (NOLOCK), inserted m
-     WHERE t_IORec.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt, 
-    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt
-  FROM t_IORec r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
-       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
-     FROM t_IORec WITH (NOLOCK), deleted m
-     WHERE t_IORec.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_t_IORecD] ON [t_IORecD]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 71 - Обновление итогов в главной таблице */
-/* t_IORecD - Заказ внутренний: Формирование: Товар */
-/* t_IORec - Заказ внутренний: Формирование: Заголовок */
-
-  UPDATE r
-  SET 
-    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
-    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
-    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt, 
-    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt
-  FROM t_IORec r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
-       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
-       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
-       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
-       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
-       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
-     FROM t_IORec WITH (NOLOCK), deleted m
-     WHERE t_IORec.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_IORecD] ON [t_IORecD]
-FOR INSERT AS
-/* t_IORecD - Заказ внутренний: Формирование: Товар - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -282,68 +134,58 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_IORec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_IORec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_IORec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_IORec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_IORec a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11221, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM t_IORec a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11221, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Заказ внутренний: Формирование'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Заказ внутренний: Формирование'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* t_IORecD ^ r_Prods - Проверка в PARENT */
-/* Заказ внутренний: Формирование: Товар ^ Справочник товаров - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_IORecD', 0
-      RETURN
-    END
 
-/* t_IORecD ^ r_Secs - Проверка в PARENT */
-/* Заказ внутренний: Формирование: Товар ^ Справочник секций - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
-    BEGIN
-      EXEC z_RelationError 'r_Secs', 't_IORecD', 0
-      RETURN
-    END
-
-/* t_IORecD ^ t_IORec - Проверка в PARENT */
-/* Заказ внутренний: Формирование: Товар ^ Заказ внутренний: Формирование: Заголовок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_IORec))
-    BEGIN
-      EXEC z_RelationError 't_IORec', 't_IORecD', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11221002, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 11221002 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 11221002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SrcPosID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 11221002, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_IORecD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_IORecD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -377,7 +219,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_IORec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -386,7 +228,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_IORec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -395,7 +237,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_IORec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -404,7 +246,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_IORec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -413,7 +255,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM t_IORec a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11221, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Заказ внутренний: Формирование'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Заказ внутренний: Формирование'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -444,6 +288,7 @@ BEGIN
         EXEC z_RelationError 't_IORec', 't_IORecD', 1
         RETURN
       END
+
 
 /* Регистрация изменения записи */
 
@@ -539,10 +384,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_IORecD] ON [t_IORecD]
-FOR DELETE AS
-/* t_IORecD - Заказ внутренний: Формирование: Товар - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_IORecD] ON [t_IORecD]
+FOR INSERT AS
+/* t_IORecD - Заказ внутренний: Формирование: Товар - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -562,53 +410,289 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_IORec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_IORec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_IORec a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_IORec a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Заказ внутренний: Формирование: Товар (t_IORecD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Заказ внутренний: Формирование: Товар'), 't_IORecD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_IORec a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11221, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM t_IORec a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11221, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Заказ внутренний: Формирование'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Заказ внутренний: Формирование'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 11221002 AND m.PKValue = 
+/* t_IORecD ^ r_Prods - Проверка в PARENT */
+/* Заказ внутренний: Формирование: Товар ^ Справочник товаров - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ProdID NOT IN (SELECT ProdID FROM r_Prods))
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_IORecD', 0
+      RETURN
+    END
+
+/* t_IORecD ^ r_Secs - Проверка в PARENT */
+/* Заказ внутренний: Формирование: Товар ^ Справочник секций - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
+    BEGIN
+      EXEC z_RelationError 'r_Secs', 't_IORecD', 0
+      RETURN
+    END
+
+/* t_IORecD ^ t_IORec - Проверка в PARENT */
+/* Заказ внутренний: Формирование: Товар ^ Заказ внутренний: Формирование: Заголовок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_IORec))
+    BEGIN
+      EXEC z_RelationError 't_IORec', 't_IORecD', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 11221002, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SrcPosID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 11221002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SrcPosID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 11221002, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_IORecD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_IORecD', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_t_IORecD] ON [t_IORecD]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 71 - Обновление итогов в главной таблице */
+/* t_IORecD - Заказ внутренний: Формирование: Товар */
+/* t_IORec - Заказ внутренний: Формирование: Заголовок */
+
+  UPDATE r
+  SET 
+    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt, 
+    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt
+  FROM t_IORec r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
+       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
+     FROM t_IORec WITH (NOLOCK), deleted m
+     WHERE t_IORec.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_t_IORecD] ON [t_IORecD]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 71 - Обновление итогов в главной таблице */
+/* t_IORecD - Заказ внутренний: Формирование: Товар */
+/* t_IORec - Заказ внутренний: Формирование: Заголовок */
+
+IF UPDATE(NewSumCC_nt) OR UPDATE(NewTaxSum) OR UPDATE(NewSumCC_wt) OR UPDATE(SumCC_nt) OR UPDATE(TaxSum) OR UPDATE(SumCC_wt)
+BEGIN
+  UPDATE r
+  SET 
+    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt, 
+    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt
+  FROM t_IORec r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
+       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
+     FROM t_IORec WITH (NOLOCK), inserted m
+     WHERE t_IORec.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.TNewSumCC_nt = r.TNewSumCC_nt - q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum - q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt - q.TNewSumCC_wt, 
+    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt
+  FROM t_IORec r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
+       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
+     FROM t_IORec WITH (NOLOCK), deleted m
+     WHERE t_IORec.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU1_INS_t_IORecD] ON [t_IORecD]
+FOR INSERT
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 71 - Обновление итогов в главной таблице */
+/* t_IORecD - Заказ внутренний: Формирование: Товар */
+/* t_IORec - Заказ внутренний: Формирование: Заголовок */
+
+  UPDATE r
+  SET 
+    r.TNewSumCC_nt = r.TNewSumCC_nt + q.TNewSumCC_nt, 
+    r.TNewTaxSum = r.TNewTaxSum + q.TNewTaxSum, 
+    r.TNewSumCC_wt = r.TNewSumCC_wt + q.TNewSumCC_wt, 
+    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt
+  FROM t_IORec r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.NewSumCC_nt), 0) TNewSumCC_nt,
+       ISNULL(SUM(m.NewTaxSum), 0) TNewTaxSum,
+       ISNULL(SUM(m.NewSumCC_wt), 0) TNewSumCC_wt,
+       ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
+       ISNULL(SUM(m.TaxSum), 0) TTaxSum,
+       ISNULL(SUM(m.SumCC_wt), 0) TSumCC_wt 
+     FROM t_IORec WITH (NOLOCK), inserted m
+     WHERE t_IORec.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

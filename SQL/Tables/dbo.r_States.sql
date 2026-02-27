@@ -21,25 +21,1035 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_States] ON [r_States]
-FOR INSERT AS
-/* r_States - Справочник статусов - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_States] ON [r_States]
+FOR DELETE AS
+/* r_States - Справочник статусов - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10190001, ChID, 
+/* r_States ^ r_StateDocs - Удаление в CHILD */
+/* Справочник статусов ^ Справочник статусов: документы - Удаление в CHILD */
+  DELETE r_StateDocs FROM r_StateDocs a, deleted d WHERE a.StateCode = d.StateCode
+  IF @@ERROR > 0 RETURN
+
+/* r_States ^ r_StateDocsChange - Удаление в CHILD */
+/* Справочник статусов ^ Справочник статусов: изменение документов - Удаление в CHILD */
+  DELETE r_StateDocsChange FROM r_StateDocsChange a, deleted d WHERE a.StateCode = d.StateCode
+  IF @@ERROR > 0 RETURN
+
+/* r_States ^ r_StateRules - Удаление в CHILD */
+/* Справочник статусов ^ Справочник статусов: правила - Удаление в CHILD */
+  DELETE r_StateRules FROM r_StateRules a, deleted d WHERE a.StateCodeFrom = d.StateCode
+  IF @@ERROR > 0 RETURN
+
+/* r_States ^ r_StateRules - Удаление в CHILD */
+/* Справочник статусов ^ Справочник статусов: правила - Удаление в CHILD */
+  DELETE r_StateRules FROM r_StateRules a, deleted d WHERE a.StateCodeTo = d.StateCode
+  IF @@ERROR > 0 RETURN
+
+/* r_States ^ b_Acc - Проверка в CHILD */
+/* Справочник статусов ^ Счет на оплату (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Acc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_Acc', 3
+      RETURN
+    END
+
+/* r_States ^ b_AExp - Проверка в CHILD */
+/* Справочник статусов ^ Акт сдачи услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_AExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_AExp', 3
+      RETURN
+    END
+
+/* r_States ^ b_ARec - Проверка в CHILD */
+/* Справочник статусов ^ Акт приемки услуг - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_ARec', 3
+      RETURN
+    END
+
+/* r_States ^ b_ARepA - Проверка в CHILD */
+/* Справочник статусов ^ Авансовый отчет валютный (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARepA a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_ARepA', 3
+      RETURN
+    END
+
+/* r_States ^ b_BankExpAC - Проверка в CHILD */
+/* Справочник статусов ^ Валютный счет: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankExpAC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_BankExpAC', 3
+      RETURN
+    END
+
+/* r_States ^ b_BankExpCC - Проверка в CHILD */
+/* Справочник статусов ^ Расчетный счет: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankExpCC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_BankExpCC', 3
+      RETURN
+    END
+
+/* r_States ^ b_BankPayAC - Проверка в CHILD */
+/* Справочник статусов ^ Валютное платежное поручение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankPayAC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_BankPayAC', 3
+      RETURN
+    END
+
+/* r_States ^ b_BankPayCC - Проверка в CHILD */
+/* Справочник статусов ^ Платежное поручение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankPayCC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_BankPayCC', 3
+      RETURN
+    END
+
+/* r_States ^ b_BankRecAC - Проверка в CHILD */
+/* Справочник статусов ^ Валютный счет: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankRecAC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_BankRecAC', 3
+      RETURN
+    END
+
+/* r_States ^ b_BankRecCC - Проверка в CHILD */
+/* Справочник статусов ^ Расчетный счет: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankRecCC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_BankRecCC', 3
+      RETURN
+    END
+
+/* r_States ^ b_CExp - Проверка в CHILD */
+/* Справочник статусов ^ Кассовый ордер: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_CExp', 3
+      RETURN
+    END
+
+/* r_States ^ b_CInv - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_CInv', 3
+      RETURN
+    END
+
+/* r_States ^ b_CRec - Проверка в CHILD */
+/* Справочник статусов ^ Кассовый ордер: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_CRec', 3
+      RETURN
+    END
+
+/* r_States ^ b_CRepA - Проверка в CHILD */
+/* Справочник статусов ^ Авансовый отчет с признаками (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRepA a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_CRepA', 3
+      RETURN
+    END
+
+/* r_States ^ b_CRet - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_CRet', 3
+      RETURN
+    END
+
+/* r_States ^ b_Cst - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_Cst', 3
+      RETURN
+    END
+
+/* r_States ^ b_DStack - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Суммовой учет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_DStack', 3
+      RETURN
+    END
+
+/* r_States ^ b_Exp - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_Exp', 3
+      RETURN
+    END
+
+/* r_States ^ b_Inv - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_Inv', 3
+      RETURN
+    END
+
+/* r_States ^ b_LExp - Проверка в CHILD */
+/* Справочник статусов ^ Зарплата: Выплата (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_LExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_LExp', 3
+      RETURN
+    END
+
+/* r_States ^ b_LRec - Проверка в CHILD */
+/* Справочник статусов ^ Зарплата: Начисление (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_LRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_LRec', 3
+      RETURN
+    END
+
+/* r_States ^ b_PAcc - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_PAcc', 3
+      RETURN
+    END
+
+/* r_States ^ b_PCost - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_PCost', 3
+      RETURN
+    END
+
+/* r_States ^ b_PEst - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_PEst', 3
+      RETURN
+    END
+
+/* r_States ^ b_PExc - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_PExc', 3
+      RETURN
+    END
+
+/* r_States ^ b_PVen - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_PVen', 3
+      RETURN
+    END
+
+/* r_States ^ b_Rec - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_Rec', 3
+      RETURN
+    END
+
+/* r_States ^ b_RepA - Проверка в CHILD */
+/* Справочник статусов ^ Авансовый отчет (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_RepA a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_RepA', 3
+      RETURN
+    END
+
+/* r_States ^ b_Ret - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_Ret', 3
+      RETURN
+    END
+
+/* r_States ^ b_SDep - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Амортизация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SDep a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SDep', 3
+      RETURN
+    END
+
+/* r_States ^ b_SExc - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SExc', 3
+      RETURN
+    END
+
+/* r_States ^ b_SExp - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Списание (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SExp', 3
+      RETURN
+    END
+
+/* r_States ^ b_SInv - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Продажа (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SInv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SInv', 3
+      RETURN
+    END
+
+/* r_States ^ b_SPut - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Ввод в эксплуатацию (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SPut a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SPut', 3
+      RETURN
+    END
+
+/* r_States ^ b_SRec - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Приход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SRec', 3
+      RETURN
+    END
+
+/* r_States ^ b_SRep - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Ремонт (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRep a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SRep', 3
+      RETURN
+    END
+
+/* r_States ^ b_SVen - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Инвентаризация - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SVen a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SVen', 3
+      RETURN
+    END
+
+/* r_States ^ b_SWer - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Износ (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SWer a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_SWer', 3
+      RETURN
+    END
+
+/* r_States ^ b_TExp - Проверка в CHILD */
+/* Справочник статусов ^ Налоговые накладные: Исходящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TExp', 3
+      RETURN
+    END
+
+/* r_States ^ b_TranC - Проверка в CHILD */
+/* Справочник статусов ^ Проводка по предприятию - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TranC', 3
+      RETURN
+    END
+
+/* r_States ^ b_TranE - Проверка в CHILD */
+/* Справочник статусов ^ Проводка по служащему - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranE a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TranE', 3
+      RETURN
+    END
+
+/* r_States ^ b_TranH - Проверка в CHILD */
+/* Справочник статусов ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_States ^ b_TranP - Проверка в CHILD */
+/* Справочник статусов ^ ТМЦ: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TranP', 3
+      RETURN
+    END
+
+/* r_States ^ b_TranS - Проверка в CHILD */
+/* Справочник статусов ^ Основные средства: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranS a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TranS', 3
+      RETURN
+    END
+
+/* r_States ^ b_TranV - Проверка в CHILD */
+/* Справочник статусов ^ Проводка общая - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranV a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TranV', 3
+      RETURN
+    END
+
+/* r_States ^ b_TRec - Проверка в CHILD */
+/* Справочник статусов ^ Налоговые накладные: Входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_TRec', 3
+      RETURN
+    END
+
+/* r_States ^ b_WBill - Проверка в CHILD */
+/* Справочник статусов ^ Путевой лист - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_WBill a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_WBill', 3
+      RETURN
+    END
+
+/* r_States ^ b_zInH - Проверка в CHILD */
+/* Справочник статусов ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_States ^ c_CompCor - Проверка в CHILD */
+/* Справочник статусов ^ Корректировка баланса предприятия - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_CompCor', 3
+      RETURN
+    END
+
+/* r_States ^ c_CompCurr - Проверка в CHILD */
+/* Справочник статусов ^ Обмен валюты по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompCurr a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_CompCurr', 3
+      RETURN
+    END
+
+/* r_States ^ c_CompExp - Проверка в CHILD */
+/* Справочник статусов ^ Расход денег по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_CompExp', 3
+      RETURN
+    END
+
+/* r_States ^ c_CompRec - Проверка в CHILD */
+/* Справочник статусов ^ Приход денег по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_CompRec', 3
+      RETURN
+    END
+
+/* r_States ^ c_EmpCor - Проверка в CHILD */
+/* Справочник статусов ^ Корректировка баланса служащего - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_EmpCor', 3
+      RETURN
+    END
+
+/* r_States ^ c_EmpCurr - Проверка в CHILD */
+/* Справочник статусов ^ Обмен валюты по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpCurr a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_EmpCurr', 3
+      RETURN
+    END
+
+/* r_States ^ c_EmpExc - Проверка в CHILD */
+/* Справочник статусов ^ Перемещение денег между служащими - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_EmpExc', 3
+      RETURN
+    END
+
+/* r_States ^ c_EmpExp - Проверка в CHILD */
+/* Справочник статусов ^ Расход денег по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_EmpExp', 3
+      RETURN
+    END
+
+/* r_States ^ c_EmpRec - Проверка в CHILD */
+/* Справочник статусов ^ Приход денег по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_EmpRec', 3
+      RETURN
+    END
+
+/* r_States ^ c_EmpRep - Проверка в CHILD */
+/* Справочник статусов ^ Отчет служащего - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpRep a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_EmpRep', 3
+      RETURN
+    END
+
+/* r_States ^ c_OurCor - Проверка в CHILD */
+/* Справочник статусов ^ Корректировка баланса денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_OurCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_OurCor', 3
+      RETURN
+    END
+
+/* r_States ^ c_PlanExp - Проверка в CHILD */
+/* Справочник статусов ^ Планирование: Расходы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_PlanExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_PlanExp', 3
+      RETURN
+    END
+
+/* r_States ^ c_PlanRec - Проверка в CHILD */
+/* Справочник статусов ^ Планирование: Доходы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_PlanRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_PlanRec', 3
+      RETURN
+    END
+
+/* r_States ^ c_Sal - Проверка в CHILD */
+/* Справочник статусов ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'c_Sal', 3
+      RETURN
+    END
+
+/* r_States ^ p_CommunalTax - Проверка в CHILD */
+/* Справочник статусов ^ Коммунальный налог - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CommunalTax a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_CommunalTax', 3
+      RETURN
+    END
+
+/* r_States ^ p_CWTime - Проверка в CHILD */
+/* Справочник статусов ^ Табель учета рабочего времени (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CWTime a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_CWTime', 3
+      RETURN
+    END
+
+/* r_States ^ p_CWTimeCor - Проверка в CHILD */
+/* Справочник статусов ^ Табель учета рабочего времени: Корректировка: Список - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_CWTimeCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_CWTimeCor', 3
+      RETURN
+    END
+
+/* r_States ^ p_DTran - Проверка в CHILD */
+/* Справочник статусов ^ Перенос рабочих дней - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_DTran a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_DTran', 3
+      RETURN
+    END
+
+/* r_States ^ p_EDis - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Увольнение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EDis a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_EDis', 3
+      RETURN
+    END
+
+/* r_States ^ p_EExc - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Кадровое перемещение - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_EExc', 3
+      RETURN
+    END
+
+/* r_States ^ p_EGiv - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Прием на работу - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EGiv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_EGiv', 3
+      RETURN
+    END
+
+/* r_States ^ p_ELeav - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Отпуск (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ELeav a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_ELeav', 3
+      RETURN
+    END
+
+/* r_States ^ p_ELeavCor - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ELeavCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_ELeavCor', 3
+      RETURN
+    END
+
+/* r_States ^ p_EmpSchedExt - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Дополнительный график работы (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EmpSchedExt a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_EmpSchedExt', 3
+      RETURN
+    END
+
+/* r_States ^ p_ESic - Проверка в CHILD */
+/* Справочник статусов ^ Больничный лист (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ESic a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_ESic', 3
+      RETURN
+    END
+
+/* r_States ^ p_ETrp - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Командировка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_ETrp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_ETrp', 3
+      RETURN
+    END
+
+/* r_States ^ p_EWri - Проверка в CHILD */
+/* Справочник статусов ^ Исполнительный лист - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EWri a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_EWri', 3
+      RETURN
+    END
+
+/* r_States ^ p_EWrk - Проверка в CHILD */
+/* Справочник статусов ^ Выполнение работ (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_EWrk a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_EWrk', 3
+      RETURN
+    END
+
+/* r_States ^ p_LExc - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Кадровое перемещение списком (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_LExc', 3
+      RETURN
+    END
+
+/* r_States ^ p_LExp - Проверка в CHILD */
+/* Справочник статусов ^ Заработная плата: Выплата (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_LExp', 3
+      RETURN
+    END
+
+/* r_States ^ p_LMem - Проверка в CHILD */
+/* Справочник статусов ^ Штатное расписание (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LMem a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_LMem', 3
+      RETURN
+    END
+
+/* r_States ^ p_LRec - Проверка в CHILD */
+/* Справочник статусов ^ Заработная плата: Начисление (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_LRec', 3
+      RETURN
+    END
+
+/* r_States ^ p_LStr - Проверка в CHILD */
+/* Справочник статусов ^ Штатная численность сотрудников (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_LStr a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_LStr', 3
+      RETURN
+    END
+
+/* r_States ^ p_OPWrk - Проверка в CHILD */
+/* Справочник статусов ^ Приказ: Производственный (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_OPWrk a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_OPWrk', 3
+      RETURN
+    END
+
+/* r_States ^ p_PostStruc - Проверка в CHILD */
+/* Справочник статусов ^ Структура должностей (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_PostStruc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_PostStruc', 3
+      RETURN
+    END
+
+/* r_States ^ p_SubStruc - Проверка в CHILD */
+/* Справочник статусов ^ Структура предприятия (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_SubStruc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_SubStruc', 3
+      RETURN
+    END
+
+/* r_States ^ p_TSer - Проверка в CHILD */
+/* Справочник статусов ^ Командировочное удостоверение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_TSer a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_TSer', 3
+      RETURN
+    END
+
+/* r_States ^ p_WExc - Проверка в CHILD */
+/* Справочник статусов ^ Привлечение на другую работу - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM p_WExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_WExc', 3
+      RETURN
+    END
+
+/* r_States ^ r_DocShedD - Проверка в CHILD */
+/* Справочник статусов ^ Шаблоны процессов: Детали - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DocShedD a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'r_DocShedD', 3
+      RETURN
+    END
+
+/* r_States ^ t_Acc - Проверка в CHILD */
+/* Справочник статусов ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Acc', 3
+      RETURN
+    END
+
+/* r_States ^ t_Cos - Проверка в CHILD */
+/* Справочник статусов ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Cos', 3
+      RETURN
+    END
+
+/* r_States ^ t_CRet - Проверка в CHILD */
+/* Справочник статусов ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_CRet', 3
+      RETURN
+    END
+
+/* r_States ^ t_CRRet - Проверка в CHILD */
+/* Справочник статусов ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_CRRet', 3
+      RETURN
+    END
+
+/* r_States ^ t_Cst - Проверка в CHILD */
+/* Справочник статусов ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Cst', 3
+      RETURN
+    END
+
+/* r_States ^ t_Cst2 - Проверка в CHILD */
+/* Справочник статусов ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Cst2', 3
+      RETURN
+    END
+
+/* r_States ^ t_Dis - Проверка в CHILD */
+/* Справочник статусов ^ Распределение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Dis', 3
+      RETURN
+    END
+
+/* r_States ^ t_EOExp - Проверка в CHILD */
+/* Справочник статусов ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_EOExp', 3
+      RETURN
+    END
+
+/* r_States ^ t_EORec - Проверка в CHILD */
+/* Справочник статусов ^ Заказ внешний: Обработка: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EORec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_EORec', 3
+      RETURN
+    END
+
+/* r_States ^ t_Epp - Проверка в CHILD */
+/* Справочник статусов ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Epp', 3
+      RETURN
+    END
+
+/* r_States ^ t_Est - Проверка в CHILD */
+/* Справочник статусов ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Est', 3
+      RETURN
+    END
+
+/* r_States ^ t_Exc - Проверка в CHILD */
+/* Справочник статусов ^ Перемещение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Exc', 3
+      RETURN
+    END
+
+/* r_States ^ t_Exp - Проверка в CHILD */
+/* Справочник статусов ^ Расходный документ: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Exp', 3
+      RETURN
+    END
+
+/* r_States ^ t_Inv - Проверка в CHILD */
+/* Справочник статусов ^ Расходная накладная: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Inv', 3
+      RETURN
+    END
+
+/* r_States ^ t_IOExp - Проверка в CHILD */
+/* Справочник статусов ^ Заказ внутренний: Обработка: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IOExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_IOExp', 3
+      RETURN
+    END
+
+/* r_States ^ t_IORec - Проверка в CHILD */
+/* Справочник статусов ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_IORec', 3
+      RETURN
+    END
+
+/* r_States ^ t_MonIntExp - Проверка в CHILD */
+/* Справочник статусов ^ Служебный расход денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonIntExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_MonIntExp', 3
+      RETURN
+    END
+
+/* r_States ^ t_MonIntRec - Проверка в CHILD */
+/* Справочник статусов ^ Служебный приход денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonIntRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_MonIntRec', 3
+      RETURN
+    END
+
+/* r_States ^ t_MonRec - Проверка в CHILD */
+/* Справочник статусов ^ Прием наличных денег на склад - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_MonRec', 3
+      RETURN
+    END
+
+/* r_States ^ t_Rec - Проверка в CHILD */
+/* Справочник статусов ^ Приход товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Rec', 3
+      RETURN
+    END
+
+/* r_States ^ t_Ret - Проверка в CHILD */
+/* Справочник статусов ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Ret', 3
+      RETURN
+    END
+
+/* r_States ^ t_Sale - Проверка в CHILD */
+/* Справочник статусов ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Sale', 3
+      RETURN
+    END
+
+/* r_States ^ t_SEst - Проверка в CHILD */
+/* Справочник статусов ^ Переоценка цен продажи: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SEst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_SEst', 3
+      RETURN
+    END
+
+/* r_States ^ t_SExp - Проверка в CHILD */
+/* Справочник статусов ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_SExp', 3
+      RETURN
+    END
+
+/* r_States ^ t_Spec - Проверка в CHILD */
+/* Справочник статусов ^ Калькуляционная карта: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Spec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Spec', 3
+      RETURN
+    END
+
+/* r_States ^ t_SPExp - Проверка в CHILD */
+/* Справочник статусов ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_SPExp', 3
+      RETURN
+    END
+
+/* r_States ^ t_SPRec - Проверка в CHILD */
+/* Справочник статусов ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_SPRec', 3
+      RETURN
+    END
+
+/* r_States ^ t_SRec - Проверка в CHILD */
+/* Справочник статусов ^ Комплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_SRec', 3
+      RETURN
+    END
+
+/* r_States ^ t_Ven - Проверка в CHILD */
+/* Справочник статусов ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 't_Ven', 3
+      RETURN
+    END
+
+/* r_States ^ z_DocShed - Проверка в CHILD */
+/* Справочник статусов ^ Документы - Процессы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocShed a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'z_DocShed', 3
+      RETURN
+    END
+
+/* r_States ^ z_DocShed - Проверка в CHILD */
+/* Справочник статусов ^ Документы - Процессы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocShed a WITH(NOLOCK), deleted d WHERE a.StateCodeFrom = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'z_DocShed', 3
+      RETURN
+    END
+
+/* r_States ^ z_InAcc - Проверка в CHILD */
+/* Справочник статусов ^ Входящий счет на оплату - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_InAcc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'z_InAcc', 3
+      RETURN
+    END
+
+/* r_States ^ z_LogState - Удаление в CHILD */
+/* Справочник статусов ^ Регистрация действий - Статусы - Удаление в CHILD */
+  DELETE z_LogState FROM z_LogState a, deleted d WHERE a.NewStateCode = d.StateCode
+  IF @@ERROR > 0 RETURN
+
+/* r_States ^ z_LogState - Удаление в CHILD */
+/* Справочник статусов ^ Регистрация действий - Статусы - Удаление в CHILD */
+  DELETE z_LogState FROM z_LogState a, deleted d WHERE a.OldStateCode = d.StateCode
+  IF @@ERROR > 0 RETURN
+
+/* r_States ^ z_Vars - Проверка в CHILD */
+/* Справочник статусов ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_ChequeStateCode' AND a.VarValue = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'z_Vars', 3
+      RETURN
+    END
+
+/* r_States ^ z_WCopy - Проверка в CHILD */
+/* Справочник статусов ^ Мастер Копирования - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_WCopy a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
+    BEGIN
+      EXEC z_RelationError 'r_States', 'z_WCopy', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10190001 AND m.PKValue = 
     '[' + cast(i.StateCode as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10190001 AND m.PKValue = 
+    '[' + cast(i.StateCode as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10190001, -ChID, 
+    '[' + cast(d.StateCode as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10190 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_States', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_States', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -2162,25 +3172,6 @@ BEGIN
         END
     END
 
-/* r_States ^ t_RestShift - Обновление CHILD */
-/* Справочник статусов ^ Ресторан: Смена: Заголовок - Обновление CHILD */
-  IF UPDATE(StateCode)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StateCode = i.StateCode
-          FROM t_RestShift a, inserted i, deleted d WHERE a.StateCode = d.StateCode
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_RestShift a, deleted d WHERE a.StateCode = d.StateCode)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник статусов'' => ''Ресторан: Смена: Заголовок''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_States ^ t_Ret - Обновление CHILD */
 /* Справочник статусов ^ Возврат товара от получателя: Заголовок - Обновление CHILD */
   IF UPDATE(StateCode)
@@ -2485,6 +3476,7 @@ BEGIN
         END
     END
 
+
 /* Регистрация изменения записи */
 
 
@@ -2566,1040 +3558,43 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_States] ON [r_States]
-FOR DELETE AS
-/* r_States - Справочник статусов - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_States] ON [r_States]
+FOR INSERT AS
+/* r_States - Справочник статусов - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_States ^ r_StateDocs - Удаление в CHILD */
-/* Справочник статусов ^ Справочник статусов: документы - Удаление в CHILD */
-  DELETE r_StateDocs FROM r_StateDocs a, deleted d WHERE a.StateCode = d.StateCode
-  IF @@ERROR > 0 RETURN
 
-/* r_States ^ r_StateDocsChange - Удаление в CHILD */
-/* Справочник статусов ^ Справочник статусов: изменение документов - Удаление в CHILD */
-  DELETE r_StateDocsChange FROM r_StateDocsChange a, deleted d WHERE a.StateCode = d.StateCode
-  IF @@ERROR > 0 RETURN
-
-/* r_States ^ r_StateRules - Удаление в CHILD */
-/* Справочник статусов ^ Справочник статусов: правила - Удаление в CHILD */
-  DELETE r_StateRules FROM r_StateRules a, deleted d WHERE a.StateCodeFrom = d.StateCode
-  IF @@ERROR > 0 RETURN
-
-/* r_States ^ r_StateRules - Удаление в CHILD */
-/* Справочник статусов ^ Справочник статусов: правила - Удаление в CHILD */
-  DELETE r_StateRules FROM r_StateRules a, deleted d WHERE a.StateCodeTo = d.StateCode
-  IF @@ERROR > 0 RETURN
-
-/* r_States ^ b_Acc - Проверка в CHILD */
-/* Справочник статусов ^ Счет на оплату (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Acc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_Acc', 3
-      RETURN
-    END
-
-/* r_States ^ b_AExp - Проверка в CHILD */
-/* Справочник статусов ^ Акт сдачи услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_AExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_AExp', 3
-      RETURN
-    END
-
-/* r_States ^ b_ARec - Проверка в CHILD */
-/* Справочник статусов ^ Акт приемки услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_ARec', 3
-      RETURN
-    END
-
-/* r_States ^ b_ARepA - Проверка в CHILD */
-/* Справочник статусов ^ Авансовый отчет валютный (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARepA a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_ARepA', 3
-      RETURN
-    END
-
-/* r_States ^ b_BankExpAC - Проверка в CHILD */
-/* Справочник статусов ^ Валютный счет: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankExpAC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_BankExpAC', 3
-      RETURN
-    END
-
-/* r_States ^ b_BankExpCC - Проверка в CHILD */
-/* Справочник статусов ^ Расчетный счет: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankExpCC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_BankExpCC', 3
-      RETURN
-    END
-
-/* r_States ^ b_BankPayAC - Проверка в CHILD */
-/* Справочник статусов ^ Валютное платежное поручение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankPayAC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_BankPayAC', 3
-      RETURN
-    END
-
-/* r_States ^ b_BankPayCC - Проверка в CHILD */
-/* Справочник статусов ^ Платежное поручение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankPayCC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_BankPayCC', 3
-      RETURN
-    END
-
-/* r_States ^ b_BankRecAC - Проверка в CHILD */
-/* Справочник статусов ^ Валютный счет: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankRecAC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_BankRecAC', 3
-      RETURN
-    END
-
-/* r_States ^ b_BankRecCC - Проверка в CHILD */
-/* Справочник статусов ^ Расчетный счет: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankRecCC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_BankRecCC', 3
-      RETURN
-    END
-
-/* r_States ^ b_CExp - Проверка в CHILD */
-/* Справочник статусов ^ Кассовый ордер: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_CExp', 3
-      RETURN
-    END
-
-/* r_States ^ b_CInv - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_CInv', 3
-      RETURN
-    END
-
-/* r_States ^ b_CRec - Проверка в CHILD */
-/* Справочник статусов ^ Кассовый ордер: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_CRec', 3
-      RETURN
-    END
-
-/* r_States ^ b_CRepA - Проверка в CHILD */
-/* Справочник статусов ^ Авансовый отчет с признаками (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRepA a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_CRepA', 3
-      RETURN
-    END
-
-/* r_States ^ b_CRet - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_CRet', 3
-      RETURN
-    END
-
-/* r_States ^ b_Cst - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_Cst', 3
-      RETURN
-    END
-
-/* r_States ^ b_DStack - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Суммовой учет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_DStack', 3
-      RETURN
-    END
-
-/* r_States ^ b_Exp - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_Exp', 3
-      RETURN
-    END
-
-/* r_States ^ b_Inv - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_Inv', 3
-      RETURN
-    END
-
-/* r_States ^ b_LExp - Проверка в CHILD */
-/* Справочник статусов ^ Зарплата: Выплата (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_LExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_LExp', 3
-      RETURN
-    END
-
-/* r_States ^ b_LRec - Проверка в CHILD */
-/* Справочник статусов ^ Зарплата: Начисление (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_LRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_LRec', 3
-      RETURN
-    END
-
-/* r_States ^ b_PAcc - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_PAcc', 3
-      RETURN
-    END
-
-/* r_States ^ b_PCost - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_PCost', 3
-      RETURN
-    END
-
-/* r_States ^ b_PEst - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_PEst', 3
-      RETURN
-    END
-
-/* r_States ^ b_PExc - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_PExc', 3
-      RETURN
-    END
-
-/* r_States ^ b_PVen - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_PVen', 3
-      RETURN
-    END
-
-/* r_States ^ b_Rec - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_Rec', 3
-      RETURN
-    END
-
-/* r_States ^ b_RepA - Проверка в CHILD */
-/* Справочник статусов ^ Авансовый отчет (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_RepA a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_RepA', 3
-      RETURN
-    END
-
-/* r_States ^ b_Ret - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_Ret', 3
-      RETURN
-    END
-
-/* r_States ^ b_SDep - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Амортизация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SDep a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SDep', 3
-      RETURN
-    END
-
-/* r_States ^ b_SExc - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SExc', 3
-      RETURN
-    END
-
-/* r_States ^ b_SExp - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Списание (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SExp', 3
-      RETURN
-    END
-
-/* r_States ^ b_SInv - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Продажа (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SInv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SInv', 3
-      RETURN
-    END
-
-/* r_States ^ b_SPut - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Ввод в эксплуатацию (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SPut a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SPut', 3
-      RETURN
-    END
-
-/* r_States ^ b_SRec - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Приход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SRec', 3
-      RETURN
-    END
-
-/* r_States ^ b_SRep - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Ремонт (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRep a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SRep', 3
-      RETURN
-    END
-
-/* r_States ^ b_SVen - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Инвентаризация - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SVen a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SVen', 3
-      RETURN
-    END
-
-/* r_States ^ b_SWer - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Износ (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SWer a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_SWer', 3
-      RETURN
-    END
-
-/* r_States ^ b_TExp - Проверка в CHILD */
-/* Справочник статусов ^ Налоговые накладные: Исходящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TExp', 3
-      RETURN
-    END
-
-/* r_States ^ b_TranC - Проверка в CHILD */
-/* Справочник статусов ^ Проводка по предприятию - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranC a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TranC', 3
-      RETURN
-    END
-
-/* r_States ^ b_TranE - Проверка в CHILD */
-/* Справочник статусов ^ Проводка по служащему - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranE a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TranE', 3
-      RETURN
-    END
-
-/* r_States ^ b_TranH - Проверка в CHILD */
-/* Справочник статусов ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_States ^ b_TranP - Проверка в CHILD */
-/* Справочник статусов ^ ТМЦ: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TranP', 3
-      RETURN
-    END
-
-/* r_States ^ b_TranS - Проверка в CHILD */
-/* Справочник статусов ^ Основные средства: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranS a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TranS', 3
-      RETURN
-    END
-
-/* r_States ^ b_TranV - Проверка в CHILD */
-/* Справочник статусов ^ Проводка общая - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranV a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TranV', 3
-      RETURN
-    END
-
-/* r_States ^ b_TRec - Проверка в CHILD */
-/* Справочник статусов ^ Налоговые накладные: Входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_TRec', 3
-      RETURN
-    END
-
-/* r_States ^ b_WBill - Проверка в CHILD */
-/* Справочник статусов ^ Путевой лист - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_WBill a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_WBill', 3
-      RETURN
-    END
-
-/* r_States ^ b_zInH - Проверка в CHILD */
-/* Справочник статусов ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_States ^ c_CompCor - Проверка в CHILD */
-/* Справочник статусов ^ Корректировка баланса предприятия - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_CompCor', 3
-      RETURN
-    END
-
-/* r_States ^ c_CompCurr - Проверка в CHILD */
-/* Справочник статусов ^ Обмен валюты по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompCurr a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_CompCurr', 3
-      RETURN
-    END
-
-/* r_States ^ c_CompExp - Проверка в CHILD */
-/* Справочник статусов ^ Расход денег по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_CompExp', 3
-      RETURN
-    END
-
-/* r_States ^ c_CompRec - Проверка в CHILD */
-/* Справочник статусов ^ Приход денег по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_CompRec', 3
-      RETURN
-    END
-
-/* r_States ^ c_EmpCor - Проверка в CHILD */
-/* Справочник статусов ^ Корректировка баланса служащего - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_EmpCor', 3
-      RETURN
-    END
-
-/* r_States ^ c_EmpCurr - Проверка в CHILD */
-/* Справочник статусов ^ Обмен валюты по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpCurr a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_EmpCurr', 3
-      RETURN
-    END
-
-/* r_States ^ c_EmpExc - Проверка в CHILD */
-/* Справочник статусов ^ Перемещение денег между служащими - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_EmpExc', 3
-      RETURN
-    END
-
-/* r_States ^ c_EmpExp - Проверка в CHILD */
-/* Справочник статусов ^ Расход денег по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_EmpExp', 3
-      RETURN
-    END
-
-/* r_States ^ c_EmpRec - Проверка в CHILD */
-/* Справочник статусов ^ Приход денег по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_EmpRec', 3
-      RETURN
-    END
-
-/* r_States ^ c_EmpRep - Проверка в CHILD */
-/* Справочник статусов ^ Отчет служащего - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpRep a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_EmpRep', 3
-      RETURN
-    END
-
-/* r_States ^ c_OurCor - Проверка в CHILD */
-/* Справочник статусов ^ Корректировка баланса денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_OurCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_OurCor', 3
-      RETURN
-    END
-
-/* r_States ^ c_PlanExp - Проверка в CHILD */
-/* Справочник статусов ^ Планирование: Расходы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_PlanExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_PlanExp', 3
-      RETURN
-    END
-
-/* r_States ^ c_PlanRec - Проверка в CHILD */
-/* Справочник статусов ^ Планирование: Доходы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_PlanRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_PlanRec', 3
-      RETURN
-    END
-
-/* r_States ^ c_Sal - Проверка в CHILD */
-/* Справочник статусов ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'c_Sal', 3
-      RETURN
-    END
-
-/* r_States ^ p_CommunalTax - Проверка в CHILD */
-/* Справочник статусов ^ Коммунальный налог - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CommunalTax a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_CommunalTax', 3
-      RETURN
-    END
-
-/* r_States ^ p_CWTime - Проверка в CHILD */
-/* Справочник статусов ^ Табель учета рабочего времени (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CWTime a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_CWTime', 3
-      RETURN
-    END
-
-/* r_States ^ p_CWTimeCor - Проверка в CHILD */
-/* Справочник статусов ^ Табель учета рабочего времени: Корректировка: Список - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_CWTimeCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_CWTimeCor', 3
-      RETURN
-    END
-
-/* r_States ^ p_DTran - Проверка в CHILD */
-/* Справочник статусов ^ Перенос рабочих дней - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_DTran a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_DTran', 3
-      RETURN
-    END
-
-/* r_States ^ p_EDis - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Увольнение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EDis a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_EDis', 3
-      RETURN
-    END
-
-/* r_States ^ p_EExc - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Кадровое перемещение - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_EExc', 3
-      RETURN
-    END
-
-/* r_States ^ p_EGiv - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Прием на работу - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EGiv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_EGiv', 3
-      RETURN
-    END
-
-/* r_States ^ p_ELeav - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Отпуск (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ELeav a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_ELeav', 3
-      RETURN
-    END
-
-/* r_States ^ p_ELeavCor - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Отпуск: Корректировка (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ELeavCor a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_ELeavCor', 3
-      RETURN
-    END
-
-/* r_States ^ p_EmpSchedExt - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Дополнительный график работы (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EmpSchedExt a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_EmpSchedExt', 3
-      RETURN
-    END
-
-/* r_States ^ p_ESic - Проверка в CHILD */
-/* Справочник статусов ^ Больничный лист (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ESic a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_ESic', 3
-      RETURN
-    END
-
-/* r_States ^ p_ETrp - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Командировка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_ETrp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_ETrp', 3
-      RETURN
-    END
-
-/* r_States ^ p_EWri - Проверка в CHILD */
-/* Справочник статусов ^ Исполнительный лист - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EWri a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_EWri', 3
-      RETURN
-    END
-
-/* r_States ^ p_EWrk - Проверка в CHILD */
-/* Справочник статусов ^ Выполнение работ (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_EWrk a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_EWrk', 3
-      RETURN
-    END
-
-/* r_States ^ p_LExc - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Кадровое перемещение списком (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_LExc', 3
-      RETURN
-    END
-
-/* r_States ^ p_LExp - Проверка в CHILD */
-/* Справочник статусов ^ Заработная плата: Выплата (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_LExp', 3
-      RETURN
-    END
-
-/* r_States ^ p_LMem - Проверка в CHILD */
-/* Справочник статусов ^ Штатное расписание (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LMem a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_LMem', 3
-      RETURN
-    END
-
-/* r_States ^ p_LRec - Проверка в CHILD */
-/* Справочник статусов ^ Заработная плата: Начисление (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_LRec', 3
-      RETURN
-    END
-
-/* r_States ^ p_LStr - Проверка в CHILD */
-/* Справочник статусов ^ Штатная численность сотрудников (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_LStr a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_LStr', 3
-      RETURN
-    END
-
-/* r_States ^ p_OPWrk - Проверка в CHILD */
-/* Справочник статусов ^ Приказ: Производственный (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_OPWrk a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_OPWrk', 3
-      RETURN
-    END
-
-/* r_States ^ p_PostStruc - Проверка в CHILD */
-/* Справочник статусов ^ Структура должностей (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_PostStruc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_PostStruc', 3
-      RETURN
-    END
-
-/* r_States ^ p_SubStruc - Проверка в CHILD */
-/* Справочник статусов ^ Структура предприятия (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_SubStruc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_SubStruc', 3
-      RETURN
-    END
-
-/* r_States ^ p_TSer - Проверка в CHILD */
-/* Справочник статусов ^ Командировочное удостоверение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_TSer a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_TSer', 3
-      RETURN
-    END
-
-/* r_States ^ p_WExc - Проверка в CHILD */
-/* Справочник статусов ^ Привлечение на другую работу - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM p_WExc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_WExc', 3
-      RETURN
-    END
-
-/* r_States ^ r_DocShedD - Проверка в CHILD */
-/* Справочник статусов ^ Шаблоны процессов: Детали - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DocShedD a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'r_DocShedD', 3
-      RETURN
-    END
-
-/* r_States ^ t_Acc - Проверка в CHILD */
-/* Справочник статусов ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Acc', 3
-      RETURN
-    END
-
-/* r_States ^ t_Cos - Проверка в CHILD */
-/* Справочник статусов ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Cos', 3
-      RETURN
-    END
-
-/* r_States ^ t_CRet - Проверка в CHILD */
-/* Справочник статусов ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_CRet', 3
-      RETURN
-    END
-
-/* r_States ^ t_CRRet - Проверка в CHILD */
-/* Справочник статусов ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_CRRet', 3
-      RETURN
-    END
-
-/* r_States ^ t_Cst - Проверка в CHILD */
-/* Справочник статусов ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Cst', 3
-      RETURN
-    END
-
-/* r_States ^ t_Cst2 - Проверка в CHILD */
-/* Справочник статусов ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Cst2', 3
-      RETURN
-    END
-
-/* r_States ^ t_Dis - Проверка в CHILD */
-/* Справочник статусов ^ Распределение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Dis', 3
-      RETURN
-    END
-
-/* r_States ^ t_EOExp - Проверка в CHILD */
-/* Справочник статусов ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_EOExp', 3
-      RETURN
-    END
-
-/* r_States ^ t_EORec - Проверка в CHILD */
-/* Справочник статусов ^ Заказ внешний: Обработка: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EORec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_EORec', 3
-      RETURN
-    END
-
-/* r_States ^ t_Epp - Проверка в CHILD */
-/* Справочник статусов ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Epp', 3
-      RETURN
-    END
-
-/* r_States ^ t_Est - Проверка в CHILD */
-/* Справочник статусов ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Est', 3
-      RETURN
-    END
-
-/* r_States ^ t_Exc - Проверка в CHILD */
-/* Справочник статусов ^ Перемещение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Exc', 3
-      RETURN
-    END
-
-/* r_States ^ t_Exp - Проверка в CHILD */
-/* Справочник статусов ^ Расходный документ: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Exp', 3
-      RETURN
-    END
-
-/* r_States ^ t_Inv - Проверка в CHILD */
-/* Справочник статусов ^ Расходная накладная: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Inv', 3
-      RETURN
-    END
-
-/* r_States ^ t_IOExp - Проверка в CHILD */
-/* Справочник статусов ^ Заказ внутренний: Обработка: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IOExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_IOExp', 3
-      RETURN
-    END
-
-/* r_States ^ t_IORec - Проверка в CHILD */
-/* Справочник статусов ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_IORec', 3
-      RETURN
-    END
-
-/* r_States ^ t_MonIntExp - Проверка в CHILD */
-/* Справочник статусов ^ Служебный расход денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonIntExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_MonIntExp', 3
-      RETURN
-    END
-
-/* r_States ^ t_MonIntRec - Проверка в CHILD */
-/* Справочник статусов ^ Служебный приход денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonIntRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_MonIntRec', 3
-      RETURN
-    END
-
-/* r_States ^ t_MonRec - Проверка в CHILD */
-/* Справочник статусов ^ Прием наличных денег на склад - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_MonRec', 3
-      RETURN
-    END
-
-/* r_States ^ t_Rec - Проверка в CHILD */
-/* Справочник статусов ^ Приход товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Rec', 3
-      RETURN
-    END
-
-/* r_States ^ t_RestShift - Проверка в CHILD */
-/* Справочник статусов ^ Ресторан: Смена: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RestShift a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_RestShift', 3
-      RETURN
-    END
-
-/* r_States ^ t_Ret - Проверка в CHILD */
-/* Справочник статусов ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Ret', 3
-      RETURN
-    END
-
-/* r_States ^ t_Sale - Проверка в CHILD */
-/* Справочник статусов ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Sale', 3
-      RETURN
-    END
-
-/* r_States ^ t_SEst - Проверка в CHILD */
-/* Справочник статусов ^ Переоценка цен продажи: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SEst a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_SEst', 3
-      RETURN
-    END
-
-/* r_States ^ t_SExp - Проверка в CHILD */
-/* Справочник статусов ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_SExp', 3
-      RETURN
-    END
-
-/* r_States ^ t_Spec - Проверка в CHILD */
-/* Справочник статусов ^ Калькуляционная карта: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Spec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Spec', 3
-      RETURN
-    END
-
-/* r_States ^ t_SPExp - Проверка в CHILD */
-/* Справочник статусов ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_SPExp', 3
-      RETURN
-    END
-
-/* r_States ^ t_SPRec - Проверка в CHILD */
-/* Справочник статусов ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_SPRec', 3
-      RETURN
-    END
-
-/* r_States ^ t_SRec - Проверка в CHILD */
-/* Справочник статусов ^ Комплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_SRec', 3
-      RETURN
-    END
-
-/* r_States ^ t_Ven - Проверка в CHILD */
-/* Справочник статусов ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 't_Ven', 3
-      RETURN
-    END
-
-/* r_States ^ z_DocShed - Проверка в CHILD */
-/* Справочник статусов ^ Документы - Процессы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocShed a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'z_DocShed', 3
-      RETURN
-    END
-
-/* r_States ^ z_DocShed - Проверка в CHILD */
-/* Справочник статусов ^ Документы - Процессы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocShed a WITH(NOLOCK), deleted d WHERE a.StateCodeFrom = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'z_DocShed', 3
-      RETURN
-    END
-
-/* r_States ^ z_InAcc - Проверка в CHILD */
-/* Справочник статусов ^ Входящий счет на оплату - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_InAcc a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'z_InAcc', 3
-      RETURN
-    END
-
-/* r_States ^ z_LogState - Удаление в CHILD */
-/* Справочник статусов ^ Регистрация действий - Статусы - Удаление в CHILD */
-  DELETE z_LogState FROM z_LogState a, deleted d WHERE a.NewStateCode = d.StateCode
-  IF @@ERROR > 0 RETURN
-
-/* r_States ^ z_LogState - Удаление в CHILD */
-/* Справочник статусов ^ Регистрация действий - Статусы - Удаление в CHILD */
-  DELETE z_LogState FROM z_LogState a, deleted d WHERE a.OldStateCode = d.StateCode
-  IF @@ERROR > 0 RETURN
-
-/* r_States ^ z_Vars - Проверка в CHILD */
-/* Справочник статусов ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_ChequeStateCode' AND a.VarValue = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'z_Vars', 3
-      RETURN
-    END
-
-/* r_States ^ z_WCopy - Проверка в CHILD */
-/* Справочник статусов ^ Мастер Копирования - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_WCopy a WITH(NOLOCK), deleted d WHERE a.StateCode = d.StateCode)
-    BEGIN
-      EXEC z_RelationError 'r_States', 'z_WCopy', 3
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10190001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10190001, ChID, 
     '[' + cast(i.StateCode as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10190001 AND m.PKValue = 
-    '[' + cast(i.StateCode as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10190001, -ChID, 
-    '[' + cast(d.StateCode as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10190 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_States', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_States', N'Last', N'INSERT'
+GO
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

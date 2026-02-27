@@ -137,13 +137,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_c_SalD] ON [c_SalD]
-FOR INSERT AS
-/* c_SalD - Начисление денег служащим (Данные) - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_c_SalD] ON [c_SalD]
+FOR DELETE AS
+/* c_SalD - Начисление денег служащим (Данные) - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -163,70 +160,64 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  c_Sal a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  c_Sal a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  c_Sal a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  c_Sal a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM c_Sal a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(12016, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM c_Sal a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(12016, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Начисление денег служащим'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Начисление денег служащим'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* c_SalD ^ c_Sal - Проверка в PARENT */
-/* Начисление денег служащим (Данные) ^ Начисление денег служащим (Заголовок) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM c_Sal))
-    BEGIN
-      EXEC z_RelationError 'c_Sal', 'c_SalD', 0
-      RETURN
-    END
 
-/* c_SalD ^ r_Currs - Проверка в PARENT */
-/* Начисление денег служащим (Данные) ^ Справочник валют - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
-    BEGIN
-      EXEC z_RelationError 'r_Currs', 'c_SalD', 0
-      RETURN
-    END
-
-/* c_SalD ^ r_Emps - Проверка в PARENT */
-/* Начисление денег служащим (Данные) ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 'c_SalD', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 12016002, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 12016002 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.EmpID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.CurrID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.KursMC as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 12016002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.EmpID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.CurrID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.KursMC as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 12016002, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.EmpID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.CurrID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.KursMC as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_c_SalD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_c_SalD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -260,7 +251,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  c_Sal a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -269,7 +260,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  c_Sal a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -278,7 +269,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  c_Sal a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -287,7 +278,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  c_Sal a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -296,7 +287,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM c_Sal a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(12016, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Начисление денег служащим'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Начисление денег служащим'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -327,6 +320,7 @@ BEGIN
         EXEC z_RelationError 'r_Emps', 'c_SalD', 1
         RETURN
       END
+
 
 /* Регистрация изменения записи */
 
@@ -448,10 +442,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_c_SalD] ON [c_SalD]
-FOR DELETE AS
-/* c_SalD - Начисление денег служащим (Данные) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_c_SalD] ON [c_SalD]
+FOR INSERT AS
+/* c_SalD - Начисление денег служащим (Данные) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -471,59 +468,144 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  c_Sal a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  c_Sal a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  c_Sal a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  c_Sal a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Начисление денег служащим (Данные) (c_SalD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Начисление денег служащим (Данные)'), 'c_SalD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM c_Sal a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(12016, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM c_Sal a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(12016, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Начисление денег служащим'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Начисление денег служащим'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 12016002 AND m.PKValue = 
+/* c_SalD ^ c_Sal - Проверка в PARENT */
+/* Начисление денег служащим (Данные) ^ Начисление денег служащим (Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM c_Sal))
+    BEGIN
+      EXEC z_RelationError 'c_Sal', 'c_SalD', 0
+      RETURN
+    END
+
+/* c_SalD ^ r_Currs - Проверка в PARENT */
+/* Начисление денег служащим (Данные) ^ Справочник валют - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CurrID NOT IN (SELECT CurrID FROM r_Currs))
+    BEGIN
+      EXEC z_RelationError 'r_Currs', 'c_SalD', 0
+      RETURN
+    END
+
+/* c_SalD ^ r_Emps - Проверка в PARENT */
+/* Начисление денег служащим (Данные) ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 'c_SalD', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 12016002, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.EmpID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.CurrID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.KursMC as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 12016002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.EmpID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.CurrID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.KursMC as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 12016002, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.EmpID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.CurrID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.KursMC as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_c_SalD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_c_SalD', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

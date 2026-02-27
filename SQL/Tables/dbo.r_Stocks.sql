@@ -60,49 +60,863 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_Stocks] ON [r_Stocks]
-FOR INSERT AS
-/* r_Stocks - Справочник складов - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_Stocks] ON [r_Stocks]
+FOR DELETE AS
+/* r_Stocks - Справочник складов - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Stocks ^ r_Emps - Проверка в PARENT */
-/* Справочник складов ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+/* r_Stocks ^ r_CRs - Проверка в CHILD */
+/* Справочник складов ^ Справочник ЭККА - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRs a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
     BEGIN
-      EXEC z_RelationError 'r_Emps', 'r_Stocks', 0
+      EXEC z_RelationError 'r_Stocks', 'r_CRs', 3
       RETURN
     END
 
-/* r_Stocks ^ r_PLs - Проверка в PARENT */
-/* Справочник складов ^ Справочник прайс-листов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PLID NOT IN (SELECT PLID FROM r_PLs))
+/* r_Stocks ^ r_StockCRProds - Удаление в CHILD */
+/* Справочник складов ^ Справочник складов - Товары для ЭККА - Удаление в CHILD */
+  DELETE r_StockCRProds FROM r_StockCRProds a, deleted d WHERE a.StockID = d.StockID
+  IF @@ERROR > 0 RETURN
+
+/* r_Stocks ^ r_StockSubs - Проверка в CHILD */
+/* Справочник складов ^ Справочник складов: Склады составляющих - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_StockSubs a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
     BEGIN
-      EXEC z_RelationError 'r_PLs', 'r_Stocks', 0
+      EXEC z_RelationError 'r_Stocks', 'r_StockSubs', 3
       RETURN
     END
 
-/* r_Stocks ^ r_StockGs - Проверка в PARENT */
-/* Справочник складов ^ Справочник складов: группы - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StockGID NOT IN (SELECT StockGID FROM r_StockGs))
+/* r_Stocks ^ r_StockSubs - Проверка в CHILD */
+/* Справочник складов ^ Справочник складов: Склады составляющих - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_StockSubs a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
     BEGIN
-      EXEC z_RelationError 'r_StockGs', 'r_Stocks', 0
+      EXEC z_RelationError 'r_Stocks', 'r_StockSubs', 3
       RETURN
     END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10310001, ChID, 
+/* r_Stocks ^ r_GOperD - Проверка в CHILD */
+/* Справочник складов ^ Справочник проводок - Проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'r_GOperD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ r_GOperD - Проверка в CHILD */
+/* Справочник складов ^ Справочник проводок - Проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'r_GOperD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ r_Scales - Проверка в CHILD */
+/* Справочник складов ^ Справочник весов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_Scales a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'r_Scales', 3
+      RETURN
+    END
+
+/* r_Stocks ^ r_GAccs - Проверка в CHILD */
+/* Справочник складов ^ План счетов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GAccs a WITH(NOLOCK), deleted d WHERE a.A_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'r_GAccs', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_ARepADP - Проверка в CHILD */
+/* Справочник складов ^ Авансовый отчет валютный (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_ARepADP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_ARepADP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_BankExpAC - Проверка в CHILD */
+/* Справочник складов ^ Валютный счет: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankExpAC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_BankExpAC', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_BankExpCC - Проверка в CHILD */
+/* Справочник складов ^ Расчетный счет: Расход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankExpCC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_BankExpCC', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_BankRecAC - Проверка в CHILD */
+/* Справочник складов ^ Валютный счет: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankRecAC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_BankRecAC', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_BankRecCC - Проверка в CHILD */
+/* Справочник складов ^ Расчетный счет: Приход - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_BankRecCC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_BankRecCC', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_CInv - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_CInv', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_CRepADP - Проверка в CHILD */
+/* Справочник складов ^ Авансовый отчет с признаками (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRepADP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_CRepADP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_CRet - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_CRet', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_Cst - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_Cst', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_DStack - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Суммовой учет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.NewStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_DStack', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_DStack - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Суммовой учет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_DStack', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_Exp - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_Exp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_GTranD - Проверка в CHILD */
+/* Справочник складов ^ Таблица проводок (Проводки) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_GTranD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_GTranD - Проверка в CHILD */
+/* Справочник складов ^ Таблица проводок (Проводки) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_GTranD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_Inv - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_Inv', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_PAcc - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_PAcc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_PCost - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_PCost', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_PEst - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_PEst', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_PExc - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.NewStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_PExc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_PExc - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_PExc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_PVen - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_PVen', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_Rec - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_Rec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_Rem - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Текущие остатки (Данные) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Rem a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_Rem', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_RemD - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Остатки на дату (Данные) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_RemD a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_RemD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_RepADP - Проверка в CHILD */
+/* Справочник складов ^ Авансовый отчет (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_RepADP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_RepADP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_Ret - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_Ret', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_SRepDP - Проверка в CHILD */
+/* Справочник складов ^ Основные средства: Ремонт (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_SRepDP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_SRepDP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_TranH - Проверка в CHILD */
+/* Справочник складов ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_TranH - Проверка в CHILD */
+/* Справочник складов ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_TranP - Проверка в CHILD */
+/* Справочник складов ^ ТМЦ: Проводка - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_TranP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_WBillA - Проверка в CHILD */
+/* Справочник складов ^ Путевой лист (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_WBillA a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_WBillA', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_zInBA - Проверка в CHILD */
+/* Справочник складов ^ Входящий баланс: Валютный счет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInBA a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_zInBA', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_zInBC - Проверка в CHILD */
+/* Справочник складов ^ Входящий баланс: Расчетный счет - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInBC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_zInBC', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_zInH - Проверка в CHILD */
+/* Справочник складов ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_zInH - Проверка в CHILD */
+/* Справочник складов ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Stocks ^ b_zInP - Проверка в CHILD */
+/* Справочник складов ^ Входящий баланс: ТМЦ - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'b_zInP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_CompCor - Проверка в CHILD */
+/* Справочник складов ^ Корректировка баланса предприятия - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompCor a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_CompCor', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_CompCurr - Проверка в CHILD */
+/* Справочник складов ^ Обмен валюты по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompCurr a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_CompCurr', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_CompExp - Проверка в CHILD */
+/* Справочник складов ^ Расход денег по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_CompExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_CompIn - Проверка в CHILD */
+/* Справочник складов ^ Входящий баланс: Предприятия (Финансы) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompIn a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_CompIn', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_CompRec - Проверка в CHILD */
+/* Справочник складов ^ Приход денег по предприятиям - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_CompRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_CompRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpCor - Проверка в CHILD */
+/* Справочник складов ^ Корректировка баланса служащего - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpCor a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpCor', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpCurr - Проверка в CHILD */
+/* Справочник складов ^ Обмен валюты по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpCurr a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpCurr', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpExc - Проверка в CHILD */
+/* Справочник складов ^ Перемещение денег между служащими - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpExc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpExc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpExp - Проверка в CHILD */
+/* Справочник складов ^ Расход денег по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpIn - Проверка в CHILD */
+/* Справочник складов ^ Входящий баланс: Служащие (Финансы) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpIn a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpIn', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpRec - Проверка в CHILD */
+/* Справочник складов ^ Приход денег по служащим - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_EmpRep - Проверка в CHILD */
+/* Справочник складов ^ Отчет служащего - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_EmpRep a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_EmpRep', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_OurCor - Проверка в CHILD */
+/* Справочник складов ^ Корректировка баланса денег - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_OurCor a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_OurCor', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_OurIn - Проверка в CHILD */
+/* Справочник складов ^ Входящий баланс: Касса (Финансы) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_OurIn a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_OurIn', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_PlanExp - Проверка в CHILD */
+/* Справочник складов ^ Планирование: Расходы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_PlanExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_PlanExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_PlanRec - Проверка в CHILD */
+/* Справочник складов ^ Планирование: Доходы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_PlanRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_PlanRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ c_Sal - Проверка в CHILD */
+/* Справочник складов ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'c_Sal', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Acc - Проверка в CHILD */
+/* Справочник складов ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Acc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Cos - Проверка в CHILD */
+/* Справочник складов ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Cos', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_CRet - Проверка в CHILD */
+/* Справочник складов ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_CRet', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_CRRet - Проверка в CHILD */
+/* Справочник складов ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_CRRet', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Cst - Проверка в CHILD */
+/* Справочник складов ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Cst', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Cst2 - Проверка в CHILD */
+/* Справочник складов ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Cst2', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Dis - Проверка в CHILD */
+/* Справочник складов ^ Распределение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Dis', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_DisDD - Проверка в CHILD */
+/* Справочник складов ^ Распределение товара: Подробно - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_DisDD a WITH(NOLOCK), deleted d WHERE a.DetStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_DisDD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_EOExp - Проверка в CHILD */
+/* Справочник складов ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_EOExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_EOExpDD - Проверка в CHILD */
+/* Справочник складов ^ Заказ внешний: Формирование: Подробно - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExpDD a WITH(NOLOCK), deleted d WHERE a.DetStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_EOExpDD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_EORec - Проверка в CHILD */
+/* Справочник складов ^ Заказ внешний: Обработка: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EORec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_EORec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Epp - Проверка в CHILD */
+/* Справочник складов ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Epp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Est - Проверка в CHILD */
+/* Справочник складов ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Est', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Exc - Проверка в CHILD */
+/* Справочник складов ^ Перемещение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.NewStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Exc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Exc - Проверка в CHILD */
+/* Справочник складов ^ Перемещение товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Exc', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Exp - Проверка в CHILD */
+/* Справочник складов ^ Расходный документ: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Exp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Inv - Проверка в CHILD */
+/* Справочник складов ^ Расходная накладная: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Inv', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_IOExp - Проверка в CHILD */
+/* Справочник складов ^ Заказ внутренний: Обработка: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IOExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_IOExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_IORec - Проверка в CHILD */
+/* Справочник складов ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_IORec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_MonRec - Проверка в CHILD */
+/* Справочник складов ^ Прием наличных денег на склад - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_MonRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Rec - Проверка в CHILD */
+/* Справочник складов ^ Приход товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Rec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Rem - Проверка в CHILD */
+/* Справочник складов ^ Остатки товара (Таблица) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Rem a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Rem', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_RemD - Проверка в CHILD */
+/* Справочник складов ^ Остатки товара на дату (Таблица) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_RemD a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_RemD', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Ret - Проверка в CHILD */
+/* Справочник складов ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Ret', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Sale - Проверка в CHILD */
+/* Справочник складов ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Sale', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SExp - Проверка в CHILD */
+/* Справочник складов ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SExp - Проверка в CHILD */
+/* Справочник складов ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SpecParams - Проверка в CHILD */
+/* Справочник складов ^ Калькуляционная карта: Настройки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SpecParams a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SpecParams', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SPExp - Проверка в CHILD */
+/* Справочник складов ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SPExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SPExp - Проверка в CHILD */
+/* Справочник складов ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SPExp', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SPRec - Проверка в CHILD */
+/* Справочник складов ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SPRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SPRec - Проверка в CHILD */
+/* Справочник складов ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SPRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SRec - Проверка в CHILD */
+/* Справочник складов ^ Комплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_SRec - Проверка в CHILD */
+/* Справочник складов ^ Комплектация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_SRec', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_Ven - Проверка в CHILD */
+/* Справочник складов ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_Ven', 3
+      RETURN
+    END
+
+/* r_Stocks ^ t_zInP - Проверка в CHILD */
+/* Справочник складов ^ Входящие остатки товара - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_zInP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 't_zInP', 3
+      RETURN
+    END
+
+/* r_Stocks ^ z_UserStocks - Удаление в CHILD */
+/* Справочник складов ^ Доступные значения - Справочник складов - Удаление в CHILD */
+  DELETE z_UserStocks FROM z_UserStocks a, deleted d WHERE a.StockID = d.StockID
+  IF @@ERROR > 0 RETURN
+
+/* r_Stocks ^ z_UserVars - Проверка в CHILD */
+/* Справочник складов ^ Пользователи - Переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_StockID' AND a.VarValue = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'z_UserVars', 3
+      RETURN
+    END
+
+/* r_Stocks ^ z_UserVars - Проверка в CHILD */
+/* Справочник складов ^ Пользователи - Переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_StockID' AND a.VarValue = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'z_UserVars', 3
+      RETURN
+    END
+
+/* r_Stocks ^ z_UserVars - Проверка в CHILD */
+/* Справочник складов ^ Пользователи - Переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_StockID' AND a.VarValue = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'z_UserVars', 3
+      RETURN
+    END
+
+/* r_Stocks ^ z_Vars - Проверка в CHILD */
+/* Справочник складов ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_StockID' AND a.VarValue = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'z_Vars', 3
+      RETURN
+    END
+
+/* r_Stocks ^ z_Vars - Проверка в CHILD */
+/* Справочник складов ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_StockID' AND a.VarValue = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'z_Vars', 3
+      RETURN
+    END
+
+/* r_Stocks ^ z_Vars - Проверка в CHILD */
+/* Справочник складов ^ Системные переменные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_StockID' AND a.VarValue = d.StockID)
+    BEGIN
+      EXEC z_RelationError 'r_Stocks', 'z_Vars', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10310001 AND m.PKValue = 
     '[' + cast(i.StockID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10310001 AND m.PKValue = 
+    '[' + cast(i.StockID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10310001, -ChID, 
+    '[' + cast(d.StockID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10310 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Stocks', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Stocks', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -156,25 +970,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM r_CRs a, deleted d WHERE a.StockID = d.StockID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Справочник ЭККА''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Stocks ^ r_Services - Обновление CHILD */
-/* Справочник складов ^ Справочник услуг - Обновление CHILD */
-  IF UPDATE(StockID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StockID = i.StockID
-          FROM r_Services a, inserted i, deleted d WHERE a.StockID = d.StockID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_Services a, deleted d WHERE a.StockID = d.StockID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Справочник услуг''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -238,25 +1033,6 @@ BEGIN
         END
     END
 
-/* r_Stocks ^ r_Resources - Обновление CHILD */
-/* Справочник складов ^ Справочник ресурсов - Обновление CHILD */
-  IF UPDATE(StockID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StockID = i.StockID
-          FROM r_Resources a, inserted i, deleted d WHERE a.StockID = d.StockID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_Resources a, deleted d WHERE a.StockID = d.StockID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Справочник ресурсов''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_Stocks ^ r_GOperD - Обновление CHILD */
 /* Справочник складов ^ Справочник проводок - Проводки - Обновление CHILD */
   IF UPDATE(StockID)
@@ -289,25 +1065,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM r_GOperD a, deleted d WHERE a.D_StockID = d.StockID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Справочник проводок - Проводки''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Stocks ^ r_ExecutorShifts - Обновление CHILD */
-/* Справочник складов ^ Справочник исполнителей - смены - Обновление CHILD */
-  IF UPDATE(StockID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StockID = i.StockID
-          FROM r_ExecutorShifts a, inserted i, deleted d WHERE a.StockID = d.StockID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_ExecutorShifts a, deleted d WHERE a.StockID = d.StockID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Справочник исполнителей - смены''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -1378,25 +2135,6 @@ BEGIN
         END
     END
 
-/* r_Stocks ^ t_BookingTempD - Обновление CHILD */
-/* Справочник складов ^ Интернет заявки - подробно - Обновление CHILD */
-  IF UPDATE(StockID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StockID = i.StockID
-          FROM t_BookingTempD a, inserted i, deleted d WHERE a.StockID = d.StockID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_BookingTempD a, deleted d WHERE a.StockID = d.StockID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Интернет заявки - подробно''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_Stocks ^ t_Cos - Обновление CHILD */
 /* Справочник складов ^ Формирование себестоимости: Заголовок - Обновление CHILD */
   IF UPDATE(StockID)
@@ -1486,25 +2224,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM t_Cst2 a, deleted d WHERE a.StockID = d.StockID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Приход товара по ГТД (новый)(Заголовок)''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Stocks ^ t_DeskRes - Обновление CHILD */
-/* Справочник складов ^ Ресторан: Резервирование столиков - Обновление CHILD */
-  IF UPDATE(StockID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StockID = i.StockID
-          FROM t_DeskRes a, inserted i, deleted d WHERE a.StockID = d.StockID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_DeskRes a, deleted d WHERE a.StockID = d.StockID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Ресторан: Резервирование столиков''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -1828,25 +2547,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM t_RemD a, deleted d WHERE a.StockID = d.StockID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Остатки товара на дату (Таблица)''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Stocks ^ t_RestShift - Обновление CHILD */
-/* Справочник складов ^ Ресторан: Смена: Заголовок - Обновление CHILD */
-  IF UPDATE(StockID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.StockID = i.StockID
-          FROM t_RestShift a, inserted i, deleted d WHERE a.StockID = d.StockID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_RestShift a, deleted d WHERE a.StockID = d.StockID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник складов'' => ''Ресторан: Смена: Заголовок''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -2233,6 +2933,7 @@ BEGIN
         END
     END
 
+
 /* Регистрация изменения записи */
 
 
@@ -2314,908 +3015,85 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_Stocks] ON [r_Stocks]
-FOR DELETE AS
-/* r_Stocks - Справочник складов - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_Stocks] ON [r_Stocks]
+FOR INSERT AS
+/* r_Stocks - Справочник складов - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Stocks ^ r_CRs - Проверка в CHILD */
-/* Справочник складов ^ Справочник ЭККА - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRs a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+/* r_Stocks ^ r_Emps - Проверка в PARENT */
+/* Справочник складов ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
     BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_CRs', 3
+      EXEC z_RelationError 'r_Emps', 'r_Stocks', 0
       RETURN
     END
 
-/* r_Stocks ^ r_Services - Проверка в CHILD */
-/* Справочник складов ^ Справочник услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Services a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
+/* r_Stocks ^ r_PLs - Проверка в PARENT */
+/* Справочник складов ^ Справочник прайс-листов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PLID NOT IN (SELECT PLID FROM r_PLs))
     BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_Services', 3
+      EXEC z_RelationError 'r_PLs', 'r_Stocks', 0
       RETURN
     END
 
-/* r_Stocks ^ r_StockCRProds - Удаление в CHILD */
-/* Справочник складов ^ Справочник складов - Товары для ЭККА - Удаление в CHILD */
-  DELETE r_StockCRProds FROM r_StockCRProds a, deleted d WHERE a.StockID = d.StockID
-  IF @@ERROR > 0 RETURN
-
-/* r_Stocks ^ r_StockSubs - Проверка в CHILD */
-/* Справочник складов ^ Справочник складов: Склады составляющих - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_StockSubs a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_StockSubs', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_StockSubs - Проверка в CHILD */
-/* Справочник складов ^ Справочник складов: Склады составляющих - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_StockSubs a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_StockSubs', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_Resources - Проверка в CHILD */
-/* Справочник складов ^ Справочник ресурсов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Resources a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_Resources', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_GOperD - Проверка в CHILD */
-/* Справочник складов ^ Справочник проводок - Проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_GOperD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_GOperD - Проверка в CHILD */
-/* Справочник складов ^ Справочник проводок - Проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_GOperD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_ExecutorShifts - Проверка в CHILD */
-/* Справочник складов ^ Справочник исполнителей - смены - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ExecutorShifts a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_ExecutorShifts', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_Scales - Проверка в CHILD */
-/* Справочник складов ^ Справочник весов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Scales a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_Scales', 3
-      RETURN
-    END
-
-/* r_Stocks ^ r_GAccs - Проверка в CHILD */
-/* Справочник складов ^ План счетов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GAccs a WITH(NOLOCK), deleted d WHERE a.A_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'r_GAccs', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_ARepADP - Проверка в CHILD */
-/* Справочник складов ^ Авансовый отчет валютный (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_ARepADP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_ARepADP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_BankExpAC - Проверка в CHILD */
-/* Справочник складов ^ Валютный счет: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankExpAC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_BankExpAC', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_BankExpCC - Проверка в CHILD */
-/* Справочник складов ^ Расчетный счет: Расход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankExpCC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_BankExpCC', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_BankRecAC - Проверка в CHILD */
-/* Справочник складов ^ Валютный счет: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankRecAC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_BankRecAC', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_BankRecCC - Проверка в CHILD */
-/* Справочник складов ^ Расчетный счет: Приход - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_BankRecCC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_BankRecCC', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_CInv - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Расход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CInv a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_CInv', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_CRepADP - Проверка в CHILD */
-/* Справочник складов ^ Авансовый отчет с признаками (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRepADP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_CRepADP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_CRet - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Возврат поставщику (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_CRet a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_CRet', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_Cst - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Приход по ГТД (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Cst a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_Cst', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_DStack - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Суммовой учет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.NewStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_DStack', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_DStack - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Суммовой учет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_DStack a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_DStack', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_Exp - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Внутренний расход (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Exp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_Exp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_GTranD - Проверка в CHILD */
-/* Справочник складов ^ Таблица проводок (Проводки) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_GTranD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_GTranD - Проверка в CHILD */
-/* Справочник складов ^ Таблица проводок (Проводки) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_GTranD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_Inv - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Расходная накладная (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Inv a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_Inv', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_PAcc - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Счет на оплату (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PAcc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_PAcc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_PCost - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Формирование себестоимости (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PCost a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_PCost', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_PEst - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Переоценка партий (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PEst a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_PEst', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_PExc - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.NewStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_PExc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_PExc - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Перемещение (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PExc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_PExc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_PVen - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Инвентаризация (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PVen a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_PVen', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_Rec - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Приход по накладной (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Rec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_Rec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_Rem - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Текущие остатки (Данные) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Rem a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_Rem', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_RemD - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Остатки на дату (Данные) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_RemD a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_RemD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_RepADP - Проверка в CHILD */
-/* Справочник складов ^ Авансовый отчет (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_RepADP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_RepADP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_Ret - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Возврат от получателя (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_Ret a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_Ret', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_SRepDP - Проверка в CHILD */
-/* Справочник складов ^ Основные средства: Ремонт (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_SRepDP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_SRepDP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_TranH - Проверка в CHILD */
-/* Справочник складов ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_TranH - Проверка в CHILD */
-/* Справочник складов ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_TranP - Проверка в CHILD */
-/* Справочник складов ^ ТМЦ: Проводка - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_TranP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_WBillA - Проверка в CHILD */
-/* Справочник складов ^ Путевой лист (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_WBillA a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_WBillA', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_zInBA - Проверка в CHILD */
-/* Справочник складов ^ Входящий баланс: Валютный счет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInBA a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_zInBA', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_zInBC - Проверка в CHILD */
-/* Справочник складов ^ Входящий баланс: Расчетный счет - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInBC a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_zInBC', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_zInH - Проверка в CHILD */
-/* Справочник складов ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.C_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_zInH - Проверка в CHILD */
-/* Справочник складов ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.D_StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Stocks ^ b_zInP - Проверка в CHILD */
-/* Справочник складов ^ Входящий баланс: ТМЦ - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'b_zInP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_CompCor - Проверка в CHILD */
-/* Справочник складов ^ Корректировка баланса предприятия - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompCor a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_CompCor', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_CompCurr - Проверка в CHILD */
-/* Справочник складов ^ Обмен валюты по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompCurr a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_CompCurr', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_CompExp - Проверка в CHILD */
-/* Справочник складов ^ Расход денег по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_CompExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_CompIn - Проверка в CHILD */
-/* Справочник складов ^ Входящий баланс: Предприятия (Финансы) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompIn a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_CompIn', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_CompRec - Проверка в CHILD */
-/* Справочник складов ^ Приход денег по предприятиям - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_CompRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_CompRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpCor - Проверка в CHILD */
-/* Справочник складов ^ Корректировка баланса служащего - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpCor a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpCor', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpCurr - Проверка в CHILD */
-/* Справочник складов ^ Обмен валюты по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpCurr a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpCurr', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpExc - Проверка в CHILD */
-/* Справочник складов ^ Перемещение денег между служащими - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpExc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpExc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpExp - Проверка в CHILD */
-/* Справочник складов ^ Расход денег по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpIn - Проверка в CHILD */
-/* Справочник складов ^ Входящий баланс: Служащие (Финансы) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpIn a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpIn', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpRec - Проверка в CHILD */
-/* Справочник складов ^ Приход денег по служащим - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_EmpRep - Проверка в CHILD */
-/* Справочник складов ^ Отчет служащего - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_EmpRep a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_EmpRep', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_OurCor - Проверка в CHILD */
-/* Справочник складов ^ Корректировка баланса денег - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_OurCor a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_OurCor', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_OurIn - Проверка в CHILD */
-/* Справочник складов ^ Входящий баланс: Касса (Финансы) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_OurIn a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_OurIn', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_PlanExp - Проверка в CHILD */
-/* Справочник складов ^ Планирование: Расходы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_PlanExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_PlanExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_PlanRec - Проверка в CHILD */
-/* Справочник складов ^ Планирование: Доходы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_PlanRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_PlanRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ c_Sal - Проверка в CHILD */
-/* Справочник складов ^ Начисление денег служащим (Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM c_Sal a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'c_Sal', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Acc - Проверка в CHILD */
-/* Справочник складов ^ Счет на оплату товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Acc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Acc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_BookingTempD - Проверка в CHILD */
-/* Справочник складов ^ Интернет заявки - подробно - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_BookingTempD a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_BookingTempD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Cos - Проверка в CHILD */
-/* Справочник складов ^ Формирование себестоимости: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cos a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Cos', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_CRet - Проверка в CHILD */
-/* Справочник складов ^ Возврат товара поставщику: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRet a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_CRet', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_CRRet - Проверка в CHILD */
-/* Справочник складов ^ Возврат товара по чеку: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_CRRet a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_CRRet', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Cst - Проверка в CHILD */
-/* Справочник складов ^ Приход товара по ГТД: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Cst', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Cst2 - Проверка в CHILD */
-/* Справочник складов ^ Приход товара по ГТД (новый)(Заголовок) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Cst2 a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Cst2', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_DeskRes - Проверка в CHILD */
-/* Справочник складов ^ Ресторан: Резервирование столиков - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DeskRes a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_DeskRes', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Dis - Проверка в CHILD */
-/* Справочник складов ^ Распределение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Dis a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Dis', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_DisDD - Проверка в CHILD */
-/* Справочник складов ^ Распределение товара: Подробно - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DisDD a WITH(NOLOCK), deleted d WHERE a.DetStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_DisDD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_EOExp - Проверка в CHILD */
-/* Справочник складов ^ Заказ внешний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_EOExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_EOExpDD - Проверка в CHILD */
-/* Справочник складов ^ Заказ внешний: Формирование: Подробно - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExpDD a WITH(NOLOCK), deleted d WHERE a.DetStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_EOExpDD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_EORec - Проверка в CHILD */
-/* Справочник складов ^ Заказ внешний: Обработка: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EORec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_EORec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Epp - Проверка в CHILD */
-/* Справочник складов ^ Расходный документ в ценах прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Epp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Epp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Est - Проверка в CHILD */
-/* Справочник складов ^ Переоценка цен прихода: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Est a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Est', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Exc - Проверка в CHILD */
-/* Справочник складов ^ Перемещение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.NewStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Exc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Exc - Проверка в CHILD */
-/* Справочник складов ^ Перемещение товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exc a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Exc', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Exp - Проверка в CHILD */
-/* Справочник складов ^ Расходный документ: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Exp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Exp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Inv - Проверка в CHILD */
-/* Справочник складов ^ Расходная накладная: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Inv a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Inv', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_IOExp - Проверка в CHILD */
-/* Справочник складов ^ Заказ внутренний: Обработка: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IOExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_IOExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_IORec - Проверка в CHILD */
-/* Справочник складов ^ Заказ внутренний: Формирование: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IORec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_IORec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_MonRec - Проверка в CHILD */
-/* Справочник складов ^ Прием наличных денег на склад - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_MonRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_MonRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Rec - Проверка в CHILD */
-/* Справочник складов ^ Приход товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Rec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Rec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Rem - Проверка в CHILD */
-/* Справочник складов ^ Остатки товара (Таблица) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Rem a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Rem', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_RemD - Проверка в CHILD */
-/* Справочник складов ^ Остатки товара на дату (Таблица) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RemD a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_RemD', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_RestShift - Проверка в CHILD */
-/* Справочник складов ^ Ресторан: Смена: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RestShift a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_RestShift', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Ret - Проверка в CHILD */
-/* Справочник складов ^ Возврат товара от получателя: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ret a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Ret', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Sale - Проверка в CHILD */
-/* Справочник складов ^ Продажа товара оператором: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Sale a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Sale', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SExp - Проверка в CHILD */
-/* Справочник складов ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SExp - Проверка в CHILD */
-/* Справочник складов ^ Разукомплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SExp a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SpecParams - Проверка в CHILD */
-/* Справочник складов ^ Калькуляционная карта: Настройки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SpecParams a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SpecParams', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SPExp - Проверка в CHILD */
-/* Справочник складов ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SPExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SPExp - Проверка в CHILD */
-/* Справочник складов ^ Планирование: Разукомплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPExp a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SPExp', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SPRec - Проверка в CHILD */
-/* Справочник складов ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SPRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SPRec - Проверка в CHILD */
-/* Справочник складов ^ Планирование: Комплектация: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SPRec a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SPRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SRec - Проверка в CHILD */
-/* Справочник складов ^ Комплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_SRec - Проверка в CHILD */
-/* Справочник складов ^ Комплектация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SRec a WITH(NOLOCK), deleted d WHERE a.SubStockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_SRec', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_Ven - Проверка в CHILD */
-/* Справочник складов ^ Инвентаризация товара: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Ven a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_Ven', 3
-      RETURN
-    END
-
-/* r_Stocks ^ t_zInP - Проверка в CHILD */
-/* Справочник складов ^ Входящие остатки товара - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_zInP a WITH(NOLOCK), deleted d WHERE a.StockID = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 't_zInP', 3
-      RETURN
-    END
-
-/* r_Stocks ^ z_UserStocks - Удаление в CHILD */
-/* Справочник складов ^ Доступные значения - Справочник складов - Удаление в CHILD */
-  DELETE z_UserStocks FROM z_UserStocks a, deleted d WHERE a.StockID = d.StockID
-  IF @@ERROR > 0 RETURN
-
-/* r_Stocks ^ z_UserVars - Проверка в CHILD */
-/* Справочник складов ^ Пользователи - Переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_StockID' AND a.VarValue = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'z_UserVars', 3
-      RETURN
-    END
-
-/* r_Stocks ^ z_UserVars - Проверка в CHILD */
-/* Справочник складов ^ Пользователи - Переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_StockID' AND a.VarValue = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'z_UserVars', 3
-      RETURN
-    END
-
-/* r_Stocks ^ z_UserVars - Проверка в CHILD */
-/* Справочник складов ^ Пользователи - Переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_UserVars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_StockID' AND a.VarValue = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'z_UserVars', 3
-      RETURN
-    END
-
-/* r_Stocks ^ z_Vars - Проверка в CHILD */
-/* Справочник складов ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'c_StockID' AND a.VarValue = d.StockID)
+/* r_Stocks ^ r_StockGs - Проверка в PARENT */
+/* Справочник складов ^ Справочник складов: группы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StockGID NOT IN (SELECT StockGID FROM r_StockGs))
     BEGIN
-      EXEC z_RelationError 'r_Stocks', 'z_Vars', 3
+      EXEC z_RelationError 'r_StockGs', 'r_Stocks', 0
       RETURN
     END
 
-/* r_Stocks ^ z_Vars - Проверка в CHILD */
-/* Справочник складов ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 'b_StockID' AND a.VarValue = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'z_Vars', 3
-      RETURN
-    END
-
-/* r_Stocks ^ z_Vars - Проверка в CHILD */
-/* Справочник складов ^ Системные переменные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_Vars a WITH(NOLOCK), deleted d WHERE a.VarName = 't_StockID' AND a.VarValue = d.StockID)
-    BEGIN
-      EXEC z_RelationError 'r_Stocks', 'z_Vars', 3
-      RETURN
-    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10310001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10310001, ChID, 
     '[' + cast(i.StockID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10310001 AND m.PKValue = 
-    '[' + cast(i.StockID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10310001, -ChID, 
-    '[' + cast(d.StockID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10310 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Stocks', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Stocks', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

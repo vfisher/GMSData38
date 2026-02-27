@@ -262,105 +262,367 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_Prods] ON [r_Prods]
-FOR INSERT AS
-/* r_Prods - Справочник товаров - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_Prods] ON [r_Prods]
+FOR DELETE AS
+/* r_Prods - Справочник товаров - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Prods ^ r_Countries - Проверка в PARENT */
-/* Справочник товаров ^ Справочник стран - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.CounID NOT IN (SELECT CounID FROM r_Countries))
+/* r_Prods ^ r_CRMP - Проверка в CHILD */
+/* Справочник товаров ^ Справочник ЭККА - Товары - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_CRMP a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_Countries', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_CRMP', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdA - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: группа альтернатив - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrAID NOT IN (SELECT PGrAID FROM r_ProdA))
+/* r_Prods ^ r_Carrs - Проверка в CHILD */
+/* Справочник товаров ^ Справочник транспорта - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_Carrs a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdA', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_Carrs', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdBG - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: группа бухгалтерии - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PBGrID NOT IN (SELECT PBGrID FROM r_ProdBG))
+/* r_Prods ^ r_ProdMarks - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров: маркировки - Удаление в CHILD */
+  DELETE r_ProdMarks FROM r_ProdMarks a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ b_PInP - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Цены прихода Бухгалтерии - Удаление в CHILD */
+  DELETE b_PInP FROM b_PInP a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdCV - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Значения для периодов - Удаление в CHILD */
+  DELETE r_ProdCV FROM r_ProdCV a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdEC - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Значения для предприятий - Удаление в CHILD */
+  DELETE r_ProdEC FROM r_ProdEC a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdImages - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров: изображения - Удаление в CHILD */
+  DELETE r_ProdImages FROM r_ProdImages a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdLV - Проверка в CHILD */
+/* Справочник товаров ^ Справочник товаров - Сборы - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdLV a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdBG', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_ProdLV', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdC - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: категории - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PCatID NOT IN (SELECT PCatID FROM r_ProdC))
+/* r_Prods ^ r_ProdMA - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Альтернативы - Удаление в CHILD */
+  DELETE r_ProdMA FROM r_ProdMA a, deleted d WHERE a.AProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdMA - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Альтернативы - Удаление в CHILD */
+  DELETE r_ProdMA FROM r_ProdMA a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdME - Проверка в CHILD */
+/* Справочник товаров ^ Справочник товаров - Затраты на комплекты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdME a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdC', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_ProdME', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdG - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: группы - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID NOT IN (SELECT PGrID FROM r_ProdG))
+/* r_Prods ^ r_ProdMP - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Цены для прайс-листов - Удаление в CHILD */
+  DELETE r_ProdMP FROM r_ProdMP a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdMQ - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Виды упаковок - Удаление в CHILD */
+  DELETE r_ProdMQ FROM r_ProdMQ a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdMS - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Комплектующие - Комплектация - Удаление в CHILD */
+  DELETE r_ProdMS FROM r_ProdMS a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdMS - Проверка в CHILD */
+/* Справочник товаров ^ Справочник товаров - Комплектующие - Комплектация - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdMS a WITH(NOLOCK), deleted d WHERE a.SProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdG', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_ProdMS', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdG1 - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: 1 группа - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID1 NOT IN (SELECT PGrID1 FROM r_ProdG1))
+/* r_Prods ^ r_ProdMSE - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Комплектующие - Разукомплектация - Удаление в CHILD */
+  DELETE r_ProdMSE FROM r_ProdMSE a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_ProdMSE - Проверка в CHILD */
+/* Справочник товаров ^ Справочник товаров - Комплектующие - Разукомплектация - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdMSE a WITH(NOLOCK), deleted d WHERE a.SProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdG1', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_ProdMSE', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdG2 - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: 2 группа - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID2 NOT IN (SELECT PGrID2 FROM r_ProdG2))
+/* r_Prods ^ r_ProdOpers - Проверка в CHILD */
+/* Справочник товаров ^ Справочник товаров: Виды операций и потери - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdOpers a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdG2', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_ProdOpers', 3
       RETURN
     END
 
-/* r_Prods ^ r_ProdG3 - Проверка в PARENT */
-/* Справочник товаров ^ Справочник товаров: 3 группа - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID3 NOT IN (SELECT PGrID3 FROM r_ProdG3))
+/* r_Prods ^ r_ProdValues - Проверка в CHILD */
+/* Справочник товаров ^ Справочник товаров - Значения - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_ProdValues a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ProdG3', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_ProdValues', 3
       RETURN
     END
 
-/* r_Prods ^ r_ScaleGrs - Проверка в PARENT */
-/* Справочник товаров ^ Справочник весов: группы - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ScaleGrID NOT IN (SELECT ScaleGrID FROM r_ScaleGrs))
+/* r_Prods ^ t_PInP - Удаление в CHILD */
+/* Справочник товаров ^ Справочник товаров - Цены прихода Торговли - Удаление в CHILD */
+  DELETE t_PInP FROM t_PInP a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_StockCRProds - Удаление в CHILD */
+/* Справочник товаров ^ Справочник складов - Товары для ЭККА - Удаление в CHILD */
+  DELETE r_StockCRProds FROM r_StockCRProds a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_GOperD - Проверка в CHILD */
+/* Справочник товаров ^ Справочник проводок - Проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_ScaleGrs', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_GOperD', 3
       RETURN
     END
 
-/* r_Prods ^ r_Taxes - Проверка в PARENT */
-/* Справочник товаров ^ Справочник НДС - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.TaxTypeID NOT IN (SELECT TaxTypeID FROM r_Taxes))
+/* r_Prods ^ r_GOperD - Проверка в CHILD */
+/* Справочник товаров ^ Справочник проводок - Проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
     BEGIN
-      EXEC z_RelationError 'r_Taxes', 'r_Prods', 0
+      EXEC z_RelationError 'r_Prods', 'r_GOperD', 3
       RETURN
     END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10350001, ChID, 
+/* r_Prods ^ r_MenuP - Удаление в CHILD */
+/* Справочник товаров ^ Справочник меню - товары - Удаление в CHILD */
+  DELETE r_MenuP FROM r_MenuP a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_DCTypeP - Проверка в CHILD */
+/* Справочник товаров ^ Справочник дисконтных карт: Типы: Товары - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_DCTypeP a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'r_DCTypeP', 3
+      RETURN
+    END
+
+/* r_Prods ^ r_DCTypes - Удаление в CHILD */
+/* Справочник товаров ^ Справочник дисконтных карт: типы - Удаление в CHILD */
+  DELETE r_DCTypes FROM r_DCTypes a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ r_GAccs - Проверка в CHILD */
+/* Справочник товаров ^ План счетов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_GAccs a WITH(NOLOCK), deleted d WHERE a.A_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'r_GAccs', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_GTranD - Проверка в CHILD */
+/* Справочник товаров ^ Таблица проводок (Проводки) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_GTranD', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_GTranD - Проверка в CHILD */
+/* Справочник товаров ^ Таблица проводок (Проводки) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_GTranD', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_PCostD - Проверка в CHILD */
+/* Справочник товаров ^ ТМЦ: Формирование себестоимости (ТМЦ) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PCostD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_PCostD', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_PVenA - Проверка в CHILD */
+/* Справочник товаров ^ ТМЦ: Инвентаризация (Итоги) - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_PVenA a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_PVenA', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_TranH - Проверка в CHILD */
+/* Справочник товаров ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_TranH - Проверка в CHILD */
+/* Справочник товаров ^ Ручные проводки - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_TranH', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_zInH - Проверка в CHILD */
+/* Справочник товаров ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Prods ^ b_zInH - Проверка в CHILD */
+/* Справочник товаров ^ Ручные входящие - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 'b_zInH', 3
+      RETURN
+    END
+
+/* r_Prods ^ r_ProdMPCh - Удаление в CHILD */
+/* Справочник товаров ^ Изменение цен продажи (Таблица) - Удаление в CHILD */
+  DELETE r_ProdMPCh FROM r_ProdMPCh a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ t_DisD - Проверка в CHILD */
+/* Справочник товаров ^ Распределение товара: Данные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_DisD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_DisD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_EOExpD - Проверка в CHILD */
+/* Справочник товаров ^ Заказ внешний: Формирование: Товар - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExpD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_EOExpD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_EOExpDD - Проверка в CHILD */
+/* Справочник товаров ^ Заказ внешний: Формирование: Подробно - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EOExpDD a WITH(NOLOCK), deleted d WHERE a.DetProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_EOExpDD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_EORecD - Проверка в CHILD */
+/* Справочник товаров ^ Заказ внешний: Обработка: Товар - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_EORecD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_EORecD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_IORecD - Проверка в CHILD */
+/* Справочник товаров ^ Заказ внутренний: Формирование: Товар - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_IORecD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_IORecD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_PInPCh - Удаление в CHILD */
+/* Справочник товаров ^ Изменение цен прихода: Бизнес - Удаление в CHILD */
+  DELETE t_PInPCh FROM t_PInPCh a, deleted d WHERE a.ProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ t_SEstD - Проверка в CHILD */
+/* Справочник товаров ^ Переоценка цен продажи: Товар - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SEstD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_SEstD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_Spec - Проверка в CHILD */
+/* Справочник товаров ^ Калькуляционная карта: Заголовок - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_Spec a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_Spec', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_SpecD - Проверка в CHILD */
+/* Справочник товаров ^ Калькуляционная карта: Состав - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_SpecD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_SpecD', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_VenA - Проверка в CHILD */
+/* Справочник товаров ^ Инвентаризация товара: Товар - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_VenA a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_VenA', 3
+      RETURN
+    END
+
+/* r_Prods ^ t_VenD_UM - Удаление в CHILD */
+/* Справочник товаров ^ Инвентаризация товара: Виды упаковок - Удаление в CHILD */
+  DELETE t_VenD_UM FROM t_VenD_UM a, deleted d WHERE a.DetProdID = d.ProdID
+  IF @@ERROR > 0 RETURN
+
+/* r_Prods ^ t_VenI - Проверка в CHILD */
+/* Справочник товаров ^ Инвентаризация товара: Первичные данные - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_VenI a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+    BEGIN
+      EXEC z_RelationError 'r_Prods', 't_VenI', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10350001 AND m.PKValue = 
     '[' + cast(i.ProdID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10350001 AND m.PKValue = 
+    '[' + cast(i.ProdID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10350001, -ChID, 
+    '[' + cast(d.ProdID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10350 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Prods', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Prods', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -477,25 +739,6 @@ BEGIN
       ELSE IF EXISTS (SELECT * FROM r_CRMP a, deleted d WHERE a.ProdID = d.ProdID)
         BEGIN
           RAISERROR ('Каскадная операция невозможна ''Справочник товаров'' => ''Справочник ЭККА - Товары''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Prods ^ r_Services - Обновление CHILD */
-/* Справочник товаров ^ Справочник услуг - Обновление CHILD */
-  IF UPDATE(ProdID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.ProdID = i.ProdID
-          FROM r_Services a, inserted i, deleted d WHERE a.ProdID = d.ProdID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_Services a, deleted d WHERE a.ProdID = d.ProdID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник товаров'' => ''Справочник услуг''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
@@ -1395,6 +1638,7 @@ BEGIN
         END
     END
 
+
 /* Регистрация изменения записи */
 
 
@@ -1476,372 +1720,225 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_Prods] ON [r_Prods]
-FOR DELETE AS
-/* r_Prods - Справочник товаров - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_Prods] ON [r_Prods]
+FOR INSERT AS
+/* r_Prods - Справочник товаров - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Prods ^ r_CRMP - Проверка в CHILD */
-/* Справочник товаров ^ Справочник ЭККА - Товары - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_CRMP a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_Countries - Проверка в PARENT */
+/* Справочник товаров ^ Справочник стран - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.CounID NOT IN (SELECT CounID FROM r_Countries))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_CRMP', 3
+      EXEC z_RelationError 'r_Countries', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_Services - Проверка в CHILD */
-/* Справочник товаров ^ Справочник услуг - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Services a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_ProdA - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: группа альтернатив - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrAID NOT IN (SELECT PGrAID FROM r_ProdA))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_Services', 3
+      EXEC z_RelationError 'r_ProdA', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_Carrs - Проверка в CHILD */
-/* Справочник товаров ^ Справочник транспорта - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Carrs a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_ProdBG - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: группа бухгалтерии - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PBGrID NOT IN (SELECT PBGrID FROM r_ProdBG))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_Carrs', 3
+      EXEC z_RelationError 'r_ProdBG', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_ProdMarks - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров: маркировки - Удаление в CHILD */
-  DELETE r_ProdMarks FROM r_ProdMarks a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ b_PInP - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Цены прихода Бухгалтерии - Удаление в CHILD */
-  DELETE b_PInP FROM b_PInP a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdCV - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Значения для периодов - Удаление в CHILD */
-  DELETE r_ProdCV FROM r_ProdCV a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdEC - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Значения для предприятий - Удаление в CHILD */
-  DELETE r_ProdEC FROM r_ProdEC a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdImages - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров: изображения - Удаление в CHILD */
-  DELETE r_ProdImages FROM r_ProdImages a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdLV - Проверка в CHILD */
-/* Справочник товаров ^ Справочник товаров - Сборы - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdLV a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_ProdC - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: категории - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PCatID NOT IN (SELECT PCatID FROM r_ProdC))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_ProdLV', 3
+      EXEC z_RelationError 'r_ProdC', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_ProdMA - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Альтернативы - Удаление в CHILD */
-  DELETE r_ProdMA FROM r_ProdMA a, deleted d WHERE a.AProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdMA - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Альтернативы - Удаление в CHILD */
-  DELETE r_ProdMA FROM r_ProdMA a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdME - Проверка в CHILD */
-/* Справочник товаров ^ Справочник товаров - Затраты на комплекты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdME a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_ProdG - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: группы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID NOT IN (SELECT PGrID FROM r_ProdG))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_ProdME', 3
+      EXEC z_RelationError 'r_ProdG', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_ProdMP - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Цены для прайс-листов - Удаление в CHILD */
-  DELETE r_ProdMP FROM r_ProdMP a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdMQ - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Виды упаковок - Удаление в CHILD */
-  DELETE r_ProdMQ FROM r_ProdMQ a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdMS - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Комплектующие - Комплектация - Удаление в CHILD */
-  DELETE r_ProdMS FROM r_ProdMS a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdMS - Проверка в CHILD */
-/* Справочник товаров ^ Справочник товаров - Комплектующие - Комплектация - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdMS a WITH(NOLOCK), deleted d WHERE a.SProdID = d.ProdID)
+/* r_Prods ^ r_ProdG1 - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: 1 группа - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID1 NOT IN (SELECT PGrID1 FROM r_ProdG1))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_ProdMS', 3
+      EXEC z_RelationError 'r_ProdG1', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_ProdMSE - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Комплектующие - Разукомплектация - Удаление в CHILD */
-  DELETE r_ProdMSE FROM r_ProdMSE a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_ProdMSE - Проверка в CHILD */
-/* Справочник товаров ^ Справочник товаров - Комплектующие - Разукомплектация - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdMSE a WITH(NOLOCK), deleted d WHERE a.SProdID = d.ProdID)
+/* r_Prods ^ r_ProdG2 - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: 2 группа - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID2 NOT IN (SELECT PGrID2 FROM r_ProdG2))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_ProdMSE', 3
+      EXEC z_RelationError 'r_ProdG2', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_ProdOpers - Проверка в CHILD */
-/* Справочник товаров ^ Справочник товаров: Виды операций и потери - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdOpers a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_ProdG3 - Проверка в PARENT */
+/* Справочник товаров ^ Справочник товаров: 3 группа - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.PGrID3 NOT IN (SELECT PGrID3 FROM r_ProdG3))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_ProdOpers', 3
+      EXEC z_RelationError 'r_ProdG3', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_ProdValues - Проверка в CHILD */
-/* Справочник товаров ^ Справочник товаров - Значения - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_ProdValues a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
+/* r_Prods ^ r_ScaleGrs - Проверка в PARENT */
+/* Справочник товаров ^ Справочник весов: группы - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ScaleGrID NOT IN (SELECT ScaleGrID FROM r_ScaleGrs))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_ProdValues', 3
+      EXEC z_RelationError 'r_ScaleGrs', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ t_PInP - Удаление в CHILD */
-/* Справочник товаров ^ Справочник товаров - Цены прихода Торговли - Удаление в CHILD */
-  DELETE t_PInP FROM t_PInP a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_StockCRProds - Удаление в CHILD */
-/* Справочник товаров ^ Справочник складов - Товары для ЭККА - Удаление в CHILD */
-  DELETE r_StockCRProds FROM r_StockCRProds a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_GOperD - Проверка в CHILD */
-/* Справочник товаров ^ Справочник проводок - Проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
+/* r_Prods ^ r_Taxes - Проверка в PARENT */
+/* Справочник товаров ^ Справочник НДС - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.TaxTypeID NOT IN (SELECT TaxTypeID FROM r_Taxes))
     BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_GOperD', 3
+      EXEC z_RelationError 'r_Taxes', 'r_Prods', 0
       RETURN
     END
 
-/* r_Prods ^ r_GOperD - Проверка в CHILD */
-/* Справочник товаров ^ Справочник проводок - Проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GOperD a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_GOperD', 3
-      RETURN
-    END
 
-/* r_Prods ^ r_MenuP - Удаление в CHILD */
-/* Справочник товаров ^ Справочник меню - товары - Удаление в CHILD */
-  DELETE r_MenuP FROM r_MenuP a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_DCTypeP - Проверка в CHILD */
-/* Справочник товаров ^ Справочник дисконтных карт: Типы: Товары - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_DCTypeP a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_DCTypeP', 3
-      RETURN
-    END
-
-/* r_Prods ^ r_DCTypes - Удаление в CHILD */
-/* Справочник товаров ^ Справочник дисконтных карт: типы - Удаление в CHILD */
-  DELETE r_DCTypes FROM r_DCTypes a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ r_GAccs - Проверка в CHILD */
-/* Справочник товаров ^ План счетов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_GAccs a WITH(NOLOCK), deleted d WHERE a.A_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'r_GAccs', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_GTranD - Проверка в CHILD */
-/* Справочник товаров ^ Таблица проводок (Проводки) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_GTranD', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_GTranD - Проверка в CHILD */
-/* Справочник товаров ^ Таблица проводок (Проводки) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_GTranD a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_GTranD', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_PCostD - Проверка в CHILD */
-/* Справочник товаров ^ ТМЦ: Формирование себестоимости (ТМЦ) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PCostD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_PCostD', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_PVenA - Проверка в CHILD */
-/* Справочник товаров ^ ТМЦ: Инвентаризация (Итоги) - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_PVenA a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_PVenA', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_TranH - Проверка в CHILD */
-/* Справочник товаров ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_TranH - Проверка в CHILD */
-/* Справочник товаров ^ Ручные проводки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_TranH a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_TranH', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_zInH - Проверка в CHILD */
-/* Справочник товаров ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.C_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Prods ^ b_zInH - Проверка в CHILD */
-/* Справочник товаров ^ Ручные входящие - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM b_zInH a WITH(NOLOCK), deleted d WHERE a.D_ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 'b_zInH', 3
-      RETURN
-    END
-
-/* r_Prods ^ r_ProdMPCh - Удаление в CHILD */
-/* Справочник товаров ^ Изменение цен продажи (Таблица) - Удаление в CHILD */
-  DELETE r_ProdMPCh FROM r_ProdMPCh a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ t_DisD - Проверка в CHILD */
-/* Справочник товаров ^ Распределение товара: Данные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DisD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_DisD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_EOExpD - Проверка в CHILD */
-/* Справочник товаров ^ Заказ внешний: Формирование: Товар - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExpD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_EOExpD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_EOExpDD - Проверка в CHILD */
-/* Справочник товаров ^ Заказ внешний: Формирование: Подробно - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EOExpDD a WITH(NOLOCK), deleted d WHERE a.DetProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_EOExpDD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_EORecD - Проверка в CHILD */
-/* Справочник товаров ^ Заказ внешний: Обработка: Товар - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_EORecD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_EORecD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_IORecD - Проверка в CHILD */
-/* Справочник товаров ^ Заказ внутренний: Формирование: Товар - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_IORecD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_IORecD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_PInPCh - Удаление в CHILD */
-/* Справочник товаров ^ Изменение цен прихода: Бизнес - Удаление в CHILD */
-  DELETE t_PInPCh FROM t_PInPCh a, deleted d WHERE a.ProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ t_SEstD - Проверка в CHILD */
-/* Справочник товаров ^ Переоценка цен продажи: Товар - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SEstD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_SEstD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_Spec - Проверка в CHILD */
-/* Справочник товаров ^ Калькуляционная карта: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Spec a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_Spec', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_SpecD - Проверка в CHILD */
-/* Справочник товаров ^ Калькуляционная карта: Состав - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_SpecD a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_SpecD', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_VenA - Проверка в CHILD */
-/* Справочник товаров ^ Инвентаризация товара: Товар - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_VenA a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_VenA', 3
-      RETURN
-    END
-
-/* r_Prods ^ t_VenD_UM - Удаление в CHILD */
-/* Справочник товаров ^ Инвентаризация товара: Виды упаковок - Удаление в CHILD */
-  DELETE t_VenD_UM FROM t_VenD_UM a, deleted d WHERE a.DetProdID = d.ProdID
-  IF @@ERROR > 0 RETURN
-
-/* r_Prods ^ t_VenI - Проверка в CHILD */
-/* Справочник товаров ^ Инвентаризация товара: Первичные данные - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_VenI a WITH(NOLOCK), deleted d WHERE a.ProdID = d.ProdID)
-    BEGIN
-      EXEC z_RelationError 'r_Prods', 't_VenI', 3
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10350001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10350001, ChID, 
     '[' + cast(i.ProdID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10350001 AND m.PKValue = 
-    '[' + cast(i.ProdID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10350001, -ChID, 
-    '[' + cast(d.ProdID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10350 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Prods', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Prods', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

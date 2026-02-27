@@ -46,118 +46,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU1_INS_b_LExpD] ON [b_LExpD]
-FOR INSERT
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_b_LExpD] ON [b_LExpD]
+FOR DELETE AS
+/* b_LExpD - Зарплата: Выплата (Данные) - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 171 - Обновление итогов в главной таблице */
-/* b_LExpD - Зарплата: Выплата (Данные) */
-/* b_LExp - Зарплата: Выплата (Заголовок) */
-
-  UPDATE r
-  SET 
-    r.TSumCC = r.TSumCC + q.TSumCC
-  FROM b_LExp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SumCC), 0) TSumCC 
-     FROM b_LExp WITH (NOLOCK), inserted m
-     WHERE b_LExp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU2_UPD_b_LExpD] ON [b_LExpD]
-FOR UPDATE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 171 - Обновление итогов в главной таблице */
-/* b_LExpD - Зарплата: Выплата (Данные) */
-/* b_LExp - Зарплата: Выплата (Заголовок) */
-
-IF UPDATE(SumCC)
-BEGIN
-  UPDATE r
-  SET 
-    r.TSumCC = r.TSumCC + q.TSumCC
-  FROM b_LExp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SumCC), 0) TSumCC 
-     FROM b_LExp WITH (NOLOCK), inserted m
-     WHERE b_LExp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.TSumCC = r.TSumCC - q.TSumCC
-  FROM b_LExp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SumCC), 0) TSumCC 
-     FROM b_LExp WITH (NOLOCK), deleted m
-     WHERE b_LExp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_b_LExpD] ON [b_LExpD]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 171 - Обновление итогов в главной таблице */
-/* b_LExpD - Зарплата: Выплата (Данные) */
-/* b_LExp - Зарплата: Выплата (Заголовок) */
-
-  UPDATE r
-  SET 
-    r.TSumCC = r.TSumCC - q.TSumCC
-  FROM b_LExp r, 
-    (SELECT m.ChID, 
-       ISNULL(SUM(m.SumCC), 0) TSumCC 
-     FROM b_LExp WITH (NOLOCK), deleted m
-     WHERE b_LExp.ChID = m.ChID
-     GROUP BY m.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_b_LExpD] ON [b_LExpD]
-FOR INSERT AS
-/* b_LExpD - Зарплата: Выплата (Данные) - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -177,68 +69,61 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_LExp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_LExp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_LExp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_LExp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM b_LExp a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14326, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM b_LExp a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14326, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Зарплата: Выплата'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Зарплата: Выплата'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* b_LExpD ^ b_LExp - Проверка в PARENT */
-/* Зарплата: Выплата (Данные) ^ Зарплата: Выплата (Заголовок) - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM b_LExp))
-    BEGIN
-      EXEC z_RelationError 'b_LExp', 'b_LExpD', 0
-      RETURN
-    END
+/* Удаление проводок */
+  DELETE FROM b_GTran WHERE GTranID IN (SELECT GTranID FROM deleted)
 
-/* b_LExpD ^ r_Emps - Проверка в PARENT */
-/* Зарплата: Выплата (Данные) ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
-    BEGIN
-      EXEC z_RelationError 'r_Emps', 'b_LExpD', 0
-      RETURN
-    END
 
-/* b_LExpD ^ r_GOpers - Проверка в PARENT */
-/* Зарплата: Выплата (Данные) ^ Справочник проводок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.GOperID NOT IN (SELECT GOperID FROM r_GOpers))
-    BEGIN
-      EXEC z_RelationError 'r_GOpers', 'b_LExpD', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 14326002, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 14326002 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.EmpID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 14326002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.EmpID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 14326002, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.EmpID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_b_LExpD', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_b_LExpD', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -272,7 +157,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_LExp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -281,7 +166,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_LExp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -290,7 +175,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_LExp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -299,7 +184,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_LExp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -308,7 +193,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM b_LExp a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14326, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Зарплата: Выплата'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Зарплата: Выплата'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -339,6 +226,7 @@ BEGIN
         EXEC z_RelationError 'r_GOpers', 'b_LExpD', 1
         RETURN
       END
+
 
 /* Регистрация изменения записи */
 
@@ -434,10 +322,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_b_LExpD] ON [b_LExpD]
-FOR DELETE AS
-/* b_LExpD - Зарплата: Выплата (Данные) - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_b_LExpD] ON [b_LExpD]
+FOR INSERT AS
+/* b_LExpD - Зарплата: Выплата (Данные) - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -457,56 +348,219 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_LExp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  b_LExp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_LExp a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  b_LExp a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Зарплата: Выплата (Данные) (b_LExpD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Зарплата: Выплата (Данные)'), 'b_LExpD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM b_LExp a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14326, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM b_LExp a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(14326, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Зарплата: Выплата'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Зарплата: Выплата'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление проводок */
-  DELETE FROM b_GTran WHERE GTranID IN (SELECT GTranID FROM deleted)
+/* b_LExpD ^ b_LExp - Проверка в PARENT */
+/* Зарплата: Выплата (Данные) ^ Зарплата: Выплата (Заголовок) - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM b_LExp))
+    BEGIN
+      EXEC z_RelationError 'b_LExp', 'b_LExpD', 0
+      RETURN
+    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 14326002 AND m.PKValue = 
+/* b_LExpD ^ r_Emps - Проверка в PARENT */
+/* Зарплата: Выплата (Данные) ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+    BEGIN
+      EXEC z_RelationError 'r_Emps', 'b_LExpD', 0
+      RETURN
+    END
+
+/* b_LExpD ^ r_GOpers - Проверка в PARENT */
+/* Зарплата: Выплата (Данные) ^ Справочник проводок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.GOperID NOT IN (SELECT GOperID FROM r_GOpers))
+    BEGIN
+      EXEC z_RelationError 'r_GOpers', 'b_LExpD', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 14326002, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.EmpID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 14326002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.EmpID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 14326002, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.EmpID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_b_LExpD', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_b_LExpD', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_b_LExpD] ON [b_LExpD]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 171 - Обновление итогов в главной таблице */
+/* b_LExpD - Зарплата: Выплата (Данные) */
+/* b_LExp - Зарплата: Выплата (Заголовок) */
+
+  UPDATE r
+  SET 
+    r.TSumCC = r.TSumCC - q.TSumCC
+  FROM b_LExp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SumCC), 0) TSumCC 
+     FROM b_LExp WITH (NOLOCK), deleted m
+     WHERE b_LExp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_b_LExpD] ON [b_LExpD]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 171 - Обновление итогов в главной таблице */
+/* b_LExpD - Зарплата: Выплата (Данные) */
+/* b_LExp - Зарплата: Выплата (Заголовок) */
+
+IF UPDATE(SumCC)
+BEGIN
+  UPDATE r
+  SET 
+    r.TSumCC = r.TSumCC + q.TSumCC
+  FROM b_LExp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SumCC), 0) TSumCC 
+     FROM b_LExp WITH (NOLOCK), inserted m
+     WHERE b_LExp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.TSumCC = r.TSumCC - q.TSumCC
+  FROM b_LExp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SumCC), 0) TSumCC 
+     FROM b_LExp WITH (NOLOCK), deleted m
+     WHERE b_LExp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU1_INS_b_LExpD] ON [b_LExpD]
+FOR INSERT
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 171 - Обновление итогов в главной таблице */
+/* b_LExpD - Зарплата: Выплата (Данные) */
+/* b_LExp - Зарплата: Выплата (Заголовок) */
+
+  UPDATE r
+  SET 
+    r.TSumCC = r.TSumCC + q.TSumCC
+  FROM b_LExp r, 
+    (SELECT m.ChID, 
+       ISNULL(SUM(m.SumCC), 0) TSumCC 
+     FROM b_LExp WITH (NOLOCK), inserted m
+     WHERE b_LExp.ChID = m.ChID
+     GROUP BY m.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

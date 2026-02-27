@@ -69,118 +69,10 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU1_INS_t_SPRecE] ON [t_SPRecE]
-FOR INSERT
-AS
+CREATE TRIGGER [dbo].[TRel3_Del_t_SPRecE] ON [t_SPRecE]
+FOR DELETE AS
+/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты - DELETE TRIGGER */
 BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 82 - Обновление итогов в главной таблице */
-/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты */
-/* t_SPRec - Планирование: Комплектация: Заголовок */
-
-  UPDATE r
-  SET 
-    r.TSetSumCC = r.TSetSumCC + q.TSetSumCC
-  FROM t_SPRec r, 
-    (SELECT t_SPRecA.ChID, 
-       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
-     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), inserted m
-     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
-     GROUP BY t_SPRecA.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU2_UPD_t_SPRecE] ON [t_SPRecE]
-FOR UPDATE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 82 - Обновление итогов в главной таблице */
-/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты */
-/* t_SPRec - Планирование: Комплектация: Заголовок */
-
-IF UPDATE(SetSumCC)
-BEGIN
-  UPDATE r
-  SET 
-    r.TSetSumCC = r.TSetSumCC + q.TSetSumCC
-  FROM t_SPRec r, 
-    (SELECT t_SPRecA.ChID, 
-       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
-     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), inserted m
-     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
-     GROUP BY t_SPRecA.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-
-  UPDATE r
-  SET 
-    r.TSetSumCC = r.TSetSumCC - q.TSetSumCC
-  FROM t_SPRec r, 
-    (SELECT t_SPRecA.ChID, 
-       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
-     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), deleted m
-     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
-     GROUP BY t_SPRecA.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-END
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TAU3_DEL_t_SPRecE] ON [t_SPRecE]
-FOR DELETE
-AS
-BEGIN
-  IF @@RowCount = 0 RETURN
-  SET NOCOUNT ON
-/* -------------------------------------------------------------------------- */
-
-/* 82 - Обновление итогов в главной таблице */
-/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты */
-/* t_SPRec - Планирование: Комплектация: Заголовок */
-
-  UPDATE r
-  SET 
-    r.TSetSumCC = r.TSetSumCC - q.TSetSumCC
-  FROM t_SPRec r, 
-    (SELECT t_SPRecA.ChID, 
-       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
-     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), deleted m
-     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
-     GROUP BY t_SPRecA.ChID) q
-  WHERE q.ChID = r.ChID
-  IF @@error > 0 Return
-/* -------------------------------------------------------------------------- */
-
-END
-GO
-
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_SPRecE] ON [t_SPRecE]
-FOR INSERT AS
-/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -200,96 +92,70 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_SPRec a, t_SPRecA b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_SPRec a, t_SPRecA b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_SPRec a, t_SPRecA b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_SPRec a, t_SPRecA b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_SPRec a, t_SPRecA b, inserted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(11311, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM t_SPRec a, t_SPRecA b, deleted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(11311, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Планирование: Комплектация'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Планирование: Комплектация'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* t_SPRecE ^ r_Codes1 - Проверка в PARENT */
-/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 1 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
-    BEGIN
-      EXEC z_RelationError 'r_Codes1', 't_SPRecE', 0
-      RETURN
-    END
 
-/* t_SPRecE ^ r_Codes2 - Проверка в PARENT */
-/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 2 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
-    BEGIN
-      EXEC z_RelationError 'r_Codes2', 't_SPRecE', 0
-      RETURN
-    END
-
-/* t_SPRecE ^ r_Codes3 - Проверка в PARENT */
-/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 3 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
-    BEGIN
-      EXEC z_RelationError 'r_Codes3', 't_SPRecE', 0
-      RETURN
-    END
-
-/* t_SPRecE ^ r_Codes4 - Проверка в PARENT */
-/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 4 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
-    BEGIN
-      EXEC z_RelationError 'r_Codes4', 't_SPRecE', 0
-      RETURN
-    END
-
-/* t_SPRecE ^ r_Codes5 - Проверка в PARENT */
-/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 5 - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
-    BEGIN
-      EXEC z_RelationError 'r_Codes5', 't_SPRecE', 0
-      RETURN
-    END
-
-/* t_SPRecE ^ t_SPRecA - Проверка в PARENT */
-/* Планирование: Комплектация: Затраты на комплекты ^ Планирование: Комплектация: Комплекты - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.AChID NOT IN (SELECT AChID FROM t_SPRecA))
-    BEGIN
-      EXEC z_RelationError 't_SPRecA', 't_SPRecE', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11311005, 0, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 11311005 AND m.PKValue = 
     '[' + cast(i.AChID as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
     '[' + cast(i.SetCodeID5 as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 11311005 AND m.PKValue = 
+    '[' + cast(i.AChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID5 as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 11311005, 0, 
+    '[' + cast(d.AChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SetCodeID5 as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SPRecE', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_SPRecE', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -323,7 +189,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_SPRec a, t_SPRecA b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -332,7 +198,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_SPRec a, t_SPRecA b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -341,7 +207,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_SPRec a, t_SPRecA b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -350,7 +216,7 @@ BEGIN
   SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_SPRec a, t_SPRecA b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
   IF (@ADate IS NOT NULL) 
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
@@ -359,7 +225,9 @@ BEGIN
 /* Возможно ли редактирование документа */
   IF EXISTS(SELECT * FROM t_SPRec a, t_SPRecA b, deleted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(11311, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Планирование: Комплектация'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Планирование: Комплектация'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -417,6 +285,7 @@ BEGIN
         EXEC z_RelationError 't_SPRecA', 't_SPRecE', 1
         RETURN
       END
+
 
 /* Регистрация изменения записи */
 
@@ -512,10 +381,13 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_SPRecE] ON [t_SPRecE]
-FOR DELETE AS
-/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_t_SPRecE] ON [t_SPRecE]
+FOR INSERT AS
+/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
 /* Проверка открытого периода */
@@ -535,65 +407,257 @@ BEGIN
   SET BDate = o.BDate, EDate = o.EDate
   FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
   WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_SPRec a, t_SPRecA b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_SPRec a, t_SPRecA b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_SPRec a, t_SPRecA b, deleted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_SPRec a, t_SPRecA b, inserted c , @OpenAges AS t WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
     BEGIN
-      SELECT @Err = 'Планирование: Комплектация: Затраты на комплекты (t_SPRecE):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Планирование: Комплектация: Затраты на комплекты'), 't_SPRecE', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
       RAISERROR (@Err, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
 /* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_SPRec a, t_SPRecA b, deleted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(11311, a.ChID, a.StateCode) = 0)
+  IF EXISTS(SELECT * FROM t_SPRec a, t_SPRecA b, inserted c WHERE (b.ChID = a.ChID) AND (c.AChID = b.AChID) AND dbo.zf_CanChangeDoc(11311, a.ChID, a.StateCode) = 0)
     BEGIN
-      RAISERROR ('Изменение документа ''Планирование: Комплектация'' в данном статусе запрещено.', 18, 1)
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Планирование: Комплектация'))
+      RAISERROR(@Err2, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 11311005 AND m.PKValue = 
-    '[' + cast(i.AChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID5 as varchar(200)) + ']'
+/* t_SPRecE ^ r_Codes1 - Проверка в PARENT */
+/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 1 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID1 NOT IN (SELECT CodeID1 FROM r_Codes1))
+    BEGIN
+      EXEC z_RelationError 'r_Codes1', 't_SPRecE', 0
+      RETURN
+    END
 
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 11311005 AND m.PKValue = 
-    '[' + cast(i.AChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SetCodeID5 as varchar(200)) + ']'
+/* t_SPRecE ^ r_Codes2 - Проверка в PARENT */
+/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 2 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID2 NOT IN (SELECT CodeID2 FROM r_Codes2))
+    BEGIN
+      EXEC z_RelationError 'r_Codes2', 't_SPRecE', 0
+      RETURN
+    END
 
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+/* t_SPRecE ^ r_Codes3 - Проверка в PARENT */
+/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 3 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID3 NOT IN (SELECT CodeID3 FROM r_Codes3))
+    BEGIN
+      EXEC z_RelationError 'r_Codes3', 't_SPRecE', 0
+      RETURN
+    END
+
+/* t_SPRecE ^ r_Codes4 - Проверка в PARENT */
+/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 4 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID4 NOT IN (SELECT CodeID4 FROM r_Codes4))
+    BEGIN
+      EXEC z_RelationError 'r_Codes4', 't_SPRecE', 0
+      RETURN
+    END
+
+/* t_SPRecE ^ r_Codes5 - Проверка в PARENT */
+/* Планирование: Комплектация: Затраты на комплекты ^ Справочник признаков 5 - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SetCodeID5 NOT IN (SELECT CodeID5 FROM r_Codes5))
+    BEGIN
+      EXEC z_RelationError 'r_Codes5', 't_SPRecE', 0
+      RETURN
+    END
+
+/* t_SPRecE ^ t_SPRecA - Проверка в PARENT */
+/* Планирование: Комплектация: Затраты на комплекты ^ Планирование: Комплектация: Комплекты - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.AChID NOT IN (SELECT AChID FROM t_SPRecA))
+    BEGIN
+      EXEC z_RelationError 't_SPRecA', 't_SPRecE', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
   SELECT 11311005, 0, 
-    '[' + cast(d.AChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SetCodeID5 as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
+    '[' + cast(i.AChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID1 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID2 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID3 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID4 as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SetCodeID5 as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_SPRecE', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SPRecE', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_t_SPRecE] ON [t_SPRecE]
+FOR DELETE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 82 - Обновление итогов в главной таблице */
+/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты */
+/* t_SPRec - Планирование: Комплектация: Заголовок */
+
+  UPDATE r
+  SET 
+    r.TSetSumCC = r.TSetSumCC - q.TSetSumCC
+  FROM t_SPRec r, 
+    (SELECT t_SPRecA.ChID, 
+       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
+     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), deleted m
+     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
+     GROUP BY t_SPRecA.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU2_UPD_t_SPRecE] ON [t_SPRecE]
+FOR UPDATE
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 82 - Обновление итогов в главной таблице */
+/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты */
+/* t_SPRec - Планирование: Комплектация: Заголовок */
+
+IF UPDATE(SetSumCC)
+BEGIN
+  UPDATE r
+  SET 
+    r.TSetSumCC = r.TSetSumCC + q.TSetSumCC
+  FROM t_SPRec r, 
+    (SELECT t_SPRecA.ChID, 
+       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
+     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), inserted m
+     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
+     GROUP BY t_SPRecA.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+
+  UPDATE r
+  SET 
+    r.TSetSumCC = r.TSetSumCC - q.TSetSumCC
+  FROM t_SPRec r, 
+    (SELECT t_SPRecA.ChID, 
+       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
+     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), deleted m
+     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
+     GROUP BY t_SPRecA.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+END
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU1_INS_t_SPRecE] ON [t_SPRecE]
+FOR INSERT
+AS
+BEGIN
+  IF @@RowCount = 0 RETURN
+  SET NOCOUNT ON
+/* -------------------------------------------------------------------------- */
+
+/* 82 - Обновление итогов в главной таблице */
+/* t_SPRecE - Планирование: Комплектация: Затраты на комплекты */
+/* t_SPRec - Планирование: Комплектация: Заголовок */
+
+  UPDATE r
+  SET 
+    r.TSetSumCC = r.TSetSumCC + q.TSetSumCC
+  FROM t_SPRec r, 
+    (SELECT t_SPRecA.ChID, 
+       ISNULL(SUM(m.SetSumCC), 0) TSetSumCC 
+     FROM t_SPRec WITH (NOLOCK), t_SPRecA WITH (NOLOCK), inserted m
+     WHERE t_SPRec.ChID = t_SPRecA.ChID AND t_SPRecA.AChID = m.AChID
+     GROUP BY t_SPRecA.ChID) q
+  WHERE q.ChID = r.ChID
+  IF @@error > 0 Return
+/* -------------------------------------------------------------------------- */
+
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

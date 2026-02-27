@@ -71,73 +71,68 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_p_DTran] ON [p_DTran]
-FOR INSERT AS
-/* p_DTran - Перенос рабочих дней - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_p_DTran] ON [p_DTran]
+FOR DELETE AS
+/* p_DTran - Перенос рабочих дней - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(15090, i.StateCode) = 0)
+/* Удаление регистрации изменения статуса */
+  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 15090 AND m.ChID = i.ChID
+
+/* Возможно ли редактирование документа */
+    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(15090, a.ChID, a.StateCode) = 0)
+      BEGIN
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Перенос рабочих дней'))
+        RAISERROR(@Err2, 18, 1)
+        ROLLBACK TRAN
+        RETURN
+      END
+
+/* p_DTran ^ z_DocLinks - Удаление в CHILD */
+/* Перенос рабочих дней ^ Документы - Взаимосвязи - Удаление в CHILD */
+  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 15090 AND a.ChildChID = d.ChID
+  IF @@ERROR > 0 RETURN
+
+/* p_DTran ^ z_DocLinks - Проверка в CHILD */
+/* Перенос рабочих дней ^ Документы - Взаимосвязи - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 15090 AND a.ParentChID = d.ChID)
     BEGIN
-      RAISERROR ('Документ ''Перенос рабочих дней'' не может иметь указанный статус.', 18, 1)
-      ROLLBACK TRAN
+      EXEC z_RelationError 'p_DTran', 'z_DocLinks', 3
       RETURN
     END
 
+/* p_DTran ^ z_DocShed - Удаление в CHILD */
+/* Перенос рабочих дней ^ Документы - Процессы - Удаление в CHILD */
+  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 15090 AND a.ChID = d.ChID
+  IF @@ERROR > 0 RETURN
 
-/* p_DTran ^ r_Deps - Проверка в PARENT */
-/* Перенос рабочих дней ^ Справочник отделов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.DepID NOT IN (SELECT DepID FROM r_Deps))
-    BEGIN
-      EXEC z_RelationError 'r_Deps', 'p_DTran', 0
-      RETURN
-    END
 
-/* p_DTran ^ r_Ours - Проверка в PARENT */
-/* Перенос рабочих дней ^ Справочник внутренних фирм - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
-    BEGIN
-      EXEC z_RelationError 'r_Ours', 'p_DTran', 0
-      RETURN
-    END
-
-/* p_DTran ^ r_States - Проверка в PARENT */
-/* Перенос рабочих дней ^ Справочник статусов - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
-    BEGIN
-      EXEC z_RelationError 'r_States', 'p_DTran', 0
-      RETURN
-    END
-
-/* p_DTran ^ r_Subs - Проверка в PARENT */
-/* Перенос рабочих дней ^ Справочник работ: подразделения - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SubID NOT IN (SELECT SubID FROM r_Subs))
-    BEGIN
-      EXEC z_RelationError 'r_Subs', 'p_DTran', 0
-      RETURN
-    END
-
-/* p_DTran ^ r_WTSigns - Проверка в PARENT */
-/* Перенос рабочих дней ^ Справочник работ: обозначения времени - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.WTSignID NOT IN (SELECT WTSignID FROM r_WTSigns))
-    BEGIN
-      EXEC z_RelationError 'r_WTSigns', 'p_DTran', 0
-      RETURN
-    END
-
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 15090001, ChID, 
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 15090001 AND m.PKValue = 
     '[' + cast(i.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 15090001 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 15090001, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 15090 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_DTran', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_p_DTran', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -153,7 +148,9 @@ BEGIN
 
   IF UPDATE(StateCode) AND EXISTS(SELECT * FROM inserted i, deleted d WHERE i.ChID = d.ChID AND dbo.zf_CanChangeState(15090, i.ChID, d.StateCode, i.StateCode) = 0)
     BEGIN
-      RAISERROR ('Переход в указанный статус невозможен (Перенос рабочих дней).', 18, 1)
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Переход в указанный статус невозможен (%s).'), dbo.zf_Translate('Перенос рабочих дней'))
+      RAISERROR(@Err1, 18, 1)
       ROLLBACK TRAN
       RETURN
     END
@@ -171,7 +168,9 @@ SET @ColumnsUpdated = COLUMNS_UPDATED()
 IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('p_DTran', @ColumnsUpdated) WHERE [name] <> 'StateCode')
     IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(15090, a.ChID, a.StateCode) = 0)
       BEGIN
-        RAISERROR ('Изменение документа ''Перенос рабочих дней'' в данном статусе запрещено.', 18, 1)
+        DECLARE @Err2 varchar(200)
+        SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Перенос рабочих дней'))
+        RAISERROR(@Err2, 18, 1)
         ROLLBACK TRAN
         RETURN
       END
@@ -278,6 +277,7 @@ IF EXISTS(SELECT 1 FROM dbo.zf_GetFieldsUpdated('p_DTran', @ColumnsUpdated) WHER
         END
     END
 
+
 /* Регистрация изменения записи */
 
 
@@ -334,63 +334,117 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_p_DTran] ON [p_DTran]
-FOR DELETE AS
-/* p_DTran - Перенос рабочих дней - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_p_DTran] ON [p_DTran]
+FOR INSERT AS
+/* p_DTran - Перенос рабочих дней - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Удаление регистрации изменения статуса */
-  DELETE z_LogState FROM z_LogState m, deleted i WHERE m.DocCode = 15090 AND m.ChID = i.ChID
-
-/* Возможно ли редактирование документа */
-    IF EXISTS(SELECT * FROM deleted a WHERE dbo.zf_CanChangeDoc(15090, a.ChID, a.StateCode) = 0)
-      BEGIN
-        RAISERROR ('Изменение документа ''Перенос рабочих дней'' в данном статусе запрещено.', 18, 1)
-        ROLLBACK TRAN
-        RETURN
-      END
-
-/* p_DTran ^ z_DocLinks - Удаление в CHILD */
-/* Перенос рабочих дней ^ Документы - Взаимосвязи - Удаление в CHILD */
-  DELETE z_DocLinks FROM z_DocLinks a, deleted d WHERE a.ChildDocCode = 15090 AND a.ChildChID = d.ChID
-  IF @@ERROR > 0 RETURN
-
-/* p_DTran ^ z_DocLinks - Проверка в CHILD */
-/* Перенос рабочих дней ^ Документы - Взаимосвязи - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM z_DocLinks a WITH(NOLOCK), deleted d WHERE a.ParentDocCode = 15090 AND a.ParentChID = d.ChID)
+  IF EXISTS(SELECT * FROM inserted i WHERE dbo.zf_IsValidDocState(15090, i.StateCode) = 0)
     BEGIN
-      EXEC z_RelationError 'p_DTran', 'z_DocLinks', 3
+      DECLARE @Err1 varchar(200)
+      SELECT @Err1 = FORMATMESSAGE(dbo.zf_Translate('Документ ''%s'' не может иметь указанный статус.'), dbo.zf_Translate('Перенос рабочих дней'))
+      RAISERROR(@Err1, 18, 1)
+      ROLLBACK TRAN
       RETURN
     END
 
-/* p_DTran ^ z_DocShed - Удаление в CHILD */
-/* Перенос рабочих дней ^ Документы - Процессы - Удаление в CHILD */
-  DELETE z_DocShed FROM z_DocShed a, deleted d WHERE a.DocCode = 15090 AND a.ChID = d.ChID
-  IF @@ERROR > 0 RETURN
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 15090001 AND m.PKValue = 
+/* p_DTran ^ r_Deps - Проверка в PARENT */
+/* Перенос рабочих дней ^ Справочник отделов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.DepID NOT IN (SELECT DepID FROM r_Deps))
+    BEGIN
+      EXEC z_RelationError 'r_Deps', 'p_DTran', 0
+      RETURN
+    END
+
+/* p_DTran ^ r_Ours - Проверка в PARENT */
+/* Перенос рабочих дней ^ Справочник внутренних фирм - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.OurID NOT IN (SELECT OurID FROM r_Ours))
+    BEGIN
+      EXEC z_RelationError 'r_Ours', 'p_DTran', 0
+      RETURN
+    END
+
+/* p_DTran ^ r_States - Проверка в PARENT */
+/* Перенос рабочих дней ^ Справочник статусов - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.StateCode NOT IN (SELECT StateCode FROM r_States))
+    BEGIN
+      EXEC z_RelationError 'r_States', 'p_DTran', 0
+      RETURN
+    END
+
+/* p_DTran ^ r_Subs - Проверка в PARENT */
+/* Перенос рабочих дней ^ Справочник работ: подразделения - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SubID NOT IN (SELECT SubID FROM r_Subs))
+    BEGIN
+      EXEC z_RelationError 'r_Subs', 'p_DTran', 0
+      RETURN
+    END
+
+/* p_DTran ^ r_WTSigns - Проверка в PARENT */
+/* Перенос рабочих дней ^ Справочник работ: обозначения времени - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.WTSignID NOT IN (SELECT WTSignID FROM r_WTSigns))
+    BEGIN
+      EXEC z_RelationError 'r_WTSigns', 'p_DTran', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 15090001, ChID, 
     '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 15090001 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 15090001, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 15090 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_p_DTran', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_p_DTran', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

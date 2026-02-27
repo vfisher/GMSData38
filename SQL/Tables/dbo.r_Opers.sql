@@ -44,33 +44,53 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_Opers] ON [r_Opers]
-FOR INSERT AS
-/* r_Opers - Справочник ЭККА: операторы - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_Opers] ON [r_Opers]
+FOR DELETE AS
+/* r_Opers - Справочник ЭККА: операторы - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Opers ^ r_Emps - Проверка в PARENT */
-/* Справочник ЭККА: операторы ^ Справочник служащих - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
+/* r_Opers ^ r_OperCRs - Проверка в CHILD */
+/* Справочник ЭККА: операторы ^ Справочник ЭККА - Операторы ЭККА - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_OperCRs a WITH(NOLOCK), deleted d WHERE a.OperID = d.OperID)
     BEGIN
-      EXEC z_RelationError 'r_Emps', 'r_Opers', 0
+      EXEC z_RelationError 'r_Opers', 'r_OperCRs', 3
       RETURN
     END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10454001, ChID, 
+/* r_Opers ^ t_ZRepT - Проверка в CHILD */
+/* Справочник ЭККА: операторы ^ Z-отчеты плат. терминалов - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM t_ZRepT a WITH(NOLOCK), deleted d WHERE a.OperID = d.OperID)
+    BEGIN
+      EXEC z_RelationError 'r_Opers', 't_ZRepT', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10454001 AND m.PKValue = 
     '[' + cast(i.OperID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10454001 AND m.PKValue = 
+    '[' + cast(i.OperID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10454001, -ChID, 
+    '[' + cast(d.OperID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10454 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Opers', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Opers', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -112,25 +132,6 @@ BEGIN
         END
     END
 
-/* r_Opers ^ t_RestShift - Обновление CHILD */
-/* Справочник ЭККА: операторы ^ Ресторан: Смена: Заголовок - Обновление CHILD */
-  IF UPDATE(OperID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.OperID = i.OperID
-          FROM t_RestShift a, inserted i, deleted d WHERE a.OperID = d.OperID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_RestShift a, deleted d WHERE a.OperID = d.OperID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник ЭККА: операторы'' => ''Ресторан: Смена: Заголовок''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_Opers ^ t_ZRepT - Обновление CHILD */
 /* Справочник ЭККА: операторы ^ Z-отчеты плат. терминалов - Обновление CHILD */
   IF UPDATE(OperID)
@@ -149,6 +150,7 @@ BEGIN
           RETURN
         END
     END
+
 
 /* Регистрация изменения записи */
 
@@ -231,58 +233,63 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_Opers] ON [r_Opers]
-FOR DELETE AS
-/* r_Opers - Справочник ЭККА: операторы - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_Opers] ON [r_Opers]
+FOR INSERT AS
+/* r_Opers - Справочник ЭККА: операторы - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Opers ^ r_OperCRs - Проверка в CHILD */
-/* Справочник ЭККА: операторы ^ Справочник ЭККА - Операторы ЭККА - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_OperCRs a WITH(NOLOCK), deleted d WHERE a.OperID = d.OperID)
+/* r_Opers ^ r_Emps - Проверка в PARENT */
+/* Справочник ЭККА: операторы ^ Справочник служащих - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.EmpID NOT IN (SELECT EmpID FROM r_Emps))
     BEGIN
-      EXEC z_RelationError 'r_Opers', 'r_OperCRs', 3
+      EXEC z_RelationError 'r_Emps', 'r_Opers', 0
       RETURN
     END
 
-/* r_Opers ^ t_RestShift - Проверка в CHILD */
-/* Справочник ЭККА: операторы ^ Ресторан: Смена: Заголовок - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_RestShift a WITH(NOLOCK), deleted d WHERE a.OperID = d.OperID)
-    BEGIN
-      EXEC z_RelationError 'r_Opers', 't_RestShift', 3
-      RETURN
-    END
 
-/* r_Opers ^ t_ZRepT - Проверка в CHILD */
-/* Справочник ЭККА: операторы ^ Z-отчеты плат. терминалов - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_ZRepT a WITH(NOLOCK), deleted d WHERE a.OperID = d.OperID)
-    BEGIN
-      EXEC z_RelationError 'r_Opers', 't_ZRepT', 3
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10454001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10454001, ChID, 
     '[' + cast(i.OperID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10454001 AND m.PKValue = 
-    '[' + cast(i.OperID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10454001, -ChID, 
-    '[' + cast(d.OperID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10454 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Opers', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Opers', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

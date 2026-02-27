@@ -97,8 +97,376 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU1_INS_t_RetD] ON [t_RetD]
-FOR INSERT
+CREATE TRIGGER [dbo].[TRel3_Del_t_RetD] ON [t_RetD]
+FOR DELETE AS
+/* t_RetD - Возврат товара от получателя: Товар - DELETE TRIGGER */
+BEGIN
+  SET NOCOUNT ON
+
+/* Проверка открытого периода */
+  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
+  DECLARE @GetDate datetime
+  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
+
+  SET @GetDate = GETDATE()
+
+  INSERT INTO @OpenAges(OurID, isIns)
+  SELECT DISTINCT OurID, 1 FROM  t_Ret a, inserted b  WHERE (b.ChID = a.ChID)
+
+  INSERT INTO @OpenAges(OurID, isDel)
+  SELECT DISTINCT OurID, 1 FROM  t_Ret a, deleted b  WHERE (b.ChID = a.ChID)
+
+  UPDATE t
+  SET BDate = o.BDate, EDate = o.EDate
+  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
+  WHERE t.OurID = o.OurID
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Ret a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11003, a.ChID, a.StateCode) = 0)
+    BEGIN
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Возврат товара от получателя'))
+      RAISERROR(@Err2, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 11003002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SrcPosID as varchar(200)) + ']'
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 11003002 AND m.PKValue = 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SrcPosID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 11003002, -ChID, 
+    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(d.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel3_Del_t_RetD', N'Last', N'DELETE'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel2_Upd_t_RetD] ON [t_RetD]
+FOR UPDATE AS
+/* t_RetD - Возврат товара от получателя: Товар - UPDATE TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* Проверка открытого периода */
+  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
+  DECLARE @GetDate datetime
+  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
+
+  SET @GetDate = GETDATE()
+
+  INSERT INTO @OpenAges(OurID, isIns)
+  SELECT DISTINCT OurID, 1 FROM  t_Ret a, inserted b  WHERE (b.ChID = a.ChID)
+
+  INSERT INTO @OpenAges(OurID, isDel)
+  SELECT DISTINCT OurID, 1 FROM  t_Ret a, deleted b  WHERE (b.ChID = a.ChID)
+
+  UPDATE t
+  SET BDate = o.BDate, EDate = o.EDate
+  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
+  WHERE t.OurID = o.OurID
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
+  IF (@ADate IS NOT NULL) 
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Дата или одна из дат изменяемого документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Ret a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11003, a.ChID, a.StateCode) = 0)
+    BEGIN
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Возврат товара от получателя'))
+      RAISERROR(@Err2, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* t_RetD ^ r_Secs - Проверка в PARENT */
+/* Возврат товара от получателя: Товар ^ Справочник секций - Проверка в PARENT */
+  IF UPDATE(SecID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
+      BEGIN
+        EXEC z_RelationError 'r_Secs', 't_RetD', 1
+        RETURN
+      END
+
+/* t_RetD ^ t_PInP - Проверка в PARENT */
+/* Возврат товара от получателя: Товар ^ Справочник товаров - Цены прихода Торговли - Проверка в PARENT */
+  IF UPDATE(PPID) OR UPDATE(ProdID)
+    IF (SELECT COUNT(*) FROM t_PInP m WITH(NOLOCK), inserted i WHERE i.PPID = m.PPID AND i.ProdID = m.ProdID) <> @RCount
+      BEGIN
+        EXEC z_RelationError 't_PInP', 't_RetD', 1
+        RETURN
+      END
+
+/* t_RetD ^ t_Ret - Проверка в PARENT */
+/* Возврат товара от получателя: Товар ^ Возврат товара от получателя: Заголовок - Проверка в PARENT */
+  IF UPDATE(ChID)
+    IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Ret))
+      BEGIN
+        EXEC z_RelationError 't_Ret', 't_RetD', 1
+        RETURN
+      END
+
+
+/* Регистрация изменения записи */
+
+
+/* Регистрация изменения кода регистрации */
+  IF UPDATE(ChID)
+    IF ((SELECT COUNT(ChID) FROM deleted GROUP BY ChID) = 1) AND ((SELECT COUNT(ChID) FROM inserted GROUP BY ChID) = 1)
+      BEGIN
+        UPDATE l SET l.ChID = i.ChID
+        FROM z_LogCreate l, inserted i, deleted d WHERE l.TableCode = 11003002 AND l.ChID = d.ChID
+        UPDATE l SET l.ChID = i.ChID
+        FROM z_LogUpdate l, inserted i, deleted d WHERE l.TableCode = 11003002 AND l.ChID = d.ChID
+      END
+    ELSE IF NOT(UPDATE(ChID) OR UPDATE(SrcPosID))
+      BEGIN
+        UPDATE l SET l.ChID = i.ChID
+        FROM z_LogCreate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
+        '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+        '[' + cast(i.SrcPosID as varchar(200)) + ']' AND i.ChID = d.ChID AND i.SrcPosID = d.SrcPosID
+        UPDATE l SET l.ChID = i.ChID
+        FROM z_LogUpdate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
+        '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+        '[' + cast(i.SrcPosID as varchar(200)) + ']' AND i.ChID = d.ChID AND i.SrcPosID = d.SrcPosID
+      END
+    ELSE
+      BEGIN
+          INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+          SELECT 11003002, ChID, 
+          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(d.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+          DELETE FROM z_LogCreate WHERE TableCode = 11003002 AND ChID IN (SELECT ChID FROM deleted)
+          DELETE FROM z_LogUpdate WHERE TableCode = 11003002 AND ChID IN (SELECT ChID FROM deleted)
+          INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+          SELECT 11003002, ChID, 
+          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(i.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM inserted i
+      END
+
+/* Регистрация изменения первичного ключа */
+  IF UPDATE(ChID) OR UPDATE(SrcPosID)
+    BEGIN
+      IF ((SELECT COUNT(1) FROM (SELECT DISTINCT ChID, SrcPosID FROM deleted) q) = 1) AND ((SELECT COUNT(1) FROM (SELECT DISTINCT ChID, SrcPosID FROM inserted) q) = 1)
+        BEGIN
+          UPDATE l SET PKValue = 
+          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(i.SrcPosID as varchar(200)) + ']'
+          FROM z_LogUpdate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
+          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(d.SrcPosID as varchar(200)) + ']'
+          UPDATE l SET PKValue = 
+          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(i.SrcPosID as varchar(200)) + ']'
+          FROM z_LogCreate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
+          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(d.SrcPosID as varchar(200)) + ']'
+        END
+      ELSE
+        BEGIN
+          INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+          SELECT 11003002, ChID, 
+          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(d.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+          DELETE FROM z_LogCreate WHERE TableCode = 11003002 AND PKValue IN (SELECT 
+          '[' + cast(ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(SrcPosID as varchar(200)) + ']' FROM deleted)
+          DELETE FROM z_LogUpdate WHERE TableCode = 11003002 AND PKValue IN (SELECT 
+          '[' + cast(ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(SrcPosID as varchar(200)) + ']' FROM deleted)
+          INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+          SELECT 11003002, ChID, 
+          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+          '[' + cast(i.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM inserted i
+
+        END
+      END
+
+  INSERT INTO z_LogUpdate (TableCode, ChID, PKValue, UserCode)
+  SELECT 11003002, ChID, 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM inserted i
+
+
+End
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel2_Upd_t_RetD', N'Last', N'UPDATE'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TRel1_Ins_t_RetD] ON [t_RetD]
+FOR INSERT AS
+/* t_RetD - Возврат товара от получателя: Товар - INSERT TRIGGER */
+BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
+  SET NOCOUNT ON
+
+/* Проверка открытого периода */
+  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
+  DECLARE @GetDate datetime
+  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
+
+  SET @GetDate = GETDATE()
+
+  INSERT INTO @OpenAges(OurID, isIns)
+  SELECT DISTINCT OurID, 1 FROM  t_Ret a, inserted b  WHERE (b.ChID = a.ChID)
+
+  INSERT INTO @OpenAges(OurID, isDel)
+  SELECT DISTINCT OurID, 1 FROM  t_Ret a, deleted b  WHERE (b.ChID = a.ChID)
+
+  UPDATE t
+  SET BDate = o.BDate, EDate = o.EDate
+  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
+  WHERE t.OurID = o.OurID
+  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
+
+  IF @ADate IS NOT NULL
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа меньше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID AS varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
+  IF @ADate IS NOT NULL
+    BEGIN
+      SELECT @Err = FORMATMESSAGE('%s (%s):' + CHAR(13) + dbo.zf_Translate('Новая дата или одна из дат документа больше даты открытого периода %s для фирмы с кодом %s') ,dbo.zf_Translate('Возврат товара от получателя: Товар'), 't_RetD', dbo.zf_DatetoStr(@ADate), CAST(@OurID as varchar(10)))
+      RAISERROR (@Err, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* Возможно ли редактирование документа */
+  IF EXISTS(SELECT * FROM t_Ret a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11003, a.ChID, a.StateCode) = 0)
+    BEGIN
+      DECLARE @Err2 varchar(200)
+      SELECT @Err2 = FORMATMESSAGE(dbo.zf_Translate('Изменение документа ''%s'' в данном статусе запрещено.'), dbo.zf_Translate('Возврат товара от получателя'))
+      RAISERROR(@Err2, 18, 1)
+      ROLLBACK TRAN
+      RETURN
+    END
+
+/* t_RetD ^ r_Secs - Проверка в PARENT */
+/* Возврат товара от получателя: Товар ^ Справочник секций - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
+    BEGIN
+      EXEC z_RelationError 'r_Secs', 't_RetD', 0
+      RETURN
+    END
+
+/* t_RetD ^ t_PInP - Проверка в PARENT */
+/* Возврат товара от получателя: Товар ^ Справочник товаров - Цены прихода Торговли - Проверка в PARENT */
+  IF (SELECT COUNT(*) FROM t_PInP m WITH(NOLOCK), inserted i WHERE i.PPID = m.PPID AND i.ProdID = m.ProdID) <> @RCount
+    BEGIN
+      EXEC z_RelationError 't_PInP', 't_RetD', 0
+      RETURN
+    END
+
+/* t_RetD ^ t_Ret - Проверка в PARENT */
+/* Возврат товара от получателя: Товар ^ Возврат товара от получателя: Заголовок - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Ret))
+    BEGIN
+      EXEC z_RelationError 't_Ret', 't_RetD', 0
+      RETURN
+    END
+
+
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 11003002, ChID, 
+    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
+    '[' + cast(i.SrcPosID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM inserted i
+
+END
+GO
+
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_RetD', N'Last', N'INSERT'
+GO
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[TAU3_DEL_t_RetD] ON [t_RetD]
+FOR DELETE
 AS
 BEGIN
   IF @@RowCount = 0 RETURN
@@ -111,12 +479,12 @@ BEGIN
 
   UPDATE r
   SET 
-    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt, 
-    r.TSumAC_nt = r.TSumAC_nt + q.TSumAC_nt, 
-    r.TTaxSumAC = r.TTaxSumAC + q.TTaxSumAC, 
-    r.TSumAC_wt = r.TSumAC_wt + q.TSumAC_wt
+    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt, 
+    r.TSumAC_nt = r.TSumAC_nt - q.TSumAC_nt, 
+    r.TTaxSumAC = r.TTaxSumAC - q.TTaxSumAC, 
+    r.TSumAC_wt = r.TSumAC_wt - q.TSumAC_wt
   FROM t_Ret r, 
     (SELECT m.ChID, 
        ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
@@ -125,7 +493,7 @@ BEGIN
        ISNULL(SUM(m.SumAC_nt), 0) TSumAC_nt,
        ISNULL(SUM(m.TaxSumAC), 0) TTaxSumAC,
        ISNULL(SUM(m.SumAC_wt), 0) TSumAC_wt 
-     FROM t_Ret WITH (NOLOCK), inserted m
+     FROM t_Ret WITH (NOLOCK), deleted m
      WHERE t_Ret.ChID = m.ChID
      GROUP BY m.ChID) q
   WHERE q.ChID = r.ChID
@@ -138,7 +506,7 @@ BEGIN
 
   INSERT INTO t_Rem (OurID, StockID, SecID, ProdID, PPID, Qty, AccQty)
   SELECT DISTINCT t_Ret.OurID, t_Ret.StockID, m.SecID, m.ProdID, m.PPID, 0, 0
-  FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), inserted m
+  FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), deleted m
   WHERE m.ProdID = r_Prods.ProdID AND t_Ret.ChID = m.ChID AND (r_Prods.InRems <> 0)
   AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
        WHERE t_Ret.OurID = r.OurID AND t_Ret.StockID = r.StockID AND m.SecID = r.SecID AND m.ProdID = r.ProdID AND m.PPID = r.PPID))
@@ -146,11 +514,11 @@ BEGIN
 
   UPDATE r
   SET 
-    r.Qty = r.Qty + q.Qty
+    r.Qty = r.Qty - q.Qty
   FROM t_Rem r, 
     (SELECT t_Ret.OurID, t_Ret.StockID, m.SecID, m.ProdID, m.PPID, 
        ISNULL(SUM(m.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), inserted m
+     FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), deleted m
      WHERE m.ProdID = r_Prods.ProdID AND t_Ret.ChID = m.ChID AND (r_Prods.InRems <> 0)
      GROUP BY t_Ret.OurID, t_Ret.StockID, m.SecID, m.ProdID, m.PPID) q
   WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.SecID = r.SecID AND q.ProdID = r.ProdID AND q.PPID = r.PPID
@@ -275,8 +643,8 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TAU3_DEL_t_RetD] ON [t_RetD]
-FOR DELETE
+CREATE TRIGGER [dbo].[TAU1_INS_t_RetD] ON [t_RetD]
+FOR INSERT
 AS
 BEGIN
   IF @@RowCount = 0 RETURN
@@ -289,12 +657,12 @@ BEGIN
 
   UPDATE r
   SET 
-    r.TSumCC_nt = r.TSumCC_nt - q.TSumCC_nt, 
-    r.TTaxSum = r.TTaxSum - q.TTaxSum, 
-    r.TSumCC_wt = r.TSumCC_wt - q.TSumCC_wt, 
-    r.TSumAC_nt = r.TSumAC_nt - q.TSumAC_nt, 
-    r.TTaxSumAC = r.TTaxSumAC - q.TTaxSumAC, 
-    r.TSumAC_wt = r.TSumAC_wt - q.TSumAC_wt
+    r.TSumCC_nt = r.TSumCC_nt + q.TSumCC_nt, 
+    r.TTaxSum = r.TTaxSum + q.TTaxSum, 
+    r.TSumCC_wt = r.TSumCC_wt + q.TSumCC_wt, 
+    r.TSumAC_nt = r.TSumAC_nt + q.TSumAC_nt, 
+    r.TTaxSumAC = r.TTaxSumAC + q.TTaxSumAC, 
+    r.TSumAC_wt = r.TSumAC_wt + q.TSumAC_wt
   FROM t_Ret r, 
     (SELECT m.ChID, 
        ISNULL(SUM(m.SumCC_nt), 0) TSumCC_nt,
@@ -303,7 +671,7 @@ BEGIN
        ISNULL(SUM(m.SumAC_nt), 0) TSumAC_nt,
        ISNULL(SUM(m.TaxSumAC), 0) TTaxSumAC,
        ISNULL(SUM(m.SumAC_wt), 0) TSumAC_wt 
-     FROM t_Ret WITH (NOLOCK), deleted m
+     FROM t_Ret WITH (NOLOCK), inserted m
      WHERE t_Ret.ChID = m.ChID
      GROUP BY m.ChID) q
   WHERE q.ChID = r.ChID
@@ -316,7 +684,7 @@ BEGIN
 
   INSERT INTO t_Rem (OurID, StockID, SecID, ProdID, PPID, Qty, AccQty)
   SELECT DISTINCT t_Ret.OurID, t_Ret.StockID, m.SecID, m.ProdID, m.PPID, 0, 0
-  FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), deleted m
+  FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), inserted m
   WHERE m.ProdID = r_Prods.ProdID AND t_Ret.ChID = m.ChID AND (r_Prods.InRems <> 0)
   AND (NOT EXISTS (SELECT TOP 1 1 FROM t_Rem r WITH (NOLOCK)
        WHERE t_Ret.OurID = r.OurID AND t_Ret.StockID = r.StockID AND m.SecID = r.SecID AND m.ProdID = r.ProdID AND m.PPID = r.PPID))
@@ -324,11 +692,11 @@ BEGIN
 
   UPDATE r
   SET 
-    r.Qty = r.Qty - q.Qty
+    r.Qty = r.Qty + q.Qty
   FROM t_Rem r, 
     (SELECT t_Ret.OurID, t_Ret.StockID, m.SecID, m.ProdID, m.PPID, 
        ISNULL(SUM(m.Qty), 0) Qty 
-     FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), deleted m
+     FROM r_Prods WITH (NOLOCK), t_Ret WITH (NOLOCK), inserted m
      WHERE m.ProdID = r_Prods.ProdID AND t_Ret.ChID = m.ChID AND (r_Prods.InRems <> 0)
      GROUP BY t_Ret.OurID, t_Ret.StockID, m.SecID, m.ProdID, m.PPID) q
   WHERE q.OurID = r.OurID AND q.StockID = r.StockID AND q.SecID = r.SecID AND q.ProdID = r.ProdID AND q.PPID = r.PPID
@@ -338,361 +706,67 @@ BEGIN
 END
 GO
 
-SET QUOTED_IDENTIFIER, ANSI_NULLS ON
-GO
-CREATE TRIGGER [dbo].[TRel1_Ins_t_RetD] ON [t_RetD]
-FOR INSERT AS
-/* t_RetD - Возврат товара от получателя: Товар - INSERT TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
 
-/* Проверка открытого периода */
-  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
-  DECLARE @GetDate datetime
-  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
 
-  SET @GetDate = GETDATE()
 
-  INSERT INTO @OpenAges(OurID, isIns)
-  SELECT DISTINCT OurID, 1 FROM  t_Ret a, inserted b  WHERE (b.ChID = a.ChID)
 
-  INSERT INTO @OpenAges(OurID, isDel)
-  SELECT DISTINCT OurID, 1 FROM  t_Ret a, deleted b  WHERE (b.ChID = a.ChID)
 
-  UPDATE t
-  SET BDate = o.BDate, EDate = o.EDate
-  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
-  WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
 
-  IF @ADate IS NOT NULL
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID AS varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
 
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF @ADate IS NOT NULL
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
 
-/* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_Ret a, inserted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11003, a.ChID, a.StateCode) = 0)
-    BEGIN
-      RAISERROR ('Изменение документа ''Возврат товара от получателя'' в данном статусе запрещено.', 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
 
-/* t_RetD ^ r_Secs - Проверка в PARENT */
-/* Возврат товара от получателя: Товар ^ Справочник секций - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
-    BEGIN
-      EXEC z_RelationError 'r_Secs', 't_RetD', 0
-      RETURN
-    END
 
-/* t_RetD ^ t_PInP - Проверка в PARENT */
-/* Возврат товара от получателя: Товар ^ Справочник товаров - Цены прихода Торговли - Проверка в PARENT */
-  IF (SELECT COUNT(*) FROM t_PInP m WITH(NOLOCK), inserted i WHERE i.PPID = m.PPID AND i.ProdID = m.ProdID) <> @RCount
-    BEGIN
-      EXEC z_RelationError 't_PInP', 't_RetD', 0
-      RETURN
-    END
 
-/* t_RetD ^ t_Ret - Проверка в PARENT */
-/* Возврат товара от получателя: Товар ^ Возврат товара от получателя: Заголовок - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Ret))
-    BEGIN
-      EXEC z_RelationError 't_Ret', 't_RetD', 0
-      RETURN
-    END
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11003002, ChID, 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
 
-END
-GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_RetD', N'Last', N'INSERT'
-GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel2_Upd_t_RetD] ON [t_RetD]
-FOR UPDATE AS
-/* t_RetD - Возврат товара от получателя: Товар - UPDATE TRIGGER */
-BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
-  SET NOCOUNT ON
 
-/* Проверка открытого периода */
-  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
-  DECLARE @GetDate datetime
-  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
-
-  SET @GetDate = GETDATE()
-
-  INSERT INTO @OpenAges(OurID, isIns)
-  SELECT DISTINCT OurID, 1 FROM  t_Ret a, inserted b  WHERE (b.ChID = a.ChID)
-
-  INSERT INTO @OpenAges(OurID, isDel)
-  SELECT DISTINCT OurID, 1 FROM  t_Ret a, deleted b  WHERE (b.ChID = a.ChID)
-
-  UPDATE t
-  SET BDate = o.BDate, EDate = o.EDate
-  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
-  WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Новая дата или одна из дат документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, inserted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isIns = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Новая дата или одна из дат документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-/* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_Ret a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11003, a.ChID, a.StateCode) = 0)
-    BEGIN
-      RAISERROR ('Изменение документа ''Возврат товара от получателя'' в данном статусе запрещено.', 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-/* t_RetD ^ r_Secs - Проверка в PARENT */
-/* Возврат товара от получателя: Товар ^ Справочник секций - Проверка в PARENT */
-  IF UPDATE(SecID)
-    IF EXISTS (SELECT * FROM inserted i WHERE i.SecID NOT IN (SELECT SecID FROM r_Secs))
-      BEGIN
-        EXEC z_RelationError 'r_Secs', 't_RetD', 1
-        RETURN
-      END
-
-/* t_RetD ^ t_PInP - Проверка в PARENT */
-/* Возврат товара от получателя: Товар ^ Справочник товаров - Цены прихода Торговли - Проверка в PARENT */
-  IF UPDATE(PPID) OR UPDATE(ProdID)
-    IF (SELECT COUNT(*) FROM t_PInP m WITH(NOLOCK), inserted i WHERE i.PPID = m.PPID AND i.ProdID = m.ProdID) <> @RCount
-      BEGIN
-        EXEC z_RelationError 't_PInP', 't_RetD', 1
-        RETURN
-      END
-
-/* t_RetD ^ t_Ret - Проверка в PARENT */
-/* Возврат товара от получателя: Товар ^ Возврат товара от получателя: Заголовок - Проверка в PARENT */
-  IF UPDATE(ChID)
-    IF EXISTS (SELECT * FROM inserted i WHERE i.ChID NOT IN (SELECT ChID FROM t_Ret))
-      BEGIN
-        EXEC z_RelationError 't_Ret', 't_RetD', 1
-        RETURN
-      END
-
-/* Регистрация изменения записи */
-
-
-/* Регистрация изменения кода регистрации */
-  IF UPDATE(ChID)
-    IF ((SELECT COUNT(ChID) FROM deleted GROUP BY ChID) = 1) AND ((SELECT COUNT(ChID) FROM inserted GROUP BY ChID) = 1)
-      BEGIN
-        UPDATE l SET l.ChID = i.ChID
-        FROM z_LogCreate l, inserted i, deleted d WHERE l.TableCode = 11003002 AND l.ChID = d.ChID
-        UPDATE l SET l.ChID = i.ChID
-        FROM z_LogUpdate l, inserted i, deleted d WHERE l.TableCode = 11003002 AND l.ChID = d.ChID
-      END
-    ELSE IF NOT(UPDATE(ChID) OR UPDATE(SrcPosID))
-      BEGIN
-        UPDATE l SET l.ChID = i.ChID
-        FROM z_LogCreate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
-        '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-        '[' + cast(i.SrcPosID as varchar(200)) + ']' AND i.ChID = d.ChID AND i.SrcPosID = d.SrcPosID
-        UPDATE l SET l.ChID = i.ChID
-        FROM z_LogUpdate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
-        '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-        '[' + cast(i.SrcPosID as varchar(200)) + ']' AND i.ChID = d.ChID AND i.SrcPosID = d.SrcPosID
-      END
-    ELSE
-      BEGIN
-          INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-          SELECT 11003002, ChID, 
-          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(d.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-          DELETE FROM z_LogCreate WHERE TableCode = 11003002 AND ChID IN (SELECT ChID FROM deleted)
-          DELETE FROM z_LogUpdate WHERE TableCode = 11003002 AND ChID IN (SELECT ChID FROM deleted)
-          INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-          SELECT 11003002, ChID, 
-          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
-      END
-
-/* Регистрация изменения первичного ключа */
-  IF UPDATE(ChID) OR UPDATE(SrcPosID)
-    BEGIN
-      IF ((SELECT COUNT(1) FROM (SELECT DISTINCT ChID, SrcPosID FROM deleted) q) = 1) AND ((SELECT COUNT(1) FROM (SELECT DISTINCT ChID, SrcPosID FROM inserted) q) = 1)
-        BEGIN
-          UPDATE l SET PKValue = 
-          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          FROM z_LogUpdate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
-          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(d.SrcPosID as varchar(200)) + ']'
-          UPDATE l SET PKValue = 
-          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          FROM z_LogCreate l, deleted d, inserted i WHERE l.TableCode = 11003002 AND l.PKValue = 
-          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(d.SrcPosID as varchar(200)) + ']'
-        END
-      ELSE
-        BEGIN
-          INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-          SELECT 11003002, ChID, 
-          '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(d.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-          DELETE FROM z_LogCreate WHERE TableCode = 11003002 AND PKValue IN (SELECT 
-          '[' + cast(ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(SrcPosID as varchar(200)) + ']' FROM deleted)
-          DELETE FROM z_LogUpdate WHERE TableCode = 11003002 AND PKValue IN (SELECT 
-          '[' + cast(ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(SrcPosID as varchar(200)) + ']' FROM deleted)
-          INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-          SELECT 11003002, ChID, 
-          '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-          '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
-
-        END
-      END
-
-  INSERT INTO z_LogUpdate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11003002, ChID, 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
-
-
-End
-GO
-
-EXEC sp_settriggerorder N'dbo.TRel2_Upd_t_RetD', N'Last', N'UPDATE'
-GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_t_RetD] ON [t_RetD]
-FOR DELETE AS
-/* t_RetD - Возврат товара от получателя: Товар - DELETE TRIGGER */
-BEGIN
-  SET NOCOUNT ON
 
-/* Проверка открытого периода */
-  DECLARE @OurID int, @ADate datetime, @Err varchar(200)
-  DECLARE @GetDate datetime
-  DECLARE @OpenAges table(OurID int, BDate datetime, EDate datetime, isIns bit, isDel bit)
 
-  SET @GetDate = GETDATE()
-
-  INSERT INTO @OpenAges(OurID, isIns)
-  SELECT DISTINCT OurID, 1 FROM  t_Ret a, inserted b  WHERE (b.ChID = a.ChID)
-
-  INSERT INTO @OpenAges(OurID, isDel)
-  SELECT DISTINCT OurID, 1 FROM  t_Ret a, deleted b  WHERE (b.ChID = a.ChID)
-
-  UPDATE t
-  SET BDate = o.BDate, EDate = o.EDate
-  FROM @OpenAges t, dbo.zf_GetOpenAges(@GetDate) o
-  WHERE t.OurID = o.OurID
-  SELECT @OurID = a.OurID, @ADate = t.BDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate < t.BDate))
-  IF (@ADate IS NOT NULL) 
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа меньше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-  SELECT @OurID = a.OurID, @ADate = t.EDate FROM  t_Ret a, deleted b , @OpenAges AS t WHERE (b.ChID = a.ChID) AND t.OurID = a.OurID AND t.isDel = 1 AND ((a.DocDate > t.EDate))
-  IF (@ADate IS NOT NULL) 
-    BEGIN
-      SELECT @Err = 'Возврат товара от получателя: Товар (t_RetD):' + CHAR(13) + 'Дата или одна из дат изменяемого документа больше даты открытого периода ' + dbo.zf_DatetoStr(@ADate) + ' для фирмы с кодом ' + CAST(@OurID as varchar(10))
-      RAISERROR (@Err, 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-/* Возможно ли редактирование документа */
-  IF EXISTS(SELECT * FROM t_Ret a, deleted b WHERE (b.ChID = a.ChID) AND dbo.zf_CanChangeDoc(11003, a.ChID, a.StateCode) = 0)
-    BEGIN
-      RAISERROR ('Изменение документа ''Возврат товара от получателя'' в данном статусе запрещено.', 18, 1)
-      ROLLBACK TRAN
-      RETURN
-    END
-
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 11003002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SrcPosID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 11003002 AND m.PKValue = 
-    '[' + cast(i.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(i.SrcPosID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 11003002, -ChID, 
-    '[' + cast(d.ChID as varchar(200)) + ']' + ' \ ' + 
-    '[' + cast(d.SrcPosID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-END
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_t_RetD', N'Last', N'DELETE'
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

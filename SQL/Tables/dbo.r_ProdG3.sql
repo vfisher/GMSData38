@@ -26,32 +26,52 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_ProdG3] ON [r_ProdG3]
-FOR INSERT AS
-/* r_ProdG3 - Справочник товаров: 5 группа - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_ProdG3] ON [r_ProdG3]
+FOR DELETE AS
+/* r_ProdG3 - Справочник товаров: 3 группа - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 10335001, ChID, 
+/* r_ProdG3 ^ r_Prods - Проверка в CHILD */
+/* Справочник товаров: 3 группа ^ Справочник товаров - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_Prods a WITH(NOLOCK), deleted d WHERE a.PGrID3 = d.PGrID3)
+    BEGIN
+      EXEC z_RelationError 'r_ProdG3', 'r_Prods', 3
+      RETURN
+    END
+
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 10335001 AND m.PKValue = 
     '[' + cast(i.PGrID3 as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 10335001 AND m.PKValue = 
+    '[' + cast(i.PGrID3 as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 10335001, -ChID, 
+    '[' + cast(d.PGrID3 as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 10335 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_ProdG3', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_ProdG3', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
 CREATE TRIGGER [dbo].[TRel2_Upd_r_ProdG3] ON [r_ProdG3]
 FOR UPDATE AS
-/* r_ProdG3 - Справочник товаров: 5 группа - UPDATE TRIGGER */
+/* r_ProdG3 - Справочник товаров: 3 группа - UPDATE TRIGGER */
 BEGIN
   DECLARE @RCount Int
   SELECT @RCount = @@RowCount
@@ -59,7 +79,7 @@ BEGIN
   SET NOCOUNT ON
 
 /* r_ProdG3 ^ r_Prods - Обновление CHILD */
-/* Справочник товаров: 5 группа ^ Справочник товаров - Обновление CHILD */
+/* Справочник товаров: 3 группа ^ Справочник товаров - Обновление CHILD */
   IF UPDATE(PGrID3)
     BEGIN
       IF @RCount = 1
@@ -70,12 +90,13 @@ BEGIN
         END
       ELSE IF EXISTS (SELECT * FROM r_Prods a, deleted d WHERE a.PGrID3 = d.PGrID3)
         BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник товаров: 5 группа'' => ''Справочник товаров''.'
+          RAISERROR ('Каскадная операция невозможна ''Справочник товаров: 3 группа'' => ''Справочник товаров''.'
 , 18, 1)
           ROLLBACK TRAN
           RETURN
         END
     END
+
 
 /* Регистрация изменения записи */
 
@@ -158,42 +179,47 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_ProdG3] ON [r_ProdG3]
-FOR DELETE AS
-/* r_ProdG3 - Справочник товаров: 5 группа - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_ProdG3] ON [r_ProdG3]
+FOR INSERT AS
+/* r_ProdG3 - Справочник товаров: 3 группа - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_ProdG3 ^ r_Prods - Проверка в CHILD */
-/* Справочник товаров: 5 группа ^ Справочник товаров - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_Prods a WITH(NOLOCK), deleted d WHERE a.PGrID3 = d.PGrID3)
-    BEGIN
-      EXEC z_RelationError 'r_ProdG3', 'r_Prods', 3
-      RETURN
-    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 10335001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 10335001, ChID, 
     '[' + cast(i.PGrID3 as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 10335001 AND m.PKValue = 
-    '[' + cast(i.PGrID3 as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 10335001, -ChID, 
-    '[' + cast(d.PGrID3 as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 10335 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_ProdG3', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_ProdG3', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO

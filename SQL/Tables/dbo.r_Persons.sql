@@ -52,41 +52,50 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel1_Ins_r_Persons] ON [r_Persons]
-FOR INSERT AS
-/* r_Persons - Справочник персон - INSERT TRIGGER */
+CREATE TRIGGER [dbo].[TRel3_Del_r_Persons] ON [r_Persons]
+FOR DELETE AS
+/* r_Persons - Справочник персон - DELETE TRIGGER */
 BEGIN
-  DECLARE @RCount Int
-  SELECT @RCount = @@RowCount
-  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Persons ^ r_Uni - Проверка в PARENT */
-/* Справочник персон ^ Справочник универсальный - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.Sex NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10011))
+/* r_Persons ^ r_PersonDC - Проверка в CHILD */
+/* Справочник персон ^ Справочник персон - дисконтные карты - Проверка в CHILD */
+  IF EXISTS (SELECT * FROM r_PersonDC a WITH(NOLOCK), deleted d WHERE a.PersonID = d.PersonID)
     BEGIN
-      EXEC z_RelationErrorUni 'r_Persons', 10011, 0
+      EXEC z_RelationError 'r_Persons', 'r_PersonDC', 3
       RETURN
     END
 
-/* r_Persons ^ r_Uni - Проверка в PARENT */
-/* Справочник персон ^ Справочник универсальный - Проверка в PARENT */
-  IF EXISTS (SELECT * FROM inserted i WHERE i.State NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10701))
-    BEGIN
-      EXEC z_RelationErrorUni 'r_Persons', 10701, 0
-      RETURN
-    END
+/* r_Persons ^ r_PersonKin - Удаление в CHILD */
+/* Справочник персон ^ Справочник персон - члены семьи - Удаление в CHILD */
+  DELETE r_PersonKin FROM r_PersonKin a, deleted d WHERE a.PersonID = d.PersonID
+  IF @@ERROR > 0 RETURN
 
-/* Регистрация создания записи */
-  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
-  SELECT 11118001, ChID, 
+
+/* Удаление регистрации создания записи */
+  DELETE z_LogCreate FROM z_LogCreate m, deleted i
+  WHERE m.TableCode = 11118001 AND m.PKValue = 
     '[' + cast(i.PersonID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM inserted i
+
+/* Удаление регистрации изменения записи */
+  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
+  WHERE m.TableCode = 11118001 AND m.PKValue = 
+    '[' + cast(i.PersonID as varchar(200)) + ']'
+
+/* Регистрация удаления записи */
+  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
+  SELECT 11118001, -ChID, 
+    '[' + cast(d.PersonID as varchar(200)) + ']'
+          , dbo.zf_GetUserCode() FROM deleted d
+
+/* Удаление регистрации печати */
+  DELETE z_LogPrint FROM z_LogPrint m, deleted i
+  WHERE m.DocCode = 11118 AND m.ChID = i.ChID
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Persons', N'Last', N'INSERT'
+EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Persons', N'Last', N'DELETE'
 GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
@@ -137,25 +146,6 @@ BEGIN
         END
     END
 
-/* r_Persons ^ r_PersonExecutorsBL - Обновление CHILD */
-/* Справочник персон ^ Справочник персон - черный список исполнителей - Обновление CHILD */
-  IF UPDATE(PersonID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.PersonID = i.PersonID
-          FROM r_PersonExecutorsBL a, inserted i, deleted d WHERE a.PersonID = d.PersonID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_PersonExecutorsBL a, deleted d WHERE a.PersonID = d.PersonID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник персон'' => ''Справочник персон - черный список исполнителей''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
 /* r_Persons ^ r_PersonKin - Обновление CHILD */
 /* Справочник персон ^ Справочник персон - члены семьи - Обновление CHILD */
   IF UPDATE(PersonID)
@@ -175,81 +165,6 @@ BEGIN
         END
     END
 
-/* r_Persons ^ r_PersonPreferences - Обновление CHILD */
-/* Справочник персон ^ Справочник персон - предпочтения - Обновление CHILD */
-  IF UPDATE(PersonID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.PersonID = i.PersonID
-          FROM r_PersonPreferences a, inserted i, deleted d WHERE a.PersonID = d.PersonID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_PersonPreferences a, deleted d WHERE a.PersonID = d.PersonID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник персон'' => ''Справочник персон - предпочтения''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Persons ^ r_PersonResourcesBL - Обновление CHILD */
-/* Справочник персон ^ Справочник персон - черный список ресурсов - Обновление CHILD */
-  IF UPDATE(PersonID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.PersonID = i.PersonID
-          FROM r_PersonResourcesBL a, inserted i, deleted d WHERE a.PersonID = d.PersonID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM r_PersonResourcesBL a, deleted d WHERE a.PersonID = d.PersonID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник персон'' => ''Справочник персон - черный список ресурсов''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Persons ^ t_Booking - Обновление CHILD */
-/* Справочник персон ^ Заявки - Обновление CHILD */
-  IF UPDATE(PersonID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.PersonID = i.PersonID
-          FROM t_Booking a, inserted i, deleted d WHERE a.PersonID = d.PersonID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_Booking a, deleted d WHERE a.PersonID = d.PersonID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник персон'' => ''Заявки''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
-
-/* r_Persons ^ t_DeskRes - Обновление CHILD */
-/* Справочник персон ^ Ресторан: Резервирование столиков - Обновление CHILD */
-  IF UPDATE(PersonID)
-    BEGIN
-      IF @RCount = 1
-        BEGIN
-          UPDATE a SET a.PersonID = i.PersonID
-          FROM t_DeskRes a, inserted i, deleted d WHERE a.PersonID = d.PersonID
-          IF @@ERROR > 0 RETURN
-        END
-      ELSE IF EXISTS (SELECT * FROM t_DeskRes a, deleted d WHERE a.PersonID = d.PersonID)
-        BEGIN
-          RAISERROR ('Каскадная операция невозможна ''Справочник персон'' => ''Ресторан: Резервирование столиков''.'
-, 18, 1)
-          ROLLBACK TRAN
-          RETURN
-        END
-    END
 
 /* Регистрация изменения записи */
 
@@ -332,78 +247,63 @@ GO
 
 SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE TRIGGER [dbo].[TRel3_Del_r_Persons] ON [r_Persons]
-FOR DELETE AS
-/* r_Persons - Справочник персон - DELETE TRIGGER */
+CREATE TRIGGER [dbo].[TRel1_Ins_r_Persons] ON [r_Persons]
+FOR INSERT AS
+/* r_Persons - Справочник персон - INSERT TRIGGER */
 BEGIN
+  DECLARE @RCount Int
+  SELECT @RCount = @@RowCount
+  IF @RCount = 0 RETURN
   SET NOCOUNT ON
 
-/* r_Persons ^ r_PersonDC - Проверка в CHILD */
-/* Справочник персон ^ Справочник персон - дисконтные карты - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM r_PersonDC a WITH(NOLOCK), deleted d WHERE a.PersonID = d.PersonID)
+/* r_Persons ^ r_Uni - Проверка в PARENT */
+/* Справочник персон ^ Справочник универсальный - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.Sex NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10011))
     BEGIN
-      EXEC z_RelationError 'r_Persons', 'r_PersonDC', 3
+      EXEC z_RelationErrorUni 'r_Persons', 10011, 0
       RETURN
     END
 
-/* r_Persons ^ r_PersonExecutorsBL - Удаление в CHILD */
-/* Справочник персон ^ Справочник персон - черный список исполнителей - Удаление в CHILD */
-  DELETE r_PersonExecutorsBL FROM r_PersonExecutorsBL a, deleted d WHERE a.PersonID = d.PersonID
-  IF @@ERROR > 0 RETURN
-
-/* r_Persons ^ r_PersonKin - Удаление в CHILD */
-/* Справочник персон ^ Справочник персон - члены семьи - Удаление в CHILD */
-  DELETE r_PersonKin FROM r_PersonKin a, deleted d WHERE a.PersonID = d.PersonID
-  IF @@ERROR > 0 RETURN
-
-/* r_Persons ^ r_PersonPreferences - Удаление в CHILD */
-/* Справочник персон ^ Справочник персон - предпочтения - Удаление в CHILD */
-  DELETE r_PersonPreferences FROM r_PersonPreferences a, deleted d WHERE a.PersonID = d.PersonID
-  IF @@ERROR > 0 RETURN
-
-/* r_Persons ^ r_PersonResourcesBL - Удаление в CHILD */
-/* Справочник персон ^ Справочник персон - черный список ресурсов - Удаление в CHILD */
-  DELETE r_PersonResourcesBL FROM r_PersonResourcesBL a, deleted d WHERE a.PersonID = d.PersonID
-  IF @@ERROR > 0 RETURN
-
-/* r_Persons ^ t_Booking - Проверка в CHILD */
-/* Справочник персон ^ Заявки - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_Booking a WITH(NOLOCK), deleted d WHERE a.PersonID = d.PersonID)
+/* r_Persons ^ r_Uni - Проверка в PARENT */
+/* Справочник персон ^ Справочник универсальный - Проверка в PARENT */
+  IF EXISTS (SELECT * FROM inserted i WHERE i.State NOT IN (SELECT RefID FROM r_Uni  WHERE RefTypeID = 10701))
     BEGIN
-      EXEC z_RelationError 'r_Persons', 't_Booking', 3
+      EXEC z_RelationErrorUni 'r_Persons', 10701, 0
       RETURN
     END
 
-/* r_Persons ^ t_DeskRes - Проверка в CHILD */
-/* Справочник персон ^ Ресторан: Резервирование столиков - Проверка в CHILD */
-  IF EXISTS (SELECT * FROM t_DeskRes a WITH(NOLOCK), deleted d WHERE a.PersonID = d.PersonID)
-    BEGIN
-      EXEC z_RelationError 'r_Persons', 't_DeskRes', 3
-      RETURN
-    END
 
-/* Удаление регистрации создания записи */
-  DELETE z_LogCreate FROM z_LogCreate m, deleted i
-  WHERE m.TableCode = 11118001 AND m.PKValue = 
+/* Регистрация создания записи */
+  INSERT INTO z_LogCreate (TableCode, ChID, PKValue, UserCode)
+  SELECT 11118001, ChID, 
     '[' + cast(i.PersonID as varchar(200)) + ']'
-
-/* Удаление регистрации изменения записи */
-  DELETE z_LogUpdate FROM z_LogUpdate m, deleted i
-  WHERE m.TableCode = 11118001 AND m.PKValue = 
-    '[' + cast(i.PersonID as varchar(200)) + ']'
-
-/* Регистрация удаления записи */
-  INSERT INTO z_LogDelete (TableCode, ChID, PKValue, UserCode)
-  SELECT 11118001, -ChID, 
-    '[' + cast(d.PersonID as varchar(200)) + ']'
-          , dbo.zf_GetUserCode() FROM deleted d
-
-/* Удаление регистрации печати */
-  DELETE z_LogPrint FROM z_LogPrint m, deleted i
-  WHERE m.DocCode = 11118 AND m.ChID = i.ChID
+          , dbo.zf_GetUserCode() FROM inserted i
 
 END
 GO
 
-EXEC sp_settriggerorder N'dbo.TRel3_Del_r_Persons', N'Last', N'DELETE'
+EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_Persons', N'Last', N'INSERT'
+GO
+
+
+
+
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
