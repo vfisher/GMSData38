@@ -23,13 +23,13 @@ BEGIN
 
   IF @DCardChID IS NULL
     BEGIN
-      SET @Msg = dbo.zf_Translate('Дисконтная карта с номером ''') + @DCardID + dbo.zf_Translate(''' не существует.')
+      SET @Msg = FORMATMESSAGE(dbo.zf_Translate('Дисконтная карта с номером ''%s'' не существует.'), @DCardID)
       RETURN
     END
 
   IF EXISTS (SELECT TOP 1 1 FROM z_DocDC WHERE DCardChID = @DCardChID AND ChID = @ChID AND DocCode = @DocCode)
     BEGIN
-      SET @Msg = dbo.zf_Translate('Дисконтная карта с номером ''') + @DCardID + dbo.zf_Translate(''' уже используется.')
+      SET @Msg = FORMATMESSAGE(dbo.zf_Translate('Дисконтная карта с номером ''%s'' уже используется.'), @DCardID)
       RETURN
     END
 

@@ -324,9 +324,9 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (126, 0, 'звертай
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (126, 1, 'Номер ключа кредитной карточки', 'Номер ключа кредитної картки');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (127, 0, 'Номер транзакции должен содержать в себе 12 цифр.', 'Номер транзакції повинен містити 12 цифр.');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (127, 1, 'Создан', 'Створений');
-INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (128, 0, 'Дисконтная карта с номером ', 'Дисконтна картка з номером');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (128, 0, 'Дисконтная карта с номером ''%s'' не существует.', 'Дисконтна картка з номером ''%s'' не існує.');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (128, 1, 'Creator', '');
-INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (129, 0, ' уже используется.', 'вже використовується.');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (129, 0, 'Дисконтная карта с номером ''%s'' уже используется.', 'Дисконтна картка з номером ''%s'' вже використовується.');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (129, 1, 'CredCardIsDCard', '');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (130, 0, 'Срок действия дисконтной карты истек.', 'Термін дії дисконтної картки закінчився.');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (130, 1, 'CredCardToDCardMask', '');
