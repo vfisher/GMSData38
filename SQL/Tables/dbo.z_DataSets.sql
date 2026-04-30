@@ -29,6 +29,7 @@
   [LockMode] [tinyint] NOT NULL DEFAULT (1),
   [CacheCalcFields] [bit] NOT NULL DEFAULT (0),
   [CalcSumListOnServer] [bit] NOT NULL DEFAULT (0),
+  [TranslationTableName] [varchar](255) NULL,
   CONSTRAINT [pk_z_DataSets] PRIMARY KEY CLUSTERED ([DSCode])
 )
 ON [PRIMARY]
