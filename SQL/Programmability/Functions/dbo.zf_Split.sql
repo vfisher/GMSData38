@@ -1,26 +1,35 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE FUNCTION [dbo].[zf_Split](@text nvarchar(MAX), @delimiter nvarchar(20) = N' ')
+CREATE FUNCTION [dbo].[zf_Split](@text NVARCHAR(MAX), @delimiter NVARCHAR(20) = N' ')
 /* Разделяет текст по указанному разделителю */
-RETURNS @Strings TABLE (Position int IDENTITY(1,1), AValue nvarchar(MAX)) AS 
+RETURNS @Strings TABLE (Position INT IDENTITY(1,1), AValue NVARCHAR(MAX)) AS 
 BEGIN
-  DECLARE @index int
-  SET @index = -1
+  DECLARE @index INT
+  DECLARE @value NVARCHAR(MAX)
+  
   IF @delimiter = N' '
-    SET @text = RTRIM(LTRIM(@text))
+    SET @text = LTRIM(RTRIM(@text))
 
-  WHILE (LEN(@text) > 0) 
+  WHILE LEN(@text) > 0 
     BEGIN
       SET @index = CHARINDEX(@delimiter, @text)
-      IF (@index = 0) AND (LEN(@text) > 0) 
-        BEGIN  
-          INSERT INTO @Strings VALUES (@text)
-          BREAK 
-        END
+ 
+      IF @index = 0
+      BEGIN
+        INSERT INTO @Strings (AValue)
+        VALUES (@text)
+        BREAK
+      END
 
-      IF (@index > 1) 
-        INSERT INTO @Strings VALUES (LEFT(@text, @index - 0))
-      SET @text = RIGHT(@text, (LEN(@text) - @index - 1))    
+      SET @value = LEFT(@text, @index - 1)
+  
+      IF LEN(@value) > 0
+        BEGIN
+            INSERT INTO @Strings (AValue)
+            VALUES (@value)
+        END
+       
+      SET @text = SUBSTRING(@text,@index + LEN(@delimiter),LEN(@text))  
     END
 RETURN
 END
