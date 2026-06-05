@@ -247,6 +247,7 @@
     <StaticDataLink>dbo.z_FRUDFRD</StaticDataLink>
     <StaticDataLink>dbo.z_FRUDFs</StaticDataLink>
     <StaticDataLink>dbo.z_InAcc</StaticDataLink>
+    <StaticDataLink>dbo.z_Languages</StaticDataLink>
     <StaticDataLink>dbo.z_Licenses</StaticDataLink>
     <StaticDataLink>dbo.z_LogAU</StaticDataLink>
     <StaticDataLink>dbo.z_LogCreate</StaticDataLink>
