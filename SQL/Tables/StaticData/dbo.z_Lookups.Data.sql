@@ -1,298 +1,299 @@
-п»їINSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_AssetC', 'РЎРїСЂР°РІРѕС‡РЅРёРє РѕСЃРЅРѕРІРЅС‹С… СЃСЂРµРґСЃС‚РІ: РєР°С‚РµРіРѕСЂРёРё', 'SELECT  ACatName, ACatIDFROM  r_AssetC WITH (NOLOCK) 
-ORDER BY ACatName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_AssetG', 'РЎРїСЂР°РІРѕС‡РЅРёРє РѕСЃРЅРѕРІРЅС‹С… СЃСЂРµРґСЃС‚РІ: РіСЂСѓРїРїС‹', 'SELECT  AGrName, AGrIDFROM  r_AssetG WITH (NOLOCK)ORDER BY AGrID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Assets', 'РЎРїСЂР°РІРѕС‡РЅРёРє РѕСЃРЅРѕРІРЅС‹С… СЃСЂРµРґСЃС‚РІ', 'SELECT  AssName, AssIDFROM  r_Assets WITH (NOLOCK) 
-ORDER BY AssName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_BankCompAC', 'Р‘Р°РЅРє РїСЂРµРґРїСЂРёСЏС‚РёСЏ РІР°Р»СЋС‚РЅС‹Р№', 'SELECT
+
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_AssetC', 'Справочник основных средств: категории', 'SELECT  ACatName, ACatIDFROM  r_AssetC WITH (NOLOCK) 
+ORDER BY ACatName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_AssetG', 'Справочник основных средств: группы', 'SELECT  AGrName, AGrIDFROM  r_AssetG WITH (NOLOCK)ORDER BY AGrID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Assets', 'Справочник основных средств', 'SELECT  AssName, AssIDFROM  r_Assets WITH (NOLOCK) 
+ORDER BY AssName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_BankCompAC', 'Банк предприятия валютный', 'SELECT
   BankName CompBankName, CompID, CompAccountAC 
 FROM
   r_Banks b WITH(NOLOCK), r_CompsAC c WITH(NOLOCK)
 WHERE
   b.BankID = c.BankID
-ORDER BY CompBankName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_BankCompCC', 'Р‘Р°РЅРє РїСЂРµРґРїСЂРёСЏС‚РёСЏ СЂР°СЃС‡РµС‚РЅС‹Р№', 'SELECT
+ORDER BY CompBankName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_BankCompCC', 'Банк предприятия расчетный', 'SELECT
   BankName CompBankName, CompID, CompAccountCC 
 FROM
   r_Banks b WITH(NOLOCK), r_CompsCC c WITH(NOLOCK)
 WHERE
   b.BankID = c.BankID
-ORDER BY CompBankName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_BankGrs', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р±Р°РЅРєРѕРІ: РіСЂСѓРїРїС‹', 'SELECT
+ORDER BY CompBankName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_BankGrs', 'Справочник банков: группы', 'SELECT
   BankGrName, BankGrID
 FROM
   r_BankGrs WITH(NOLOCK)
 ORDER BY
   BankGrID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_BankOurAC', 'Р‘Р°РЅРє С„РёСЂРјС‹ РІР°Р»СЋС‚РЅС‹Р№', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_BankOurAC', 'Банк фирмы валютный', 'SELECT
   BankName, OurID, AccountAC
 FROM
   r_Banks b WITH(NOLOCK), r_OursAC c WITH(NOLOCK)
 WHERE
   b.BankID = c.BankID
-ORDER BY BankName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_BankOurCC', 'Р‘Р°РЅРє С„РёСЂРјС‹ СЂР°СЃС‡РµС‚РЅС‹Р№', 'SELECT
+ORDER BY BankName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_BankOurCC', 'Банк фирмы расчетный', 'SELECT
   BankName, OurID, AccountCC 
 FROM
   r_Banks b WITH(NOLOCK), r_OursCC c WITH(NOLOCK)
 WHERE
   b.BankID = c.BankID
-ORDER BY BankName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Banks', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р±Р°РЅРєРѕРІ', 'SELECT   BankName, BankIDFROM   r_Banks WITH (NOLOCK) 
-ORDER BY BankName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_BServs', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р±Р°РЅРєРѕРІСЃРєРёС… СѓСЃР»СѓРі', 'SELECT
+ORDER BY BankName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Banks', 'Справочник банков', 'SELECT   BankName, BankIDFROM   r_Banks WITH (NOLOCK) 
+ORDER BY BankName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_BServs', 'Справочник банковских услуг', 'SELECT
   BServName, BServID
 FROM
   r_BServs WITH(NOLOCK)
 ORDER BY
   BServID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Candidates', 'РЎРїСЂР°РІРѕС‡РЅРёРє РєР°РЅРґРёРґР°С‚РѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Candidates', 'Справочник кандидатов', 'SELECT
   CandidateName, CandidateID
 FROM
   r_Candidates WITH(NOLOCK)
 ORDER BY
   CandidateID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Carrs', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚СЂР°РЅСЃРїРѕСЂС‚Р°', 'SELECT  CarrName, CarrIDFROM  r_Carrs WITH (NOLOCK) 
-ORDER BY CarrName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CarrsC', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚СЂР°РЅСЃРїРѕСЂС‚Р°: РєР°С‚РµРіРѕСЂРёРё', 'SELECT  CarrCName, CarrCIDFROM  r_CarrsC WITH (NOLOCK) 
-ORDER BY CarrCName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Codes1', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёР·РЅР°РєРѕРІ 1', 'SELECT   CodeName1, CodeID1FROM   r_Codes1 WITH (NOLOCK) 
-ORDER BY CodeName1');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Codes2', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёР·РЅР°РєРѕРІ 2', 'SELECT   CodeName2, CodeID2FROM   r_Codes2 WITH (NOLOCK) 
-ORDER BY CodeName2');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Codes3', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёР·РЅР°РєРѕРІ 3', 'SELECT   CodeName3, CodeID3FROM   r_Codes3 WITH (NOLOCK) 
-ORDER BY CodeName3');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Codes4', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёР·РЅР°РєРѕРІ 4', 'SELECT   CodeName4, CodeID4FROM   r_Codes4 WITH (NOLOCK) 
-ORDER BY CodeName4');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Codes5', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёР·РЅР°РєРѕРІ 5', 'SELECT   CodeName5, CodeID5FROM   r_Codes5 WITH (NOLOCK) 
-ORDER BY CodeName5');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompContacts', 'РЎРїСЂР°РІРѕС‡РЅРёРє РџСЂРµРґРїСЂРёСЏС‚РёР№ - РљРѕРЅС‚Р°РєС‚С‹', 'SELECT  CompName, CompIDFROM  r_CompContacts WITH (NOLOCK) 
-ORDER BY CompName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompG', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№: РіСЂСѓРїРїС‹', 'SELECT  CGrName, CGrIDFROM  r_CompG WITH (NOLOCK) 
-ORDER BY CGrName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompGrs1', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№: 1 РіСЂСѓРїРїР°', 'SELECT  CompGrName1, CompGrID1FROM  r_CompGrs1 WITH (NOLOCK) 
-ORDER BY CompGrName1');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompGrs2', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№: 2 РіСЂСѓРїРїР°', 'SELECT  CompGrName2, CompGrID2FROM  r_CompGrs2 WITH (NOLOCK) 
-ORDER BY CompGrName2');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompGrs3', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№: 3 РіСЂСѓРїРїР°', 'SELECT  CompGrName3, CompGrID3FROM  r_CompGrs3 WITH (NOLOCK) 
-ORDER BY CompGrName3');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompGrs4', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№: 4 РіСЂСѓРїРїР°', 'SELECT  CompGrName4, CompGrID4FROM  r_CompGrs4 WITH (NOLOCK) 
-ORDER BY CompGrName4');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompGrs5', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№: 5 РіСЂСѓРїРїР°', 'SELECT  CompGrName5, CompGrID5FROM  r_CompGrs5 WITH (NOLOCK) 
-ORDER BY CompGrName5');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Comps', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№', 'SELECT   CompName, City, CompIDFROM   r_Comps WITH (NOLOCK) 
-ORDER BY CompName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompsTax', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№ (РЅР°Р»РѕРіРѕРІС‹Рµ)', 'SELECT  CompName, City, CompID, TaxCode, TaxRegNoFROM  r_Comps WITH (NOLOCK)ORDER BY CompName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CompValues', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРµРґРїСЂРёСЏС‚РёР№ - Р—РЅР°С‡РµРЅРёСЏ', 'SELECT  CompName, CompIDFROM  r_CompValues WITH (NOLOCK) 
-ORDER BY CompName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Countries', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚СЂР°РЅ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Carrs', 'Справочник транспорта', 'SELECT  CarrName, CarrIDFROM  r_Carrs WITH (NOLOCK) 
+ORDER BY CarrName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CarrsC', 'Справочник транспорта: категории', 'SELECT  CarrCName, CarrCIDFROM  r_CarrsC WITH (NOLOCK) 
+ORDER BY CarrCName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Codes1', 'Справочник признаков 1', 'SELECT   CodeName1, CodeID1FROM   r_Codes1 WITH (NOLOCK) 
+ORDER BY CodeName1', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Codes2', 'Справочник признаков 2', 'SELECT   CodeName2, CodeID2FROM   r_Codes2 WITH (NOLOCK) 
+ORDER BY CodeName2', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Codes3', 'Справочник признаков 3', 'SELECT   CodeName3, CodeID3FROM   r_Codes3 WITH (NOLOCK) 
+ORDER BY CodeName3', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Codes4', 'Справочник признаков 4', 'SELECT   CodeName4, CodeID4FROM   r_Codes4 WITH (NOLOCK) 
+ORDER BY CodeName4', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Codes5', 'Справочник признаков 5', 'SELECT   CodeName5, CodeID5FROM   r_Codes5 WITH (NOLOCK) 
+ORDER BY CodeName5', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompContacts', 'Справочник Предприятий - Контакты', 'SELECT  CompName, CompIDFROM  r_CompContacts WITH (NOLOCK) 
+ORDER BY CompName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompG', 'Справочник предприятий: группы', 'SELECT  CGrName, CGrIDFROM  r_CompG WITH (NOLOCK) 
+ORDER BY CGrName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompGrs1', 'Справочник предприятий: 1 группа', 'SELECT  CompGrName1, CompGrID1FROM  r_CompGrs1 WITH (NOLOCK) 
+ORDER BY CompGrName1', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompGrs2', 'Справочник предприятий: 2 группа', 'SELECT  CompGrName2, CompGrID2FROM  r_CompGrs2 WITH (NOLOCK) 
+ORDER BY CompGrName2', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompGrs3', 'Справочник предприятий: 3 группа', 'SELECT  CompGrName3, CompGrID3FROM  r_CompGrs3 WITH (NOLOCK) 
+ORDER BY CompGrName3', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompGrs4', 'Справочник предприятий: 4 группа', 'SELECT  CompGrName4, CompGrID4FROM  r_CompGrs4 WITH (NOLOCK) 
+ORDER BY CompGrName4', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompGrs5', 'Справочник предприятий: 5 группа', 'SELECT  CompGrName5, CompGrID5FROM  r_CompGrs5 WITH (NOLOCK) 
+ORDER BY CompGrName5', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Comps', 'Справочник предприятий', 'SELECT   CompName, City, CompIDFROM   r_Comps WITH (NOLOCK) 
+ORDER BY CompName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompsTax', 'Справочник предприятий (налоговые)', 'SELECT  CompName, City, CompID, TaxCode, TaxRegNoFROM  r_Comps WITH (NOLOCK)ORDER BY CompName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CompValues', 'Справочник предприятий - Значения', 'SELECT  CompName, CompIDFROM  r_CompValues WITH (NOLOCK) 
+ORDER BY CompName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Countries', 'Справочник стран', 'SELECT
   Country, CounID
 FROM
   r_Countries WITH(NOLOCK)
 ORDER BY
   CounID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CRs', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р­РљРљРђ', 'SELECT   CRName, CRIDFROM   r_CRs WITH (NOLOCK) 
-ORDER BY CRName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CRSrvs', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕСЂРіРѕРІС‹С… СЃРµСЂРІРµСЂРѕРІ', 'SELECT  SrvName, SrvIDFROM  r_CRSrvs WITH (NOLOCK) 
-ORDER BY SrvName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_CRTaxs', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р­РљРљРђ: РЅР°Р»РѕРіРё', 'SELECT  TaxName, TaxIDFROM  r_CRTaxs WITH (NOLOCK) 
-ORDER BY TaxName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Currs', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІР°Р»СЋС‚', 'SELECT   CurrName, CurrIDFROM   r_Currs WITH (NOLOCK) 
-ORDER BY CurrName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_DCards', 'РЎРїСЂР°РІРѕС‡РЅРёРє РґРёСЃРєРѕРЅС‚РЅС‹С… РєР°СЂС‚', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CRs', 'Справочник ЭККА', 'SELECT   CRName, CRIDFROM   r_CRs WITH (NOLOCK) 
+ORDER BY CRName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CRSrvs', 'Справочник торговых серверов', 'SELECT  SrvName, SrvIDFROM  r_CRSrvs WITH (NOLOCK) 
+ORDER BY SrvName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_CRTaxs', 'Справочник ЭККА: налоги', 'SELECT  TaxName, TaxIDFROM  r_CRTaxs WITH (NOLOCK) 
+ORDER BY TaxName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Currs', 'Справочник валют', 'SELECT   CurrName, CurrIDFROM   r_Currs WITH (NOLOCK) 
+ORDER BY CurrName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_DCards', 'Справочник дисконтных карт', 'SELECT
   ChID, DCardID
 FROM
   r_DCards WITH (NOLOCK) 
 ORDER BY DCardID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_DCTypeG', 'РЎРїСЂР°РІРѕС‡РЅРёРє РґРёСЃРєРѕРЅС‚РЅС‹С… РєР°СЂС‚: РіСЂСѓРїРїС‹ С‚РёРїРѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_DCTypeG', 'Справочник дисконтных карт: группы типов', 'SELECT
   DCTypeGName, DCTypeGCode
 FROM
   r_DCTypeG WITH(NOLOCK)
 ORDER BY
   DCTypeGName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_DCTypes', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РёРїРѕРІ РґРёСЃРєРѕРЅС‚РЅС‹С… РєР°СЂС‚', 'SELECT  DCTypeName, DCTypeCodeFROM  r_DCTypes WITH (NOLOCK) 
-ORDER BY DCTypeName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Deps', 'РЎРїСЂР°РІРѕС‡РЅРёРє РѕС‚РґРµР»РѕРІ', 'SELECT  DepName, DepIDFROM  r_Deps WITH (NOLOCK) 
-ORDER BY DepName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_DeskG', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚РѕР»РёРєРѕРІ: Р“СЂСѓРїРїС‹', 'SELECT  DeskGName, DeskGCodeFROM  r_DeskG WITH (NOLOCK) 
-ORDER BY DeskGName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Desks', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚РѕР»РёРєРѕРІ', 'SELECT  DeskName, DeskCodeFROM  r_Desks WITH (NOLOCK) 
-ORDER BY DeskName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_DeviceTypes', 'РўРёРї СѓСЃС‚СЂРѕР№СЃС‚РІР°', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_DCTypes', 'Справочник типов дисконтных карт', 'SELECT  DCTypeName, DCTypeCodeFROM  r_DCTypes WITH (NOLOCK) 
+ORDER BY DCTypeName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Deps', 'Справочник отделов', 'SELECT  DepName, DepIDFROM  r_Deps WITH (NOLOCK) 
+ORDER BY DepName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_DeskG', 'Справочник столиков: Группы', 'SELECT  DeskGName, DeskGCodeFROM  r_DeskG WITH (NOLOCK) 
+ORDER BY DeskGName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Desks', 'Справочник столиков', 'SELECT  DeskName, DeskCodeFROM  r_Desks WITH (NOLOCK) 
+ORDER BY DeskName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_DeviceTypes', 'Тип устройства', 'SELECT
   DeviceTypeName, DeviceType
 FROM
   r_DeviceTypes WITH(NOLOCK)
 ORDER BY
   SrcPosID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Dis', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р­РљРљРђ: СЃРєРёРґРєРё - РЎРєРёРґРєРё', 'SELECT  DisName, DisIDFROM  r_Dis WITH (NOLOCK) 
-ORDER BY DisName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Emps', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃР»СѓР¶Р°С‰РёС…', 'SELECT   EmpName, EmpIDFROM   r_Emps WITH (NOLOCK) 
-ORDER BY EmpName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Executors', 'РСЃРїРѕР»РЅРёС‚РµР»СЊ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Dis', 'Справочник ЭККА: скидки - Скидки', 'SELECT  DisName, DisIDFROM  r_Dis WITH (NOLOCK) 
+ORDER BY DisName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Emps', 'Справочник служащих', 'SELECT   EmpName, EmpIDFROM   r_Emps WITH (NOLOCK) 
+ORDER BY EmpName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Executors', 'Исполнитель', 'SELECT
   ExecutorName, ExecutorID
 FROM
   r_Executors WITH(NOLOCK)
 ORDER BY
   ExecutorID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ExtFiles', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°СЃС€РёСЂРµРЅРёР№ С„Р°Р№Р»РѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ExtFiles', 'Справочник расширений файлов', 'SELECT
   ExtFileName, ExtFileID
 FROM
   r_ExtFiles WITH(NOLOCK)
 ORDER BY
   ExtFileID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_GAccs', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‡РµС‚РѕРІ', 'SELECT   GAccID,   GAccName FROM r_GAccs WITH (NOLOCK) 
-ORDER BY GAccName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_GAccs1', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‡РµС‚РѕРІ - РљР»Р°СЃСЃС‹', 'SELECT  GAccName1, GAccID1FROM  r_GAccs1 WITH (NOLOCK) 
-ORDER BY GAccName1');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_GOperC', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРѕРІРѕРґРѕРє: РєР°С‚РµРіРѕСЂРёРё', 'SELECT  GOperCName, GOperCIDFROM  r_GOperC WITH (NOLOCK) 
-ORDER BY GOperCName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_GOpers', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРѕРІРѕРґРѕРє', 'SELECT  GOperName, GOperIDFROM  r_GOpers WITH (NOLOCK) 
-ORDER BY GOperName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_GVols', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРѕРІРѕРґРѕРє: РІРёРґС‹ Р°РЅР°Р»РёС‚РёРєРё', 'SELECT  GVolName, GVolIDFROM  r_GVols WITH (NOLOCK) 
-ORDER BY GVolName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Holidays', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂР°Р·РґРЅРёС‡РЅС‹С… Рё РЅРµСЂР°Р±РѕС‡РёС… РґРЅРµР№', 'SELECT  HolidayName, HolidayDateFROM  r_Holidays WITH (NOLOCK) 
-ORDER BY HolidayName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Levies', 'РЎР±РѕСЂ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_GAccs', 'Справочник счетов', 'SELECT   GAccID,   GAccName FROM r_GAccs WITH (NOLOCK) 
+ORDER BY GAccName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_GAccs1', 'Справочник счетов - Классы', 'SELECT  GAccName1, GAccID1FROM  r_GAccs1 WITH (NOLOCK) 
+ORDER BY GAccName1', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_GOperC', 'Справочник проводок: категории', 'SELECT  GOperCName, GOperCIDFROM  r_GOperC WITH (NOLOCK) 
+ORDER BY GOperCName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_GOpers', 'Справочник проводок', 'SELECT  GOperName, GOperIDFROM  r_GOpers WITH (NOLOCK) 
+ORDER BY GOperName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_GVols', 'Справочник проводок: виды аналитики', 'SELECT  GVolName, GVolIDFROM  r_GVols WITH (NOLOCK) 
+ORDER BY GVolName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Holidays', 'Справочник праздничных и нерабочих дней', 'SELECT  HolidayName, HolidayDateFROM  r_Holidays WITH (NOLOCK) 
+ORDER BY HolidayName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Levies', 'Сбор', 'SELECT
   LevyName, LevyID
 FROM
   r_Levies WITH(NOLOCK)
 ORDER BY
   LevyName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Menu', 'РЎРїСЂР°РІРѕС‡РЅРёРє РјРµРЅСЋ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Menu', 'Справочник меню', 'SELECT
   MenuName, MenuID
 FROM
   r_Menu WITH(NOLOCK)
 ORDER BY
   MenuID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Mods', 'РЎРїСЂР°РІРѕС‡РЅРёРє РјРѕРґРёС„РёРєР°С‚РѕСЂРѕРІ', 'SELECT  ModName, ModCodeFROM  r_Mods WITH (NOLOCK) 
-ORDER BY ModName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Norms', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°Р±РѕС‚: РЅРѕСЂРјС‹ РІСЂРµРјРµРЅРё', 'SELECT  YearName, YearIDFROM  r_Norms WITH (NOLOCK) 
-ORDER BY YearName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Opers', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р­РљРљРђ: РѕРїРµСЂР°С‚РѕСЂС‹', 'SELECT   OperName, OperIDFROM   r_Opers WITH (NOLOCK) 
-ORDER BY OperName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_OrderMonitors', 'РњРѕРЅРёС‚РѕСЂ Р·Р°РєР°Р·РѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Mods', 'Справочник модификаторов', 'SELECT  ModName, ModCodeFROM  r_Mods WITH (NOLOCK) 
+ORDER BY ModName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Norms', 'Справочник работ: нормы времени', 'SELECT  YearName, YearIDFROM  r_Norms WITH (NOLOCK) 
+ORDER BY YearName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Opers', 'Справочник ЭККА: операторы', 'SELECT   OperName, OperIDFROM   r_Opers WITH (NOLOCK) 
+ORDER BY OperName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_OrderMonitors', 'Монитор заказов', 'SELECT
   OrderMonitorName, OrderMonitorID
 FROM
   r_OrderMonitors WITH(NOLOCK)
 ORDER BY
   OrderMonitorName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Ours', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРЅСѓС‚СЂРµРЅРЅРёС… С„РёСЂРј', 'SELECT   OurName, OurIDFROM   r_Ours WITH (NOLOCK) 
-ORDER BY OurName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_OurValues', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРЅСѓС‚СЂРµРЅРЅРёС… С„РёСЂРј - Р—РЅР°С‡РµРЅРёСЏ', 'SELECT  OurName, OurIDFROM  r_OurValues WITH (NOLOCK) 
-ORDER BY OurName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_PayForms', 'РЎРїСЂР°РІРѕС‡РЅРёРє С„РѕСЂРј РѕРїР»Р°С‚С‹', 'SELECT 
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Ours', 'Справочник внутренних фирм', 'SELECT   OurName, OurIDFROM   r_Ours WITH (NOLOCK) 
+ORDER BY OurName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_OurValues', 'Справочник внутренних фирм - Значения', 'SELECT  OurName, OurIDFROM  r_OurValues WITH (NOLOCK) 
+ORDER BY OurName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_PayForms', 'Справочник форм оплаты', 'SELECT 
   PayFormName, PayFormCode
 FROM 
   r_PayForms WITH (NOLOCK) 
 ORDER BY PayFormName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_PayTypeCats', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІС‹РїР»Р°С‚/СѓРґРµСЂР¶Р°РЅРёР№: РєР°С‚РµРіРѕСЂРёРё', 'SELECT  PayTypeCatName, PayTypeCatIDFROM  r_PayTypeCats WITH (NOLOCK) 
-ORDER BY PayTypeCatName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_PayTypes', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІС‹РїР»Р°С‚/СѓРґРµСЂР¶Р°РЅРёР№', 'SELECT  PayTypeName, PayTypeIDFROM  r_PayTypes WITH (NOLOCK) 
-ORDER BY PayTypeName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Persons', 'РџРµСЂСЃРѕРЅР°', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_PayTypeCats', 'Справочник выплат/удержаний: категории', 'SELECT  PayTypeCatName, PayTypeCatIDFROM  r_PayTypeCats WITH (NOLOCK) 
+ORDER BY PayTypeCatName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_PayTypes', 'Справочник выплат/удержаний', 'SELECT  PayTypeName, PayTypeIDFROM  r_PayTypes WITH (NOLOCK) 
+ORDER BY PayTypeName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Persons', 'Персона', 'SELECT
   PersonName, PersonID
 FROM
   r_Persons WITH(NOLOCK)
 ORDER BY
   PersonID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_PLs', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂР°Р№СЃ-Р»РёСЃС‚РѕРІ', 'SELECT   PLName, PLIDFROM   r_PLs WITH (NOLOCK) 
-ORDER BY PLName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_POSPays', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїР»Р°С‚РµР¶РЅС‹С… С‚РµСЂРјРёРЅР°Р»РѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_PLs', 'Справочник прайс-листов', 'SELECT   PLName, PLIDFROM   r_PLs WITH (NOLOCK) 
+ORDER BY PLName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_POSPays', 'Справочник платежных терминалов', 'SELECT
   POSPayName, POSPayID
 FROM
   r_POSPays WITH(NOLOCK)
 ORDER BY
   POSPayName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_PostC', 'РЎРїСЂР°РІРѕС‡РЅРёРє РґРѕР»Р¶РЅРѕСЃС‚РµР№: РєР°С‚РµРіРѕСЂРёРё', 'SELECT  PostCName, PostCIDFROM  r_PostC WITH (NOLOCK) 
-ORDER BY PostCName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Posts', 'РЎРїСЂР°РІРѕС‡РЅРёРє РґРѕР»Р¶РЅРѕСЃС‚РµР№', 'SELECT  PostName, PostIDFROM  r_Posts WITH (NOLOCK) 
-ORDER BY PostName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Prevs', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р»СЊРіРѕС‚', 'SELECT  PrevName, PrevIDFROM  r_Prevs WITH (NOLOCK) 
-ORDER BY PrevName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Processings', 'РџСЂРѕС†РµСЃСЃРёРЅРіРѕРІС‹Рµ С†РµРЅС‚СЂС‹', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_PostC', 'Справочник должностей: категории', 'SELECT  PostCName, PostCIDFROM  r_PostC WITH (NOLOCK) 
+ORDER BY PostCName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Posts', 'Справочник должностей', 'SELECT  PostName, PostIDFROM  r_Posts WITH (NOLOCK) 
+ORDER BY PostName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Prevs', 'Справочник льгот', 'SELECT  PrevName, PrevIDFROM  r_Prevs WITH (NOLOCK) 
+ORDER BY PrevName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Processings', 'Процессинговые центры', 'SELECT
   ProcessingName, ProcessingID
 FROM
   r_Processings WITH(NOLOCK)
 ORDER BY
   ProcessingName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdA', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: РіСЂСѓРїРїР° Р°Р»СЊС‚РµСЂРЅР°С‚РёРІ', 'SELECT  PGrAName, PGrAIDFROM  r_ProdA WITH (NOLOCK) 
-ORDER BY PGrAName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdBG', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: РіСЂСѓРїРїР° Р±СѓС…РіР°Р»С‚РµСЂРёРё', 'SELECT  PBGrName, PBGrIDFROM  r_ProdBG WITH (NOLOCK) 
-ORDER BY PBGrName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdC', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: 1 РіСЂСѓРїРїР°', 'SELECT  PCatName, PCatIDFROM  r_ProdC WITH (NOLOCK) 
-ORDER BY PCatName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdG', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: 2 РіСЂСѓРїРїР°', 'SELECT  PGrName, PGrIDFROM  r_ProdG WITH (NOLOCK) 
-ORDER BY PGrName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdG1', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: 3 РіСЂСѓРїРїР°', 'SELECT  PGrName1, PGrID1FROM  r_ProdG1 WITH (NOLOCK) 
-ORDER BY PGrName1');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdG2', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: 4 РіСЂСѓРїРїР°', 'SELECT  PGrName2, PGrID2FROM  r_ProdG2 WITH (NOLOCK) 
-ORDER BY PGrName2');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdG3', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: 5 РіСЂСѓРїРїР°', 'SELECT  PGrName3, PGrID3FROM  r_ProdG3 WITH (NOLOCK) 
-ORDER BY PGrName3');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdMarks', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: РјР°СЂРєРёСЂРѕРІРєРё', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdA', 'Справочник товаров: группа альтернатив', 'SELECT  PGrAName, PGrAIDFROM  r_ProdA WITH (NOLOCK) 
+ORDER BY PGrAName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdBG', 'Справочник товаров: группа бухгалтерии', 'SELECT  PBGrName, PBGrIDFROM  r_ProdBG WITH (NOLOCK) 
+ORDER BY PBGrName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdC', 'Справочник товаров: 1 группа', 'SELECT  PCatName, PCatIDFROM  r_ProdC WITH (NOLOCK) 
+ORDER BY PCatName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdG', 'Справочник товаров: 2 группа', 'SELECT  PGrName, PGrIDFROM  r_ProdG WITH (NOLOCK) 
+ORDER BY PGrName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdG1', 'Справочник товаров: 3 группа', 'SELECT  PGrName1, PGrID1FROM  r_ProdG1 WITH (NOLOCK) 
+ORDER BY PGrName1', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdG2', 'Справочник товаров: 4 группа', 'SELECT  PGrName2, PGrID2FROM  r_ProdG2 WITH (NOLOCK) 
+ORDER BY PGrName2', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdG3', 'Справочник товаров: 5 группа', 'SELECT  PGrName3, PGrID3FROM  r_ProdG3 WITH (NOLOCK) 
+ORDER BY PGrName3', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdMarks', 'Справочник товаров: маркировки', 'SELECT
   DataMatrix, MarkCode
 FROM
   r_ProdMarks WITH(NOLOCK)
 ORDER BY
   MarkCode
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Prods', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ', 'SELECT   ProdName, UM, ProdIDFROM   r_Prods WITH (NOLOCK) 
-ORDER BY ProdName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ProdValues', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ - Р—РЅР°С‡РµРЅРёСЏ', 'SELECT  ProdName, ProdIDFROM  r_ProdValues WITH (NOLOCK) 
-ORDER BY ProdName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Resources', 'Р РµСЃСѓСЂСЃ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Prods', 'Справочник товаров', 'SELECT   ProdName, UM, ProdIDFROM   r_Prods WITH (NOLOCK) 
+ORDER BY ProdName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ProdValues', 'Справочник товаров - Значения', 'SELECT  ProdName, ProdIDFROM  r_ProdValues WITH (NOLOCK) 
+ORDER BY ProdName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Resources', 'Ресурс', 'SELECT
   ResourceName, ResourceID
 FROM
   r_Resources WITH(NOLOCK)
 ORDER BY
   ResourceID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ResourceTypes', 'РўРёРї СЂРµСЃСѓСЂСЃР°', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ResourceTypes', 'Тип ресурса', 'SELECT
   ResourceTypeName, ResourceTypeID
 FROM
   r_ResourceTypes WITH(NOLOCK)
 ORDER BY
   ResourceTypeID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ScaleDefs', 'Р’РµСЃС‹: РєРѕРЅС„РёРіСѓСЂР°С†РёРё', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ScaleDefs', 'Весы: конфигурации', 'SELECT
   ScaleDefName, ScaleDefID
 FROM
   r_ScaleDefs WITH(NOLOCK)
 ORDER BY
   ScaleDefName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_ScaleGrs', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРµСЃРѕРІ: РіСЂСѓРїРїС‹', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_ScaleGrs', 'Справочник весов: группы', 'SELECT
   ScaleGrName, ScaleGrID
 FROM
   r_ScaleGrs WITH(NOLOCK)
 ORDER BY
   ScaleGrName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Scales', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРµСЃРѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Scales', 'Справочник весов', 'SELECT
   ScaleName, ScaleID
 FROM
   r_Scales WITH(NOLOCK)
 ORDER BY
   ScaleName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Secs', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃРµРєС†РёР№', 'SELECT   SecName, SecIDFROM   r_Secs WITH (NOLOCK) 
-ORDER BY SecName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Services', 'РЈСЃР»СѓРіР°', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Secs', 'Справочник секций', 'SELECT   SecName, SecIDFROM   r_Secs WITH (NOLOCK) 
+ORDER BY SecName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Services', 'Услуга', 'SELECT
   ProdName AS SrvcName, SrvcID
 FROM
   r_Services s WITH(NOLOCK), r_Prods p WITH(NOLOCK)
@@ -300,90 +301,90 @@ WHERE
   s.ProdID = p.ProdID
 ORDER BY
   p.ProdName
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Sheds', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°Р±РѕС‚: РіСЂР°С„РёРєРё', 'SELECT  ShedName, ShedIDFROM  r_Sheds WITH (NOLOCK) 
-ORDER BY ShedName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Spends', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р·Р°С‚СЂР°С‚', 'SELECT   SpendName, SpendCodeFROM   r_Spends WITH (NOLOCK) 
-ORDER BY SpendName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_StateRuleDocs', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚Р°С‚СѓСЃРѕРІ: РґРѕРєСѓРјРµРЅС‚С‹', 'SELECT  StateName, StateCodeFROM  r_StateRuleDocs WITH (NOLOCK) 
-ORDER BY StateName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_StateRuleFrom', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚Р°С‚СѓСЃРѕРІ: СЃС‚Р°С‚СѓСЃС‹ РёСЃС‚РѕС‡РЅРёРєРё', 'SELECT  StateName, StateCodeFROM  r_StateRuleFrom WITH (NOLOCK) 
-ORDER BY StateName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_StateRuleTo', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚Р°С‚СѓСЃРѕРІ: СЃС‚Р°С‚СѓСЃС‹ РЅР°Р·РЅР°С‡РµРЅРёСЏ', 'SELECT  StateName, StateCodeFROM  r_StateRuleTo WITH (NOLOCK) 
-ORDER BY StateName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_StateRuleUsers', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚Р°С‚СѓСЃРѕРІ: РїРѕР»СЊР·РѕРІР°С‚РµР»Рё', 'SELECT  StateName, StateCodeFROM  r_StateRuleUsers WITH (NOLOCK) 
-ORDER BY StateName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_States', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃС‚Р°С‚СѓСЃРѕРІ', 'SELECT   StateName, StateCodeFROM   r_States WITH (NOLOCK) 
-ORDER BY StateName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_StockGs', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃРєР»Р°РґРѕРІ: РіСЂСѓРїРїС‹', 'SELECT  StockGName, StockGIDFROM  r_StockGs WITH (NOLOCK) 
-ORDER BY StockGName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Stocks', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃРєР»Р°РґРѕРІ', 'SELECT   StockName, StockIDFROM   r_Stocks WITH (NOLOCK) 
-ORDER BY StockName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Subs', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°Р±РѕС‚: РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ', 'SELECT  SubName, SubIDFROM  r_Subs WITH (NOLOCK) 
-ORDER BY SubName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_TagC', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃРїРµС†РёР°Р»РёР·Р°С†РёР№: РєР°С‚РµРіРѕСЂРёРё', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Sheds', 'Справочник работ: графики', 'SELECT  ShedName, ShedIDFROM  r_Sheds WITH (NOLOCK) 
+ORDER BY ShedName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Spends', 'Справочник затрат', 'SELECT   SpendName, SpendCodeFROM   r_Spends WITH (NOLOCK) 
+ORDER BY SpendName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_StateRuleDocs', 'Справочник статусов: документы', 'SELECT  StateName, StateCodeFROM  r_StateRuleDocs WITH (NOLOCK) 
+ORDER BY StateName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_StateRuleFrom', 'Справочник статусов: статусы источники', 'SELECT  StateName, StateCodeFROM  r_StateRuleFrom WITH (NOLOCK) 
+ORDER BY StateName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_StateRuleTo', 'Справочник статусов: статусы назначения', 'SELECT  StateName, StateCodeFROM  r_StateRuleTo WITH (NOLOCK) 
+ORDER BY StateName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_StateRuleUsers', 'Справочник статусов: пользователи', 'SELECT  StateName, StateCodeFROM  r_StateRuleUsers WITH (NOLOCK) 
+ORDER BY StateName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_States', 'Справочник статусов', 'SELECT   StateName, StateCodeFROM   r_States WITH (NOLOCK) 
+ORDER BY StateName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_StockGs', 'Справочник складов: группы', 'SELECT  StockGName, StockGIDFROM  r_StockGs WITH (NOLOCK) 
+ORDER BY StockGName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Stocks', 'Справочник складов', 'SELECT   StockName, StockIDFROM   r_Stocks WITH (NOLOCK) 
+ORDER BY StockName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Subs', 'Справочник работ: подразделения', 'SELECT  SubName, SubIDFROM  r_Subs WITH (NOLOCK) 
+ORDER BY SubName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_TagC', 'Справочник специализаций: категории', 'SELECT
   TagCName, TagCID
 FROM
   r_TagC WITH(NOLOCK)
 ORDER BY
   TagCID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Tags', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃРїРµС†РёР°Р»РёР·Р°С†РёР№', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Tags', 'Справочник специализаций', 'SELECT
   TagName, TagID
 FROM
   r_Tags WITH(NOLOCK)
 ORDER BY
   TagID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Taxes', 'РЎРїСЂР°РІРѕС‡РЅРёРє РќР”РЎ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Taxes', 'Справочник НДС', 'SELECT
   TaxName, TaxTypeID
 FROM
   r_Taxes WITH(NOLOCK)
 ORDER BY
   TaxTypeID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_TaxRegions', 'РЎРїСЂР°РІРѕС‡РЅРёРє РјРµСЃС‚РЅС‹С… РЅР°Р»РѕРіРѕРІ', 'SELECT TaxRegionID, TaxRegionName FROM r_TaxRegions');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10011', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїРѕР»РѕРІ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_TaxRegions', 'Справочник местных налогов', 'SELECT TaxRegionID, TaxRegionName FROM r_TaxRegions', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10011', 'Справочник полов', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10011
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10020', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РёРїРѕРІ РіСЂР°Р¶РґР°РЅСЃРєРѕ-РїСЂР°РІРѕРІС‹С… РґРѕРіРѕРІРѕСЂРѕРІ', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10020', 'Справочник типов гражданско-правовых договоров', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10020
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10041', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРёРґРѕРІ РЅР°Р»РѕРіРѕРІС‹С… РЅР°РєР»Р°РґРЅС‹С…', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10041', 'Справочник видов налоговых накладных', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10041
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10042', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёС‡РёРЅ РєРѕСЂСЂРµРєС‚РёСЂРѕРІРєРё РЅР°Р»РѕРіРѕРІС‹С… РЅР°РєР»Р°РґРЅС‹С…', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10042', 'Справочник причин корректировки налоговых накладных', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10042
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10050', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РёРїРѕРІ РґРѕР»Р¶РЅРѕСЃС‚РµР№', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10050', 'Справочник типов должностей', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10050
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10051', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РёРїРѕРІ РѕС‚РїСѓСЃРєРѕРІ', '
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10051', 'Справочник типов отпусков', '
 SELECT
   RefName, RefID
 FROM
@@ -391,165 +392,165 @@ FROM
 WHERE
   RefTypeID = 10051
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10055', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёС‡РёРЅ СѓРІРѕР»СЊРЅРµРЅРёСЏ', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10055', 'Справочник причин увольнения', 'SELECT
   RefName, Notes, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10055
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10056', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёС‡РёРЅ РЅРµС‚СЂСѓРґРѕСЃРїРѕСЃРѕР±РЅРѕСЃС‚Рё', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10056', 'Справочник причин нетрудоспособности', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10056
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10057', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РёРїРѕРІ СЃС‚Р°РІРѕРє СЃС‚СЂР°С…РѕРІРѕРіРѕ СЃР±РѕСЂР°', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10057', 'Справочник типов ставок страхового сбора', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10057
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10058', 'РЎРїСЂР°РІРѕС‡РЅРёРє РєР°С‚РµРіРѕСЂРёР№ Р·Р°СЃС‚СЂР°С…РѕРІР°РЅРЅС‹С… Р»РёС†', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10058', 'Справочник категорий застрахованных лиц', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10058
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10059', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РёРїРѕРІ РєРѕСЂСЂРµРєС‚РёСЂРѕРІРєРё РѕС‚РїСѓСЃРєР°', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10059', 'Справочник типов корректировки отпуска', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10059
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10060', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёС‡РёРЅ РєРѕСЂСЂРµРєС‚РёСЂРѕРІРєРё РѕС‚РїСѓСЃРєР°', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10060', 'Справочник причин корректировки отпуска', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10060
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10061', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРёРґРѕРІ РѕР±СЂР°Р·РѕРІР°РЅРёСЏ', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10061 ORDER BY RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10062', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРёРґРѕРІ СЃРµРјРµР№РЅРѕРіРѕ РїРѕР»РѕР¶РµРЅРёСЏ', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10062 ORDER BY RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10063', 'РЎРїСЂР°РІРѕС‡РЅРёРє РєР°С‚РµРіРѕСЂРёР№ РІРѕРёРЅСЃРєРѕР№ РѕР±СЏР·Р°РЅРЅРѕСЃС‚Рё', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10063 ORDER BY RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10064', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРёРґРѕРІ РіРѕРґРЅРѕСЃС‚Рё Рє РІРѕРµРЅРЅРѕР№ СЃР»СѓР¶Р±Рµ', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10064 ORDER BY RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10455', 'РЎРїСЂР°РІРѕС‡РЅРёРє Р­РљРљРђ: Р•РґРёРЅС‹Р№ РІРІРѕРґ: Р”РµР№СЃС‚РІРёСЏ', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10061', 'Справочник видов образования', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10061 ORDER BY RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10062', 'Справочник видов семейного положения', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10062 ORDER BY RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10063', 'Справочник категорий воинской обязанности', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10063 ORDER BY RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10064', 'Справочник видов годности к военной службе', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10064 ORDER BY RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10455', 'Справочник ЭККА: Единый ввод: Действия', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10455
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10606', 'РЎРїСЂР°РІРѕС‡РЅРёРє РґРѕР»Р¶РЅРѕСЃС‚РµР№ РІ СЃРјРµРЅРµ СЂРµСЃС‚РѕСЂР°РЅР°', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10606', 'Справочник должностей в смене ресторана', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10606
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10607', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёС‡РёРЅ РѕС‚РјРµРЅС‹', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10607', 'Справочник причин отмены', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10607
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10608', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: РёР·РѕР±СЂР°Р¶РµРЅРёСЏ', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10608', 'Справочник товаров: изображения', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10608
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10609', 'РЎРїСЂР°РІРѕС‡РЅРёРє РІРёРґРѕРІ РґРѕРєСѓРјРµРЅС‚РѕРІ', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10609', 'Справочник видов документов', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10609
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10610', 'РЎРїСЂР°РІРѕС‡РЅРёРє РєР°РЅРґРёРґР°С‚РѕРІ: РЅР°РІС‹РєРё/СЂРµСЃСѓСЂСЃС‹', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10610', 'Справочник кандидатов: навыки/ресурсы', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10610
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10611', 'РЎРїСЂР°РІРѕС‡РЅРёРє РєР°РЅРґРёРґР°С‚РѕРІ: СЃС‚Р°С‚СѓСЃС‹', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10611', 'Справочник кандидатов: статусы', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10611
 ORDER BY
-  RefName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10612', 'РЎРїСЂР°РІРѕС‡РЅРёРє РєР°РЅРґРёРґР°С‚РѕРІ: СЂРµР·СѓР»СЊС‚Р°С‚ РїСЂРѕРІРµСЂРєРё РђРћ', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10612 ORDER BY RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10701', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїРµСЂСЃРѕРЅ: CС‚Р°С‚СѓСЃС‹', 'SELECT
+  RefName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10612', 'Справочник кандидатов: результат проверки АО', 'SELECT RefName, RefID FROM r_Uni WITH(NOLOCK) WHERE RefTypeID = 10612 ORDER BY RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10701', 'Справочник персон: Cтатусы', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10701
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10702', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїСЂРёС‡РёРЅ РІРѕР·РІСЂР°С‚Р°', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10702', 'Справочник причин возврата', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10702
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Uni_10800', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЃРїРѕСЃРѕР±РѕРІ РІРІРѕРґР° РґР°РЅРЅС‹С…', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Uni_10800', 'Справочник способов ввода данных', 'SELECT
   RefName, RefID
 FROM
   r_Uni WITH(NOLOCK)
 WHERE
   RefTypeID = 10800
 ORDER BY
-  RefID');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_Users', 'РЎРїСЂР°РІРѕС‡РЅРёРє РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№', 'SELECT  UserName, UserIDFROM  r_Users WITH (NOLOCK) 
-ORDER BY UserName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_WPrefs', 'РЎРїСЂР°РІРѕС‡РЅРёРє С‚РѕРІР°СЂРѕРІ: РІРµСЃРѕРІС‹Рµ РїСЂРµС„РёРєСЃС‹', 'SELECT  WPref, Notes WPrefNameFROM  r_WPrefs WITH (NOLOCK)ORDER BY WPref');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_WPRoles', 'Р РѕР»СЊ СЂР°Р±РѕС‡РµРіРѕ РјРµСЃС‚Р°', 'SELECT
+  RefID', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_Users', 'Справочник пользователей', 'SELECT  UserName, UserIDFROM  r_Users WITH (NOLOCK) 
+ORDER BY UserName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_WPrefs', 'Справочник товаров: весовые префиксы', 'SELECT  WPref, Notes WPrefNameFROM  r_WPrefs WITH (NOLOCK)ORDER BY WPref', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_WPRoles', 'Роль рабочего места', 'SELECT
   WPRoleName, WPRoleID
 FROM
   r_WPRoles WITH(NOLOCK)
 ORDER BY
   WPRoleID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_WPs', 'Р Р°Р±РѕС‡РµРµ РјРµСЃС‚Рѕ', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_WPs', 'Рабочее место', 'SELECT
   WPName, WPID
 FROM
   r_WPs WITH(NOLOCK)
 ORDER BY
   WPID
-');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_WrkTypes', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°Р±РѕС‚: РІРёРґС‹', 'SELECT  WrkName, WrkIDFROM  r_WrkTypes WITH (NOLOCK) 
-ORDER BY WrkName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_WTSigns', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°Р±РѕС‚: РѕР±РѕР·РЅР°С‡РµРЅРёСЏ РІСЂРµРјРµРЅРё', 'SELECT  WTSignName, WTSignIDFROM  r_WTSigns WITH (NOLOCK) 
-ORDER BY WTSignName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('r_WWeeks', 'РЎРїСЂР°РІРѕС‡РЅРёРє СЂР°Р±РѕС‚: С‚РёРїС‹ РЅРµРґРµР»Рё', 'SELECT  WWeekName, WWeekTypeIDFROM  r_WWeeks WITH (NOLOCK) 
-ORDER BY WWeekName');
-INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr) VALUES ('z_Docs', 'Р”РѕРєСѓРјРµРЅС‚С‹', 'SELECT
+', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_WrkTypes', 'Справочник работ: виды', 'SELECT  WrkName, WrkIDFROM  r_WrkTypes WITH (NOLOCK) 
+ORDER BY WrkName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_WTSigns', 'Справочник работ: обозначения времени', 'SELECT  WTSignName, WTSignIDFROM  r_WTSigns WITH (NOLOCK) 
+ORDER BY WTSignName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('r_WWeeks', 'Справочник работ: типы недели', 'SELECT  WWeekName, WWeekTypeIDFROM  r_WWeeks WITH (NOLOCK) 
+ORDER BY WWeekName', 1);
+INSERT dbo.z_Lookups(LSName, LSDesc, SQLStr, UsePrimaryKeyAsSortOrder) VALUES ('z_Docs', 'Документы', 'SELECT
   DocName, DocCode
 FROM
   z_Docs WITH (NOLOCK) 
-ORDER BY DocName');
+ORDER BY DocName', 1);

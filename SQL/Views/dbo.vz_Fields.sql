@@ -10,5 +10,5 @@ FROM
   z_Tables t, z_Fields f, z_FieldsRep r, systypes s
 WHERE
   f.TableCode = t.TableCode AND r.FieldName = f.FieldName AND
-  s.xtype = SQLType) GMSView
+  s.xtype = SQLType AND s.xtype = s.xusertype) GMSView
 GO

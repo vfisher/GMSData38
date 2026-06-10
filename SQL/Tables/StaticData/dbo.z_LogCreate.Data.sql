@@ -1903,3 +1903,5 @@ INSERT dbo.z_LogCreate(TableCode, PKValue, DocTime, ChID, UserCode) VALUES (1081
 INSERT dbo.z_LogCreate(TableCode, PKValue, DocTime, ChID, UserCode) VALUES (10810002, '[1] \ [янв  1 1900 12:00AM]', '2014-10-24 10:27:00.000', 0, 0);
 INSERT dbo.z_LogCreate(TableCode, PKValue, DocTime, ChID, UserCode) VALUES (10810002, '[2] \ [янв  1 1900 12:00AM]', '2014-10-24 10:27:00.000', 0, 0);
 INSERT dbo.z_LogCreate(TableCode, PKValue, DocTime, ChID, UserCode) VALUES (10810002, '[3] \ [янв  1 1900 12:00AM]', '2014-10-24 10:27:00.000', 0, 0);
+
+INSERT dbo.z_LogCreate(TableCode, PKValue, DocTime, ChID, UserCode) VALUES (10440001, '[13]', '2026-05-20 13:05:09.637', 13, 0);

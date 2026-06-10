@@ -29,9 +29,11 @@
   [GUID] [uniqueidentifier] NOT NULL DEFAULT (newid()),
   [ChequeTypeID] [int] NOT NULL DEFAULT (1),
   [SaleRndSum] [numeric](21, 9) NULL,
+  [JSONData] [nvarchar](max) NULL,
   CONSTRAINT [pk_t_SaleTemp] PRIMARY KEY CLUSTERED ([ChID])
 )
 ON [PRIMARY]
+TEXTIMAGE_ON [PRIMARY]
 GO
 
 CREATE UNIQUE INDEX [GUID]
@@ -329,6 +331,27 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_t_SaleTemp', N'Last', N'INSERT'
 GO
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
 
 
 

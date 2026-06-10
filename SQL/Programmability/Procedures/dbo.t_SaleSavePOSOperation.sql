@@ -1,6 +1,6 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-Create procedure [dbo].[t_SaleSavePOSOperation](@ParamsIn varchar(Max), @ParamsOut varchar(8000) output)
+CREATE procedure [dbo].[t_SaleSavePOSOperation](@ParamsIn varchar(Max), @ParamsOut varchar(8000) output)
 as
 begin
   declare -- @DocCode int
@@ -29,6 +29,11 @@ begin
         ,@Response = JSON_VALUE(@ParamsIn, '$."Response"')
         ,@Msg = JSON_VALUE(@ParamsIn, '$."Msg"')
 
+ -- Защита от предыдущего rrn для старых экзешек
+ IF EXISTS(SELECT * FROM t_POSPayJournal WHERE ChID <> @ChID AND @ChID IS NOT NULL AND @ChID <> -1 AND RRN = @RRN AND @RRN IS NOT NULL AND @RRN <> '')
+    RETURN
+  
+
   begin TRAN
     IF @ChID IS NOT NULL AND @ChID <> -1
       update t_POSPayJournal with (updlock, holdlock)
@@ -36,8 +41,8 @@ begin
          , Request = @Request--CASE WHEN @Request IS NULL THEN Request ELSE JSON_MODIFY(ISNULL(Request, '[]'), 'append $', @Request) END
          , RRN = CASE WHEN @RRN IS null THEN RRN ELSE @RRN END
          , STATUS = CASE WHEN @Status IS null THEN Status ELSE @Status END
-         , Flags = Flags | @Flags
-         , Msg = LEFT(@Msg, 250)
+         , Flags = CASE WHEN Flags IS NULL THEN @Flags ELSE Flags | @Flags END
+         , Msg = CASE WHEN (Isnull(@Msg, '') = '') AND (Isnull(Msg, '') <> '') THEN Msg ELSE LEFT(@Msg, 250) END
       where ChID = @ChID
     if @@ROWCOUNT = 0
       BEGIN
