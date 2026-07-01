@@ -12514,3 +12514,4 @@ INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataS
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001183, 'LanguageCode', 2, NULL, 1, 10, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1001183, 'LanguageID', 1, NULL, 1, 4, NULL);
 INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (1011001, 'JSONData', 35, NULL, 0, -1, NULL);
+INSERT dbo.z_Fields(TableCode, FieldName, FieldPosID, FieldInfo, Required, DataSize, DBDefault) VALUES (10551001, 'UsePOSForPINCodeEnter', 190, NULL, 1, 1, '((0))');
