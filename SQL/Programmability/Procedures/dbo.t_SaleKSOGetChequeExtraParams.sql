@@ -1,0 +1,15 @@
+﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[t_SaleKSOGetChequeExtraParams](@DocCode int, @ChID bigint, @JSON nvarchar(2000) OUTPUT)
+AS
+BEGIN
+  SELECT @JSON = NULL 
+  IF @DocCode <> 11035 RETURN
+
+  SELECT
+    JSON_VALUE(JSON_VALUE(p.TransactionInfo,'$.POSPayAdv'),'$.natr') AS BID
+  FROM t_SalePays p
+  WHERE ChID = @ChID AND ISJSON(JSON_VALUE(p.TransactionInfo,'$.POSPayAdv')) = 1
+  FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER
+END
+GO
