@@ -236,3 +236,6 @@ INSERT dbo.z_Vars(VarName, VarDesc, VarValue, VarInfo, VarType, VarPageCode, Var
 INSERT dbo.z_Vars(VarName, VarDesc, VarValue, VarInfo, VarType, VarPageCode, VarGroup, VarPosID, LabelPos, VarExtInfo, VarSelType, AppCode, ObjectDef) VALUES ('z_RoundTaxSum', 'Округление суммы НДС', '0.00001', '', 5, 2, '', 4, 1, '', 0, 0, NULL);
 INSERT dbo.z_Vars(VarName, VarDesc, VarValue, VarInfo, VarType, VarPageCode, VarGroup, VarPosID, LabelPos, VarExtInfo, VarSelType, AppCode, ObjectDef) VALUES ('z_TechBreakRefreshInterval', 'Интервал проверки выполнения технического обслуживания БД (сек)', '0', '', 4, -10, '', 0, 0, '', 0, 0, NULL);
 INSERT dbo.z_Vars(VarName, VarDesc, VarValue, VarInfo, VarType, VarPageCode, VarGroup, VarPosID, LabelPos, VarExtInfo, VarSelType, AppCode, ObjectDef) VALUES ('z_UseGroupDocFilter', 'Использовать группировку в фильтре документа', '1', '', 8, -10, '', 38, 0, '', 0, 0, NULL);
+
+
+INSERT dbo.z_Vars(VarName, VarDesc, VarValue, VarInfo, VarType, VarPageCode, VarGroup, VarPosID, LabelPos, VarExtInfo, VarSelType, AppCode, ObjectDef) VALUES ('t_CheckRequiredFieldsOnCloseMonitorTranslation', 'Проверять обязательные поля при закрытии "Монитора перевода"', '0', '', 8, 11000, '', 20, 0, '', 0, 11000, NULL);
