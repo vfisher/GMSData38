@@ -17,6 +17,7 @@
   [POSMerchantId] [int] NOT NULL DEFAULT (1),
   [UsePosCompareCR] [bit] NOT NULL DEFAULT (0),
   [UseFacePay] [bit] NOT NULL DEFAULT (0),
+  [ProcessCorrection] [bit] NOT NULL DEFAULT (0),
   CONSTRAINT [pk_r_POSPays] PRIMARY KEY CLUSTERED ([POSPayID])
 )
 ON [PRIMARY]
@@ -357,6 +358,29 @@ GO
 
 EXEC sp_settriggerorder N'dbo.TRel1_Ins_r_POSPays', N'Last', N'INSERT'
 GO
+
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
+SET QUOTED_IDENTIFIER, ANSI_NULLS ON
+GO
+
+
+
+
 
 
 

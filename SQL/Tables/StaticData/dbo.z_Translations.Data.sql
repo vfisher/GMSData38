@@ -6141,3 +6141,4 @@ INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2751, 1, 'Сумма в
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2762, 1, 'Печатать комментарий к проекту «еЧек»', 'Друкувати коментар до проєкту «єЧек»');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (535, 0, 'Проверять обязательные поля при закрытии "Монитора перевода"', 'Перевіряти обов''язкові поля під час закриття "Монітора перекладу"');
 INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (1001182, 10, 'Перевод', 'Переклад');
+INSERT dbo.z_Translations(MsgID, TypeID, RU, UK) VALUES (2768, 1, 'Обрабатывать статус коррекции от термимнала', 'Обробляти статус коррекції від термінала');
