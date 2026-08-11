@@ -1,1 +1,2 @@
-п»їINSERT dbo.r_POSPays(POSPayID, ChID, POSPayName, POSPayClass, POSPayPort, POSPayTimeout, Notes, UseGrpCardForDiscs, UseUnionCheque, BankID, PrintTranInfoInCheque, IP, NetPort, UsePosCollection, SettleBeforeRefund, POSMerchantId, UsePosCompareCR, UseFacePay) VALUES (0, 0, 'РќРµС‚ С‚РµСЂРјРёРЅР°Р»Р°', 'TVirtualPOSPay', 1, 0, NULL, 0, 0, 0, 0, NULL, NULL, 0, 1, 1, 0, 0);
+
+INSERT dbo.r_POSPays(POSPayID, ChID, POSPayName, POSPayClass, POSPayPort, POSPayTimeout, Notes, UseGrpCardForDiscs, UseUnionCheque, BankID, PrintTranInfoInCheque, IP, NetPort, UsePosCollection, SettleBeforeRefund, POSMerchantId, UsePosCompareCR, UseFacePay, ProcessCorrection) VALUES (0, 0, 'Нет терминала', 'TVirtualPOSPay', 1, 0, NULL, 0, 0, 0, 0, NULL, NULL, 0, 1, 1, 0, 0, 0);
