@@ -25,8 +25,12 @@ BEGIN
       DECLARE @SumCash numeric(21, 9)
       DECLARE @InitialBalance numeric(21, 9)
       DECLARE @NoExpMode bit
+      DECLARE @RetSumCash numeric(21, 9)
+      DECLARE @CashType int
 
       SELECT @CRID = CRID FROM t_CRRet WHERE ChID = @ChID
+      SELECT @CashType = CashType FROM r_CRs WITH (NOLOCK) WHERE CRID = @CRID 
+
       SET @NoExpMode = ISNULL((SELECT TOP 1 NoExpMode FROM r_WPRoles WITH (NOLOCK) WHERE WPRoleID IN (SELECT WPRoleID FROM r_WPs WITH (NOLOCK) WHERE CRID = @CRID)),0)
 	  SET @ParamsIn = (SELECT @CRID AS CRID FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 
@@ -35,8 +39,12 @@ BEGIN
 	  SET @SumCash = JSON_VALUE(@ParamsOut, '$.SumCash')
 	  SET @InitialBalance = JSON_VALUE(@ParamsOut, '$.InitialBalance')
 
+      SET @RetSumCash = 0
+      IF @CashType = 39 
+        SELECT @RetSumCash = ISNULL(SUM(SumCC_wt), 0) FROM t_CRRetPays WITH (NOLOCK) WHERE ChID = @ChID AND PayFormCode = 1 AND SumCC_wt > 0
+
       /* Поскольку @SumCash уже учитывает возврат, то достаточно проверить на отрицательность */
-      IF (@SumCash + CASE WHEN @NoExpMode = 1 THEN @InitialBalance ELSE 0 END) < 0
+      IF (@SumCash - @RetSumCash + CASE WHEN @NoExpMode = 1 THEN @InitialBalance ELSE 0 END) < 0
         BEGIN
           SET @CanContinue = 0
           SET @Msg = dbo.zf_Translate('В кассе недостаточно средств для оплаты возврата')
