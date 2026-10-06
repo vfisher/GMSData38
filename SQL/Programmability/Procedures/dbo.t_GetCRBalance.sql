@@ -30,6 +30,7 @@ BEGIN
   DECLARE @RetSumType0 numeric(21, 9), @RetSumType1 numeric(21, 9), @RetSumType2 numeric(21, 9)
   DECLARE @SaleLevySum_0 numeric(21, 9), @SaleLevySum_1 numeric(21, 9), @SaleLevySum_2 numeric(21, 9), @SaleLevySum_3 numeric(21, 9), @SaleLevySum_4 numeric(21, 9), @SaleLevySum_5 numeric(21, 9)
   DECLARE @RetLevySum_0 numeric(21, 9), @RetLevySum_1 numeric(21, 9), @RetLevySum_2 numeric(21, 9), @RetLevySum_3 numeric(21, 9), @RetLevySum_4 numeric(21, 9), @RetLevySum_5 numeric(21, 9)
+  DECLARE @SoftwareCashType int, @VirtualCashType int
 
   /* SET @ParamsIn = '{"CRID":2}' */
   SET @ParamsOut = '{}'
@@ -42,6 +43,9 @@ BEGIN
   /* SELECT @CountSymbolRoundTax = ISNULL((SELECT LEN(REPLACE(STR(@RoundTaxSum, 20, 10), '0', ' ')) - 10),2) */ 
   /* ПРРО: необходимо для корректного рассчета суммы НДС и суммы акциза */
   SET @CountSymbolRoundTax = 5
+
+  SET @SoftwareCashType = 39
+  SET @VirtualCashType = 8
 
   SELECT @TaxPayer = o.TaxPayer 
   FROM r_CRs c WITH(NOLOCK), r_CRSrvs s WITH(NOLOCK), r_Ours o WITH(NOLOCK) 
@@ -105,7 +109,7 @@ BEGIN
   SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.DocDate) AS TaxPayerByDate, SaleRndSum, TSumCC_wt AS SaleNoRndSum  
   INTO #t_Sale
   FROM t_Sale m WITH(NOLOCK)
-  WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
+  WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> @SoftwareCashType OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
 
   /* Все документы выдачи наличных кассы @CRID */ 
   SELECT m.DocID  
@@ -114,8 +118,8 @@ BEGIN
   WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID 
 
   SELECT d.ChID, d.SrcPosID, d.TaxTypeID, 
-  CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurTax),2) ELSE d.TaxSum END TaxSum,
-  CASE WHEN @CashType = 39 AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurPriceCC_wt),2) ELSE d.SumCC_wt END SumCC_wt 
+  CASE WHEN @CashType = @SoftwareCashType AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurTax),2) ELSE d.TaxSum END TaxSum,
+  CASE WHEN @CashType = @SoftwareCashType AND @UseHardwareDisc = 1 THEN ROUND((Qty * PurPriceCC_wt),2) ELSE d.SumCC_wt END SumCC_wt 
   INTO #t_SaleD
   FROM #t_Sale m WITH(NOLOCK)
   INNER JOIN t_SaleD d WITH(NOLOCK) ON m.ChID = d.ChID 
@@ -130,7 +134,7 @@ BEGIN
   SELECT m.ChID, m.DocID, m.OurID, m.DocDate, TSumCC_wt, dbo.zf_GetTaxPayerByDate(m.OurID, m.SrcDocDate) AS TaxPayerByDate, RetRndSum, TSumCC_wt AS RetNoRndSum   
   INTO #t_CRRet
   FROM t_CRRet m WITH(NOLOCK)
-  WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode))
+  WHERE m.DocTime BETWEEN @LastZRep AND @Time AND m.CRID = @CRID AND (@CashType <> @SoftwareCashType OR m.StateCode IN (SELECT StateCode FROM #StateCode))
 
   SELECT d.ChID, d.SrcPosID, d.TaxTypeID, d.TaxSum, d.SumCC_wt
   INTO #t_CRRetD
@@ -146,12 +150,12 @@ BEGIN
   SELECT m.ChID, m.SumCC  
   INTO #t_MonIntRec
   FROM t_MonIntRec m WITH(NOLOCK)
-  WHERE DocTime BETWEEN @LastZRep AND @Time AND CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
+  WHERE DocTime BETWEEN @LastZRep AND @Time AND CRID = @CRID AND (@CashType <> @SoftwareCashType OR m.StateCode IN (SELECT StateCode FROM #StateCode)) 
 
   SELECT m.ChID, m.SumCC 
   INTO #t_MonIntExp
   FROM t_MonIntExp m WITH(NOLOCK)
-  WHERE DocTime BETWEEN @LastZRep AND @Time AND CRID = @CRID AND (@CashType <> 39 OR m.StateCode IN (SELECT StateCode FROM #StateCode))
+  WHERE DocTime BETWEEN @LastZRep AND @Time AND CRID = @CRID AND (@CashType <> @SoftwareCashType OR m.StateCode IN (SELECT StateCode FROM #StateCode))
 
   SELECT DISTINCT m.TaxTypeID, m.TaxID 
   INTO #r_Taxes
@@ -308,7 +312,7 @@ BEGIN
   WHERE (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) = lcr.TaxTypeID OR (CASE WHEN m.TaxPayerByDate = 1 THEN d.TaxTypeID ELSE @TaxIDNotVAT END) IN (SELECT CASE WHEN m.TaxPayerByDate = 1 THEN TaxTypeID ELSE @TaxIDNotVAT END FROM #r_Taxes WHERE CASE WHEN m.TaxPayerByDate = 1 THEN TaxID ELSE @TaxIDNotVAT END = 5)
   GROUP BY m.ChID) t
 
-  IF @CashType <> 39
+  IF @CashType NOT IN (@SoftwareCashType,@VirtualCashType)
   BEGIN
     SELECT @SaleTaxSum_0 = ISNULL(SUM(t.TaxSum), 0) FROM (SELECT ROUND(SUM(ISNULL(TaxSum, 0)), 2) AS TaxSum FROM #t_SaleD WHERE TaxTypeID = 0 GROUP BY ChID) t
     SELECT @SaleTaxSum_1 = ISNULL(SUM(t.TaxSum), 0) FROM (SELECT ROUND(SUM(ISNULL(TaxSum, 0)), 2) AS TaxSum FROM #t_SaleD WHERE TaxTypeID = 1 GROUP BY ChID) t
@@ -455,7 +459,7 @@ BEGIN
 	GROUP BY m.ChID) t
 
 
-  IF @CashType <> 39 
+  IF @CashType NOT IN (@SoftwareCashType,@VirtualCashType) 
   BEGIN
     SELECT @RetTaxSum_0 = ISNULL(SUM(t.TaxSum), 0) FROM (SELECT ROUND(SUM(ISNULL(TaxSum, 0)), 2) AS TaxSum FROM #t_CRRetD WHERE TaxTypeID = 0 GROUP BY ChID) t
     SELECT @RetTaxSum_1 = ISNULL(SUM(t.TaxSum), 0) FROM (SELECT ROUND(SUM(ISNULL(TaxSum, 0)), 2) AS TaxSum FROM #t_CRRetD WHERE TaxTypeID = 1 GROUP BY ChID) t
@@ -544,7 +548,7 @@ BEGIN
   SET @RetRndSum = 0
   SET @RetNoRndSum = 0
 
-  IF (@CashType = 39) AND (@RoundInCheque = 1)
+  IF @CashType IN (@SoftwareCashType,@VirtualCashType) AND (@RoundInCheque = 1)
     BEGIN
 	  UPDATE m 
 	  SET SaleNoRndSum = 0 

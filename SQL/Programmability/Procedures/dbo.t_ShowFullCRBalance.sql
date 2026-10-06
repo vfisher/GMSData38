@@ -181,6 +181,7 @@ BEGIN
   DECLARE @SaleRndSumCR numeric(21, 9), @SaleNoRndSumCR numeric(21, 9), @RetRndSumCR numeric(21, 9), @RetNoRndSumCR numeric(21, 9)
   DECLARE @SaleRndSumDB numeric(21, 9), @SaleNoRndSumDB numeric(21, 9), @RetRndSumDB numeric(21, 9), @RetNoRndSumDB numeric(21, 9)
   DECLARE @Cat1 varchar(250), @Cat2 varchar(250), @Name varchar(250)
+  DECLARE @SoftwareCashType int, @VirtualCashType int
    
 
   DECLARE @CashType int
@@ -384,6 +385,9 @@ BEGIN
   SET @RetNoRndSumCR = JSON_VALUE(@ParamsIn, '$.RetNoRndSum')
   /* Сума готівки в касі */
   SET @SumRemCR = JSON_VALUE(@ParamsIn, '$.SumRem')
+
+  SET @SoftwareCashType = 39
+  SET @VirtualCashType = 8
   
   /* Не використані поля: 
      ZRepNum: int -- Номер Z-звіту (локальний номер РРО)
@@ -672,7 +676,7 @@ BEGIN
   SELECT @Cat1 AS Cat1, @Cat2 AS Cat2, 'Сума готівки в касі' AS [Name], @SumRemDB AS ValueDB, @SumRemCR AS ValueCR, 0 AS Diff
   
   /* Заокруглення */
-  IF (@CashType = 39) AND (@RoundInCheque = 1)
+  IF @CashType IN (@SoftwareCashType,@VirtualCashType) AND (@RoundInCheque = 1)
     BEGIN
 	  IF @SaleRndSumDB < 0 SET @SaleRndSumDB = (-1) * @SaleRndSumDB
 	  IF @RetRndSumDB < 0 SET @RetRndSumDB = (-1) * @RetRndSumDB
