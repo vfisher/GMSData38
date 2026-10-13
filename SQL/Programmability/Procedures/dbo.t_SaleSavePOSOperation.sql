@@ -29,12 +29,17 @@ begin
         ,@Response = JSON_VALUE(@ParamsIn, '$."Response"')
         ,@Msg = JSON_VALUE(@ParamsIn, '$."Msg"')
 
- -- Защита от предыдущего rrn для старых экзешек
- IF EXISTS(SELECT * FROM t_POSPayJournal WHERE ChID <> @ChID AND @ChID IS NOT NULL AND @ChID <> -1 AND RRN = @RRN AND @RRN IS NOT NULL AND @RRN <> '')
-    RETURN
+  SET XACT_ABORT ON 
+  BEGIN TRAN
+
+   -- Защита от предыдущего rrn для старых экзешек
+   IF EXISTS(SELECT * FROM t_POSPayJournal with (xlock, holdlock) WHERE ChID <> @ChID AND @ChID IS NOT NULL AND @ChID <> -1 AND RRN = @RRN AND @RRN IS NOT NULL AND @RRN <> '')
+    BEGIN
+      ROLLBACK
+      RETURN
+    end
   
 
-  begin TRAN
     IF @ChID IS NOT NULL AND @ChID <> -1
       update t_POSPayJournal with (updlock, holdlock)
       set  Response = @Response--CASE WHEN @Response IS NULL THEN Response ELSE JSON_MODIFY(ISNULL(Response, '[]'), 'append $', @Response) END
@@ -77,8 +82,8 @@ begin
          ,@Flags        
          ,@Msg
         );
-      end
-  commit
+      END
+  COMMIT
 
   set @ParamsOut = (SELECT @ChID AS ChID for json path, without_array_wrapper)
 end

@@ -250,7 +250,7 @@ INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 0, 'Нет д�
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 1, 'Штрихкод товара', '');
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 2, 'Код товара', '');
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 3, 'Подбор товара по каталогу', '');
-INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 4, 'DataMatrix товара (код маркировки)', '');
+INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 4, 'Не используется [DataMatrix товара (код маркировки)]', '');
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 11, 'Дисконтная карта', '');
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 12, 'Поиск дисконтной карты', '');
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 13, 'Абонемент', '');
@@ -310,3 +310,9 @@ INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10800, 0, 'Вручн
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10800, 1, 'Сканер', NULL);
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10800, 2, 'Весы', NULL);
 INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10800, 3, 'Автоматически расчитано', NULL);
+
+INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 16, 'Подарочный сертификат с водом пароля (B2B)', NULL);
+INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 17, 'Дисконтная карта для внешнего процессинга', NULL);
+INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 73, 'QR код с обработкой через t_SaleOnEvent - 2', NULL);
+INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 74, 'QR код с обработкой через t_SaleOnEvent - 3', NULL);
+INSERT dbo.r_Uni(RefTypeID, RefID, RefName, Notes) VALUES (10455, 75, 'QR код с обработкой через t_SaleOnEvent - 4', NULL);

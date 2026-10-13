@@ -1,21 +1,29 @@
 ﻿SET QUOTED_IDENTIFIER, ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[t_SaleDCardEnter](
-  @DocCode int,
-  @ChID bigint,
-  @DCardID varchar(250),
-  @DCTypeGCode int,
-  @Result int OUTPUT,
-  @Msg varchar(200) OUTPUT
-)
+CREATE PROCEDURE [dbo].[t_SaleDCardEnter](@ParamsIn varchar(max), @ParamsOut varchar(8000) OUTPUT)
 /* Реакция на ввод дисконтной карты */ 
 AS
 BEGIN
   DECLARE @DCardChID bigint 
   DECLARE @DCardDate smalldatetime
   DECLARE @DCardInUse bit
-  DECLARE @DCTypeCode int
+  DECLARE @DCTypeCode INT
 
+  DECLARE
+    @DocCode int,
+    @ChID bigint,
+    @DCardID varchar(250),
+    @DCTypeGCode int,
+    @PayFormCode int,
+    @Result int,
+    @Msg varchar(200)
+
+  SET @ParamsOut = '{}'
+  SET @DocCode = JSON_VALUE(@ParamsIn, '$.DocCode')
+  SET @ChID = JSON_VALUE(@ParamsIn, '$.ChID')
+  SET @DCardID = JSON_VALUE(@ParamsIn, '$.DCardID')
+  SET @DCTypeGCode = JSON_VALUE(@ParamsIn, '$.DCTypeGCode')
+  SET @PayFormCode = JSON_VALUE(@ParamsIn, '$.PayFormCode')
   SET @Result = 0
   SET @Msg = ''
 
@@ -24,29 +32,34 @@ BEGIN
   IF @DCardChID IS NULL
     BEGIN
       SET @Msg = FORMATMESSAGE(dbo.zf_Translate('Дисконтная карта с номером ''%s'' не существует.'), @DCardID)
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
 
   IF EXISTS (SELECT TOP 1 1 FROM z_DocDC WHERE DCardChID = @DCardChID AND ChID = @ChID AND DocCode = @DocCode)
     BEGIN
       SET @Msg = FORMATMESSAGE(dbo.zf_Translate('Дисконтная карта с номером ''%s'' уже используется.'), @DCardID)
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
 
   IF @DCardDate IS NOT NULL AND @DCardDate < dbo.zf_GetDate(GetDate())
     BEGIN
       SET @Msg = dbo.zf_Translate('Срок действия дисконтной карты истек.')
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
   IF @DCardInUse = 0
     BEGIN
       SET @Msg = dbo.zf_Translate('Дисконтная карта заблокирована.')
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
 
   IF @DCTypeCode = 0
     BEGIN
       SET @Msg = dbo.zf_Translate('Тип данной карты не указан.')
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
 
@@ -59,6 +72,7 @@ BEGIN
         SET @Msg = dbo.zf_Translate('Дисконтная карта данного типа уже используется.')
       ELSE 
         SET @Msg = dbo.zf_Translate('Невозможно использовать дисконтную карту данного типа. Максимально возможное количество: ') + CAST(@MaxQty AS varchar(10))
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
 
@@ -70,6 +84,7 @@ BEGIN
       IF @MainDialogCur = 1 AND @DCTypeGCode <> 0 
         SELECT @DCTypeGNameCur = dbo.zf_Translate('Дисконтные карты')
       SET @Msg = dbo.zf_Translate('Данная дисконтная карта должна вводиться в окно ''') + @DCTypeGNameCur + '''.'
+      SET @ParamsOut = (SELECT @Result AS Result, @Msg AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
       RETURN
     END
 
@@ -77,5 +92,6 @@ BEGIN
   VALUES (@DocCode, @ChID, @DCardChID)
 
   SET @Result = 1
+  SET @ParamsOut = (SELECT @Result AS Result, '' AS Msg FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
 END
 GO
