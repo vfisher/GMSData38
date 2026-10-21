@@ -2498,3 +2498,4 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2738, 't_SaleGetEReceiptComment', 'Возвращает комментари к чеку для поддержки программы єЧек', NULL, 'P', 0);
 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2739, 't_SaleOnPOSPayCorrection', 'Обробка запиту коррекції від терміналу', NULL, 'P', 1);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2740, 'zf_EncryptCardInfo', 'Возвращает зашифрофанные данные карты процессинга', NULL, 'FN', 0);
