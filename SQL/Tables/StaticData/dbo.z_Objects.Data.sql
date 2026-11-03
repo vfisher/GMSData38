@@ -2500,3 +2500,8 @@ INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES 
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2739, 't_SaleOnPOSPayCorrection', 'Обробка запиту коррекції від терміналу', NULL, 'P', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2740, 'zf_EncryptCardInfo', 'Возвращает зашифрофанные данные карты процессинга', NULL, 'FN', 0);
 INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2741, 't_SaleGetChequesForAutoClose', 'Возвращает список чеков для автоматического закрытия', NULL, 'P', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2742, 't_SaleOverrideDefaultTerminal', 't_SaleOverrideDefaultTerminal', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2743, 'kso_ContextSave', 'kso_ContextSave', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2744, 't_SaleKSOGetChequeExtraParams', 't_SaleKSOGetChequeExtraParams', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2745, 'kso_ContextLoad', 'kso_ContextLoad', NULL, 'P ', 0);
+INSERT dbo.z_Objects(ObjCode, ObjName, ObjDesc, ObjInfo, ObjType, RevID) VALUES (2746, 't_SaleInitCustomBonusFrame', 't_SaleInitCustomBonusFrame', NULL, 'P ', 0);
